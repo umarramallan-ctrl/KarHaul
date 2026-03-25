@@ -8,3 +8,4 @@ export * from "./reviews";
 export * from "./driver-routes";
 export * from "./saved-drivers";
 export * from "./condition-photos";
+export * from "./tracking-checkpoints";

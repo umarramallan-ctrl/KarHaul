@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { messagesTable, conversationsTable, usersTable } from "@workspace/db";
 import { eq, or, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { checkMessageContent } from "../lib/message-filter";
 
 const router: IRouter = Router();
 
@@ -83,6 +84,12 @@ router.post("/messages", async (req, res) => {
     return;
   }
   const { recipientId, shipmentId, content } = req.body;
+
+  const filter = checkMessageContent(content || "");
+  if (filter.blocked) {
+    res.status(400).json({ error: filter.reason, code: "CONTENT_BLOCKED" });
+    return;
+  }
   let conv = await db.select().from(conversationsTable)
     .where(or(
       and(eq(conversationsTable.user1Id, dbUser.id), eq(conversationsTable.user2Id, recipientId)),

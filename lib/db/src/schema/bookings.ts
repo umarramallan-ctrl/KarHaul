@@ -9,6 +9,8 @@ export const bookingsTable = pgTable("bookings", {
   shipperId: text("shipper_id").notNull(),
   bidId: text("bid_id"),
   agreedPrice: real("agreed_price").notNull(),
+  platformFeePercent: real("platform_fee_percent").notNull().default(3.0),
+  platformFeeAmount: real("platform_fee_amount").notNull().default(0),
   status: text("status").notNull().default("confirmed"),
   pickupConfirmedAt: timestamp("pickup_confirmed_at"),
   deliveryConfirmedAt: timestamp("delivery_confirmed_at"),

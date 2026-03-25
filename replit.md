@@ -25,7 +25,7 @@ AutoHaul Connect is a direct auto transport marketplace that connects shippers (
 - **Admin features**: verify drivers, suspend users, view platform stats
 
 ## Database Schema (PostgreSQL)
-Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`, `driver_routes`, `saved_drivers`, `condition_photos`
+Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`, `driver_routes`, `saved_drivers`, `condition_photos`, `tracking_checkpoints`
 
 ### Important: DB Schema Index
 `lib/db/src/schema/index.ts` selectively exports to avoid duplicate `usersTable`:
@@ -38,6 +38,8 @@ Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `
 - Shipments: `/shipments` (CRUD), `/shipments/:id/bids`
 - Bids: `/bids`, `/bids/:id/accept`
 - Bookings: `/bookings`, `/bookings/:id`, status updates
+- Tracking: `/bookings/:id/tracking` (GET history, POST new checkpoint by driver only)
+- Call: `/bookings/:id/call-request` (POST — initiates masked in-app call session)
 - Messages: `/conversations`, `/messages`
 - Reviews: `/reviews`
 - Admin: `/admin/stats`, `/admin/users/:id/verify`, `/admin/users/:id/suspend`

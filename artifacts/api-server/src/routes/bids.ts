@@ -78,6 +78,8 @@ router.post("/bids/:bidId/accept", async (req, res) => {
   await db.update(shipmentsTable).set({ status: "assigned", assignedDriverId: bid.driverId, updatedAt: new Date() })
     .where(eq(shipmentsTable.id, bid.shipmentId));
   const bookingId = randomUUID();
+  const PLATFORM_FEE_PERCENT = 3.0;
+  const platformFeeAmount = Math.round(bid.amount * (PLATFORM_FEE_PERCENT / 100) * 100) / 100;
   await db.insert(bookingsTable).values({
     id: bookingId,
     shipmentId: bid.shipmentId,
@@ -85,6 +87,8 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     shipperId: shipment.shipperId,
     bidId: bid.id,
     agreedPrice: bid.amount,
+    platformFeePercent: PLATFORM_FEE_PERCENT,
+    platformFeeAmount,
     status: "confirmed",
   });
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
