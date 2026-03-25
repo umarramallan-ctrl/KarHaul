@@ -10,13 +10,147 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+const LOCATION_INFO: Record<string, {
+  label: string;
+  icon: any;
+  color: string;
+  badgeClass: string;
+  requirements: string[];
+  safetyTips: string[];
+  warning?: string;
+}> = {
+  residential: {
+    label: "Residential Area",
+    icon: Home,
+    color: "blue",
+    badgeClass: "bg-blue-50 text-blue-800 border-blue-200",
+    requirements: [],
+    safetyTips: [
+      "Call ahead to confirm truck can access the street or driveway",
+      "Check for low-hanging trees, narrow driveways, or overhead obstacles",
+      "If unable to pull up, plan to load from the nearest open street",
+      "HOA communities may restrict large vehicle access — confirm in advance",
+    ],
+  },
+  dealer: {
+    label: "Auto Dealer / Lot",
+    icon: Building2,
+    color: "slate",
+    badgeClass: "bg-slate-50 text-slate-800 border-slate-200",
+    requirements: [],
+    safetyTips: [
+      "Confirm dealer lot hours before arrival — many close by 6 PM",
+      "Get a contact name at the dealership for a smooth handoff",
+      "Inspect and photograph the vehicle before and after loading",
+      "Ensure the correct vehicle is released — verify VIN and year/make/model",
+    ],
+  },
+  auction: {
+    label: "Auto Auction House",
+    icon: Building2,
+    color: "amber",
+    badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
+    warning: "Auction release paperwork required",
+    requirements: [
+      "Signed auction release form confirming vehicle is paid and cleared",
+      "Gate pass or lot number from the shipper",
+    ],
+    safetyTips: [
+      "Do NOT load a vehicle without a signed release form — you could be held liable",
+      "Auction lots are busy; expect delays and plan extra time",
+      "Verify VIN against the release paperwork before loading",
+      "Confirm the vehicle has a title or at minimum a buyer's certificate",
+    ],
+  },
+  port: {
+    label: "Port / Marine Terminal",
+    icon: Anchor,
+    color: "red",
+    badgeClass: "bg-red-50 text-red-800 border-red-200",
+    warning: "TWIC card federally required",
+    requirements: [
+      "Transportation Worker Identification Credential (TWIC) card — federal law",
+      "Carrier-specific gate appointment or booking number",
+      "Commercial vehicle registration and proof of insurance on hand",
+    ],
+    safetyTips: [
+      "Schedule a gate appointment — most ports do not allow walk-ins",
+      "Arrive early; port security checks can add 45–90 minutes",
+      "Follow all posted traffic and safety signs inside the terminal",
+      "Do not leave your cab unattended once inside the terminal",
+      "All passengers must also have valid TWIC cards to enter",
+    ],
+  },
+  military: {
+    label: "Military Base",
+    icon: Shield,
+    color: "olive",
+    badgeClass: "bg-green-50 text-green-900 border-green-200",
+    warning: "Government ID + escort required",
+    requirements: [
+      "Government-issued photo ID (driver's license or passport)",
+      "Vehicle registration and proof of insurance",
+      "Prior coordination with the base's Vehicle Control Office",
+    ],
+    safetyTips: [
+      "Contact the base's Visitor Control Center in advance — walk-ins are typically denied",
+      "Your vehicle may be subject to a thorough inspection at the gate",
+      "No photography is permitted on base",
+      "You will likely require a military escort throughout the base — do not proceed unaccompanied",
+      "Leave at least 1–2 hours buffer for gate security clearance",
+    ],
+  },
+  storage: {
+    label: "Storage Facility / Compound",
+    icon: Warehouse,
+    color: "slate",
+    badgeClass: "bg-slate-50 text-slate-800 border-slate-200",
+    requirements: [],
+    safetyTips: [
+      "Get the gate access code from the shipper before departure",
+      "Confirm access road weight limits — some storage facilities restrict heavy trucks",
+      "Check facility hours; many storage lots lock after hours",
+      "Photograph the vehicle's condition at the storage site before loading",
+    ],
+  },
+  airport: {
+    label: "Airport / Private Airfield",
+    icon: PlaneTakeoff,
+    color: "purple",
+    badgeClass: "bg-purple-50 text-purple-800 border-purple-200",
+    warning: "Pre-approved access required",
+    requirements: [
+      "Pre-approval from the airport authority or FBO (Fixed-Base Operator)",
+      "Commercial vehicle permit for airside or tarmac access (if applicable)",
+    ],
+    safetyTips: [
+      "Confirm access permissions well in advance — most airports require prior authorization",
+      "Do not enter restricted airside areas without explicit escort and clearance",
+      "Follow all posted speed limits and directions inside the airfield",
+      "Cargo or executive terminals may have separate access gates — confirm which to use",
+    ],
+  },
+  other: {
+    label: "Other Location",
+    icon: HelpCircle,
+    color: "gray",
+    badgeClass: "bg-gray-50 text-gray-800 border-gray-200",
+    requirements: [],
+    safetyTips: [
+      "Review the shipper's notes for any location-specific instructions",
+      "Contact the shipper ahead of time to confirm access requirements",
+      "Photograph the vehicle thoroughly at pickup before loading",
+    ],
+  },
+};
 
 const bidSchema = z.object({
   amount: z.coerce.number().min(50, "Amount must be at least $50"),
@@ -144,9 +278,20 @@ export default function ShipmentDetail() {
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-background border shadow-sm text-muted-foreground">
                       <ArrowRight className="h-5 w-5" />
                     </div>
-                    <div className="uppercase text-xs font-bold text-primary tracking-wider mb-2">Origin</div>
+                    <div className="uppercase text-xs font-bold text-primary tracking-wider mb-2">Origin / Pickup</div>
                     <h3 className="text-2xl font-bold mb-1">{shipment.originCity}, {shipment.originState}</h3>
                     <p className="text-muted-foreground">{shipment.originZip}</p>
+                    {(shipment as any).pickupLocationType && LOCATION_INFO[(shipment as any).pickupLocationType] && (() => {
+                      const loc = LOCATION_INFO[(shipment as any).pickupLocationType];
+                      const Icon = loc.icon;
+                      return (
+                        <div className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full border text-xs font-medium ${loc.badgeClass}`}>
+                          <Icon className="h-3 w-3" />
+                          {loc.label}
+                          {loc.warning && <span className="font-bold ml-1">· {loc.warning}</span>}
+                        </div>
+                      );
+                    })()}
                     <p className="text-sm mt-3 pt-3 border-t text-muted-foreground">
                       <span className="font-medium text-foreground">Pickup:</span> {formatDate(shipment.pickupDateFrom)} - {formatDate(shipment.pickupDateTo)}
                     </p>
@@ -159,9 +304,20 @@ export default function ShipmentDetail() {
                   </div>
 
                   <div className="flex-1 p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/20">
-                    <div className="uppercase text-xs font-bold text-accent tracking-wider mb-2">Destination</div>
+                    <div className="uppercase text-xs font-bold text-accent tracking-wider mb-2">Destination / Delivery</div>
                     <h3 className="text-2xl font-bold mb-1">{shipment.destinationCity}, {shipment.destinationState}</h3>
                     <p className="text-muted-foreground">{shipment.destinationZip}</p>
+                    {(shipment as any).deliveryLocationType && LOCATION_INFO[(shipment as any).deliveryLocationType] && (() => {
+                      const loc = LOCATION_INFO[(shipment as any).deliveryLocationType];
+                      const Icon = loc.icon;
+                      return (
+                        <div className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full border text-xs font-medium ${loc.badgeClass}`}>
+                          <Icon className="h-3 w-3" />
+                          {loc.label}
+                          {loc.warning && <span className="font-bold ml-1">· {loc.warning}</span>}
+                        </div>
+                      );
+                    })()}
                     <p className="text-sm mt-3 pt-3 border-t text-muted-foreground">
                       <span className="font-medium text-foreground">Delivery:</span> Flexible
                     </p>
@@ -185,6 +341,113 @@ export default function ShipmentDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Driver Safety & Location Requirements Panel */}
+            {(() => {
+              const pickupLoc = (shipment as any).pickupLocationType ? LOCATION_INFO[(shipment as any).pickupLocationType] : null;
+              const deliveryLoc = (shipment as any).deliveryLocationType ? LOCATION_INFO[(shipment as any).deliveryLocationType] : null;
+              if (!pickupLoc && !deliveryLoc) return null;
+              const hasRequirements = (pickupLoc?.requirements?.length || 0) + (deliveryLoc?.requirements?.length || 0) > 0;
+              const hasWarnings = pickupLoc?.warning || deliveryLoc?.warning;
+
+              return (
+                <Card className={`border-2 ${hasWarnings ? 'border-amber-300 dark:border-amber-700' : 'border-blue-200 dark:border-blue-800'}`}>
+                  <CardHeader className={`pb-3 ${hasWarnings ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <AlertTriangle className={`h-5 w-5 ${hasWarnings ? 'text-amber-600' : 'text-blue-600'}`} />
+                      Driver Safety & Location Requirements
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">Review all requirements before accepting this load.</p>
+                  </CardHeader>
+                  <CardContent className="pt-5 space-y-6">
+
+                    {/* Pickup safety */}
+                    {pickupLoc && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="text-xs font-bold uppercase tracking-wider text-primary">Pickup</div>
+                          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${pickupLoc.badgeClass}`}>
+                            {pickupLoc.label}
+                          </div>
+                        </div>
+                        {pickupLoc.requirements.length > 0 && (
+                          <div className="mb-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                            <p className="text-xs font-bold text-red-800 dark:text-red-300 mb-2 uppercase tracking-wide">Required Items — Must Have Before Arrival</p>
+                            <ul className="space-y-1.5">
+                              {pickupLoc.requirements.map((req, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-red-800 dark:text-red-300">
+                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" />
+                                  {req}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <ul className="space-y-2">
+                          {pickupLoc.safetyTips.map((tip, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Delivery safety */}
+                    {deliveryLoc && (
+                      <div className={pickupLoc ? 'border-t pt-5' : ''}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="text-xs font-bold uppercase tracking-wider text-accent">Delivery</div>
+                          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${deliveryLoc.badgeClass}`}>
+                            {deliveryLoc.label}
+                          </div>
+                        </div>
+                        {deliveryLoc.requirements.length > 0 && (
+                          <div className="mb-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                            <p className="text-xs font-bold text-red-800 dark:text-red-300 mb-2 uppercase tracking-wide">Required Items — Must Have Before Arrival</p>
+                            <ul className="space-y-1.5">
+                              {deliveryLoc.requirements.map((req, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-red-800 dark:text-red-300">
+                                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" />
+                                  {req}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <ul className="space-y-2">
+                          {deliveryLoc.safetyTips.map((tip, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Universal tips */}
+                    <div className="border-t pt-4">
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Always at Pickup & Delivery</p>
+                      <ul className="space-y-2">
+                        {[
+                          "Take timestamped photos of the vehicle on all 4 sides before loading",
+                          "Complete and sign a Bill of Lading (BOL) — this is your legal protection",
+                          "Note all existing damage on the BOL before the shipper signs",
+                          "Confirm the shipper's identity matches the name on the listing",
+                        ].map((tip, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* Bids List (Visible to owner or if you bid) */}
             {bidsData && (isOwner || hasMyBid) && (

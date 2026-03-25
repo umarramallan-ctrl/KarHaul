@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
-import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Check, TrendingDown, Route, Heart, Camera, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Check, TrendingDown, Route, Heart, Camera, Zap, User, Building2, FileText, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -346,6 +346,118 @@ export default function Home() {
               ))}
               <Button variant="outline" asChild><Link href="/shipments">Browse Open Loads <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Who is Traxion for? */}
+      <section className="py-20 md:py-28 bg-slate-50 dark:bg-slate-900/40">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4 border border-primary/20">Open to Everyone</span>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Who can use Traxion?</h2>
+            <p className="text-lg text-muted-foreground">You don't need to be a dealer or a corporation. Anyone with a vehicle to move or a truck to haul can sign up — here's what you'll need.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+
+            {/* Individual Shipper */}
+            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0 }}>
+              <Card className="h-full border-2 hover:border-primary/40 transition-colors">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
+                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="inline-block text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full mb-3">Individual / Private Owner</div>
+                  <h3 className="font-display font-bold text-xl mb-2">Shipping your personal vehicle</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">Relocating? Bought a car online? Sending a vehicle to a family member? You don't need a business — just create a free account and post your load.</p>
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-foreground">What you'll need to sign up:</p>
+                    {[
+                      { icon: FileText, text: "Government-issued photo ID (driver's license or passport)" },
+                      { icon: CreditCard, text: "Payment method to pay the 3% platform fee (charged only on acceptance)" },
+                      { icon: FileText, text: "Vehicle title or registration to confirm ownership" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <item.icon className="h-4 w-4 shrink-0 mt-0.5 text-blue-500" />
+                        {item.text}
+                      </div>
+                    ))}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-blue-800 dark:text-blue-300"><strong>No business license needed.</strong> Individuals ship vehicles every day — relocation, online purchases, estate transfers, and more.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Auto Dealer */}
+            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+              <Card className="h-full border-2 hover:border-primary/40 transition-colors">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
+                    <Building2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="inline-block text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full mb-3">Independent Auto Dealer</div>
+                  <h3 className="font-display font-bold text-xl mb-2">Moving inventory at scale</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">Post individual cars or batches. Stop paying broker margins on every unit. Rebook drivers you trust directly — no re-listing required.</p>
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-foreground">What you'll need to sign up:</p>
+                    {[
+                      { icon: FileText, text: "Dealer license or business registration" },
+                      { icon: CreditCard, text: "Business payment method for the 3% platform fee" },
+                      { icon: FileText, text: "Lot address and contact information" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <item.icon className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
+                        {item.text}
+                      </div>
+                    ))}
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-emerald-800 dark:text-emerald-300"><strong>Dealers pay $0 in broker markup.</strong> The 3% platform fee replaces $150–$500 per-car broker fees — you keep the difference.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Professional Driver */}
+            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
+              <Card className="h-full border-2 hover:border-primary/40 transition-colors">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
+                    <Truck className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full mb-3">Professional Driver / Carrier</div>
+                  <h3 className="font-display font-bold text-xl mb-2">Get paid to haul — no subscription</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">Browse open loads for free. Bid on jobs along your routes. You only pay when you win a job — no monthly fee just to see available loads.</p>
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-foreground">Federal requirements to haul:</p>
+                    {[
+                      { icon: FileText, text: "Active USDOT number (registered with FMCSA)" },
+                      { icon: FileText, text: "Active MC (Motor Carrier) authority number" },
+                      { icon: ShieldCheck, text: "Minimum $750,000 auto liability insurance (per 49 CFR 387)" },
+                      { icon: FileText, text: "Truck type and hauling capacity on your profile" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <item.icon className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                        {item.text}
+                      </div>
+                    ))}
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-amber-800 dark:text-amber-300"><strong>Drivers pay $0.</strong> No monthly subscription, no listing fees, no broker cut. We verify your credentials and you're live.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+          </div>
+
+          <div className="text-center mt-12">
+            <Button size="lg" asChild>
+              <Link href="/api/auth/login?screen_hint=signup">Create a Free Account <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
           </div>
         </div>
       </section>

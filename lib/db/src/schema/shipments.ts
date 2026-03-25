@@ -25,6 +25,8 @@ export const shipmentsTable = pgTable("shipments", {
   budgetMin: real("budget_min"),
   budgetMax: real("budget_max"),
   notes: text("notes"),
+  pickupLocationType: text("pickup_location_type"),
+  deliveryLocationType: text("delivery_location_type"),
   status: text("status").notNull().default("open"),
   bidCount: integer("bid_count").notNull().default(0),
   assignedDriverId: text("assigned_driver_id"),
