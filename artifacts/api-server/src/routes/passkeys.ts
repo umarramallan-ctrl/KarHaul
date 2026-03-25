@@ -14,7 +14,7 @@ import crypto from "crypto";
 
 const router: IRouter = Router();
 
-const RP_NAME = "Traxion";
+const RP_NAME = "EVAUL";
 const challenges = new Map<string, { challenge: string; userId?: string; expires: number }>();
 
 function getOrigin(req: Request): string {

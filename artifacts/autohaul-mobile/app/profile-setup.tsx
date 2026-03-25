@@ -130,7 +130,7 @@ export default function ProfileSetupScreen() {
               {form.termsAccepted && <Feather name="check" size={12} color="#fff" />}
             </View>
             <Text style={[styles.termsText, { color: C.textSecondary }]}>
-              I agree to the <Text style={{ color: C.primary }}>Terms of Service</Text>. I understand Traxion is a marketplace only and assumes no liability for transport, damages, or disputes between shippers and drivers.
+              I agree to the <Text style={{ color: C.primary }}>Terms of Service</Text>. I understand EVAUL is a marketplace only and assumes no liability for transport, damages, or disputes between shippers and drivers.
             </Text>
           </Pressable>
         )}

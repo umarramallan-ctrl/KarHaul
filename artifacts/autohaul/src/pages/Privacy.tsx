@@ -10,7 +10,7 @@ export default function Privacy() {
         <p className="lead text-muted-foreground">Effective Date: {EFFECTIVE_DATE} &nbsp;|&nbsp; Last Updated: {EFFECTIVE_DATE}</p>
 
         <p>
-          Traxion ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and platform services at traxion.com (the "Platform"). Please read this policy carefully. By using the Platform, you agree to the practices described here.
+          EVAUL ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and platform services at evaul.com (the "Platform"). Please read this policy carefully. By using the Platform, you agree to the practices described here.
         </p>
 
         <h2>1. Information We Collect</h2>
@@ -76,7 +76,7 @@ export default function Privacy() {
 
         <h3>3.3 Legal Requirements</h3>
         <p>
-          We may disclose your information if required to do so by law, regulation, or valid legal process (such as a court order or subpoena), or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of Traxion, our users, or the public.
+          We may disclose your information if required to do so by law, regulation, or valid legal process (such as a court order or subpoena), or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of EVAUL, our users, or the public.
         </p>
 
         <h3>3.4 Business Transfers</h3>
@@ -116,22 +116,22 @@ export default function Privacy() {
         <p>You may update your profile information at any time through your Profile & Settings page.</p>
 
         <h3>6.2 Data Access and Portability</h3>
-        <p>You may request a copy of the personal data we hold about you by contacting us at privacy@traxion.com. We will provide the data in a commonly used, machine-readable format within 30 days.</p>
+        <p>You may request a copy of the personal data we hold about you by contacting us at privacy@evaul.com. We will provide the data in a commonly used, machine-readable format within 30 days.</p>
 
         <h3>6.3 Deletion</h3>
-        <p>You may request deletion of your account and associated personal data by contacting support@traxion.com. We will process your request within 30 days, subject to any legal retention obligations.</p>
+        <p>You may request deletion of your account and associated personal data by contacting support@evaul.com. We will process your request within 30 days, subject to any legal retention obligations.</p>
 
         <h3>6.4 Opt-Out of Communications</h3>
         <p>You may opt out of non-essential email communications by using the unsubscribe link in any marketing email. You cannot opt out of transactional notifications required for platform operations (booking confirmations, bid notifications, security alerts).</p>
 
         <h3>6.5 California Residents (CCPA)</h3>
         <p>
-          California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected, the right to delete personal information, and the right to opt out of the sale of personal information (which we do not conduct). To exercise these rights, contact us at privacy@traxion.com.
+          California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected, the right to delete personal information, and the right to opt out of the sale of personal information (which we do not conduct). To exercise these rights, contact us at privacy@evaul.com.
         </p>
 
         <h3>6.6 European Economic Area Residents (GDPR)</h3>
         <p>
-          If you are located in the EEA, you have rights under the General Data Protection Regulation (GDPR) including the right to access, rectify, erase, restrict processing, and port your personal data, as well as the right to object to processing based on legitimate interests. Our legal basis for processing is your consent (account creation), contract performance (providing marketplace services), and legitimate interests (security, fraud prevention, platform improvement). Contact us at privacy@traxion.com to exercise these rights.
+          If you are located in the EEA, you have rights under the General Data Protection Regulation (GDPR) including the right to access, rectify, erase, restrict processing, and port your personal data, as well as the right to object to processing based on legitimate interests. Our legal basis for processing is your consent (account creation), contract performance (providing marketplace services), and legitimate interests (security, fraud prevention, platform improvement). Contact us at privacy@evaul.com to exercise these rights.
         </p>
 
         <h2>7. Cookies and Tracking</h2>
@@ -149,7 +149,7 @@ export default function Privacy() {
 
         <h2>8. Children's Privacy</h2>
         <p>
-          Traxion is not directed to individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a minor has created an account, we will terminate the account and delete the associated data promptly. If you believe a minor has submitted personal information, contact us at privacy@traxion.com.
+          EVAUL is not directed to individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a minor has created an account, we will terminate the account and delete the associated data promptly. If you believe a minor has submitted personal information, contact us at privacy@evaul.com.
         </p>
 
         <h2>9. Third-Party Links</h2>
@@ -167,9 +167,9 @@ export default function Privacy() {
           If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:
         </p>
         <ul>
-          <li><strong>Email:</strong> privacy@traxion.com</li>
-          <li><strong>Support:</strong> support@traxion.com</li>
-          <li><strong>Support Center:</strong> <a href="/support">traxion.com/support</a></li>
+          <li><strong>Email:</strong> privacy@evaul.com</li>
+          <li><strong>Support:</strong> support@evaul.com</li>
+          <li><strong>Support Center:</strong> <a href="/support">evaul.com/support</a></li>
         </ul>
         <p>
           We will respond to all privacy-related inquiries within 30 days.

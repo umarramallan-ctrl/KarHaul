@@ -59,7 +59,7 @@ export default function AccountScreen() {
           <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF" }]}>
             <Feather name="user" size={40} color={C.primary} />
           </View>
-          <Text style={[styles.authTitle, { color: C.text }]}>Welcome to Traxion</Text>
+          <Text style={[styles.authTitle, { color: C.text }]}>Welcome to EVAUL</Text>
           <Text style={[styles.authSub, { color: C.textSecondary }]}>Direct connections between shippers and drivers — no brokers, no middlemen.</Text>
           <Pressable style={[styles.signInBtn, { backgroundColor: C.primary }]} onPress={() => router.push("/auth")}>
             <Text style={styles.signInBtnText}>Get Started</Text>

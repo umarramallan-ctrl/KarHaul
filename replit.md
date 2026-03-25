@@ -1,8 +1,8 @@
-# Traxion — Workspace
+# EVAUL — Workspace
 
 ## Overview
 
-Traxion is a direct auto transport marketplace that connects shippers (individuals/dealers) with drivers, eliminating middlemen/brokers. Built as a pnpm monorepo with TypeScript.
+EVAUL (by The EvoPoint LLC) is a direct auto transport marketplace that connects shippers (individuals/dealers) with drivers, eliminating middlemen/brokers. Built as a pnpm monorepo with TypeScript.
 
 ## Platform Architecture
 
