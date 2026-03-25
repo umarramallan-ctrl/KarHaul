@@ -13,6 +13,7 @@ import driverRoutesRouter from "./driver-routes";
 import savedDriversRouter from "./saved-drivers";
 import conditionPhotosRouter from "./condition-photos";
 import trackingRouter from "./tracking";
+import passkeyRouter from "./passkeys";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(driverRoutesRouter);
 router.use(savedDriversRouter);
 router.use(conditionPhotosRouter);
 router.use(trackingRouter);
+router.use(passkeyRouter);
 
 export default router;

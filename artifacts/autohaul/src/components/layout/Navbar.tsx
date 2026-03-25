@@ -4,6 +4,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart } from "lucide-react";
 import { CarCarrierIcon } from "@/components/icons/CarCarrierIcon";
+import { PasskeyLoginButton } from "@/components/passkeys/PasskeyLoginButton";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -83,8 +84,9 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           {!isAuthenticated ? (
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3">
               <Button variant="ghost" onClick={login}>Log in</Button>
+              <PasskeyLoginButton variant="outline" className="h-9 text-sm" onSuccess={() => window.location.reload()} />
               <Button onClick={login}>Sign up</Button>
             </div>
           ) : (

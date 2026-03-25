@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
 import { ShieldCheck, Info } from "lucide-react";
+import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
 type UpdateProfileBodyRole = "shipper" | "driver" | "both";
 
 const profileSchema = z.object({
@@ -241,11 +242,12 @@ export default function Profile() {
               </Form>
             </CardContent>
           </Card>
+
+          <div className="mt-6">
+            <PasskeyManager />
+          </div>
         </div>
       </MainLayout>
     </AuthGuard>
   );
 }
-
-// Dummy Truck import
-import { Truck } from "lucide-react";
