@@ -7,10 +7,33 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelative } from "@/lib/format";
-import { MessageSquare, Send, Shield, Phone, AlertCircle, Loader2, Info } from "lucide-react";
+import { MessageSquare, Send, Shield, Phone, AlertCircle, Loader2, Info, Zap } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+
+const DRIVER_REPLIES = [
+  "I'm interested in this load — when is the pickup window?",
+  "Is the vehicle running and can it be driven onto the trailer?",
+  "I have capacity on that route. What's your target price?",
+  "Vehicle picked up successfully and is on the way!",
+  "Delivered safely — please confirm receipt and leave a review.",
+  "I'll be on-site by [time] — please have the release docs ready.",
+  "Can you confirm the gate code or contact at pickup?",
+  "I need to adjust my ETA — please let me know if that works.",
+];
+
+const SHIPPER_REPLIES = [
+  "Please send your MC and DOT number before arrival.",
+  "Vehicle is ready for pickup at the address listed.",
+  "Can you provide your estimated arrival time?",
+  "Thank you — delivery confirmed! Leaving you a review now.",
+  "Can you pick up any earlier? I'm flexible on dates.",
+  "Please photograph the vehicle before loading.",
+  "Any issues or damage noted on the vehicle at pickup?",
+  "I'm comparing a few bids — can you adjust your price at all?",
+];
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -42,13 +65,15 @@ function MessageBubble({ msg, isOwn }: { msg: any; isOwn: boolean }) {
   );
 }
 
-function ChatWindow({ conv, currentUserId }: { conv: any; currentUserId: string | undefined }) {
+function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserId: string | undefined; userRole?: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [text, setText] = useState("");
   const [blockedError, setBlockedError] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const quickReplies = userRole === "driver" ? DRIVER_REPLIES : userRole === "shipper" ? SHIPPER_REPLIES : [...DRIVER_REPLIES.slice(0, 4), ...SHIPPER_REPLIES.slice(0, 4)];
 
   const { data, isLoading } = useQuery({
     queryKey: ["messages", conv.id],
@@ -133,7 +158,30 @@ function ChatWindow({ conv, currentUserId }: { conv: any; currentUserId: string 
             <p className="text-xs text-red-700 dark:text-red-400">{blockedError}</p>
           </div>
         )}
+
+        {/* Quick reply tray */}
+        {showQuickReplies && (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {quickReplies.map((reply, i) => (
+              <button
+                key={i}
+                onClick={() => { setText(reply); setShowQuickReplies(false); }}
+                className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 transition-colors font-medium whitespace-nowrap"
+              >
+                {reply.length > 48 ? reply.slice(0, 47) + "…" : reply}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2 items-end">
+          <button
+            onClick={() => setShowQuickReplies(v => !v)}
+            title="Quick replies"
+            className={`h-11 w-11 shrink-0 rounded-lg border flex items-center justify-center transition-colors ${showQuickReplies ? "bg-primary text-white border-primary" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"}`}
+          >
+            <Zap className="h-4 w-4" />
+          </button>
           <Textarea
             placeholder="Type a message..."
             className="resize-none min-h-[44px] max-h-28 text-sm"
@@ -146,6 +194,7 @@ function ChatWindow({ conv, currentUserId }: { conv: any; currentUserId: string 
             {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
+        <p className="text-[10px] text-muted-foreground text-center">⚡ Quick replies — tap to fill, edit before sending</p>
       </div>
     </div>
   );
@@ -156,6 +205,7 @@ export default function Messages() {
   const { data, isLoading } = useListConversations();
   const [selectedConv, setSelectedConv] = useState<any>(null);
   const currentUserId = authData?.profile?.id;
+  const userRole = authData?.profile?.role as string | undefined;
 
   const conversations = data?.conversations || [];
 
@@ -202,7 +252,7 @@ export default function Messages() {
             {/* Chat Area */}
             <div className="flex-1 flex flex-col bg-background min-w-0">
               {selectedConv ? (
-                <ChatWindow conv={selectedConv} currentUserId={currentUserId} />
+                <ChatWindow conv={selectedConv} currentUserId={currentUserId} userRole={userRole} />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-10 text-muted-foreground">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -80,43 +81,48 @@ export default function AccountScreen() {
         <Text style={[styles.headerTitle, { color: C.text }]}>Account</Text>
       </View>
 
-      <View style={styles.profileCard}>
-        <View style={[styles.avatarLarge, { backgroundColor: C.primary }]}>
+      <LinearGradient
+        colors={["#1A56DB", "#1E40AF"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.profileCard}
+      >
+        <View style={styles.avatarLarge}>
           <Text style={styles.avatarLargeText}>{fullName.charAt(0).toUpperCase()}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.nameRow}>
-            <Text style={[styles.profileName, { color: C.text }]}>{fullName}</Text>
+            <Text style={styles.profileName}>{fullName}</Text>
             {profile?.isVerified && (
-              <View style={[styles.verifiedBadge, { backgroundColor: "#D1FAE5" }]}>
-                <Feather name="check-circle" size={12} color="#065F46" />
-                <Text style={[styles.verifiedText, { color: "#065F46" }]}>Verified</Text>
+              <View style={styles.verifiedBadge}>
+                <Feather name="check-circle" size={12} color="#fff" />
+                <Text style={styles.verifiedText}>Verified</Text>
               </View>
             )}
           </View>
-          <Text style={[styles.profileRole, { color: C.primary }]}>{roleLabel}</Text>
+          <Text style={styles.profileRole}>{roleLabel}</Text>
           {profile?.averageRating && profile.averageRating > 0 ? (
             <View style={styles.ratingRow}>
-              <Feather name="star" size={13} color="#F59E0B" />
-              <Text style={[styles.ratingText, { color: C.textSecondary }]}>{profile.averageRating.toFixed(1)} ({profile.totalReviews} reviews)</Text>
+              <Feather name="star" size={13} color="#FCD34D" />
+              <Text style={styles.ratingText}>{profile.averageRating.toFixed(1)} ({profile.totalReviews} reviews)</Text>
             </View>
           ) : null}
         </View>
-      </View>
+      </LinearGradient>
 
       {profile?.role === "driver" || profile?.role === "both" ? (
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: "#fff" }]}>
+          <View style={[styles.statCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
             <Text style={[styles.statNum, { color: C.primary }]}>{profile?.completedJobs || 0}</Text>
-            <Text style={[styles.statLabel, { color: C.textSecondary }]}>Completed Jobs</Text>
+            <Text style={[styles.statLabel, { color: C.primary }]}>Jobs Done</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: "#fff" }]}>
-            <Text style={[styles.statNum, { color: C.success }]}>{profile?.averageRating?.toFixed(1) || "—"}</Text>
-            <Text style={[styles.statLabel, { color: C.textSecondary }]}>Avg Rating</Text>
+          <View style={[styles.statCard, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]}>
+            <Text style={[styles.statNum, { color: "#065F46" }]}>{profile?.averageRating?.toFixed(1) || "—"}</Text>
+            <Text style={[styles.statLabel, { color: "#065F46" }]}>Avg Rating</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: "#fff" }]}>
-            <Text style={[styles.statNum, { color: C.text }]}>{profile?.totalReviews || 0}</Text>
-            <Text style={[styles.statLabel, { color: C.textSecondary }]}>Reviews</Text>
+          <View style={[styles.statCard, { backgroundColor: "#FEFCE8", borderColor: "#FDE68A" }]}>
+            <Text style={[styles.statNum, { color: "#92400E" }]}>{profile?.totalReviews || 0}</Text>
+            <Text style={[styles.statLabel, { color: "#92400E" }]}>Reviews</Text>
           </View>
         </View>
       ) : null}
@@ -159,18 +165,18 @@ const styles = StyleSheet.create({
   authSub: { fontFamily: "Inter_400Regular", fontSize: 15, textAlign: "center", lineHeight: 22 },
   signInBtn: { paddingHorizontal: 40, paddingVertical: 16, borderRadius: 14, marginTop: 8 },
   signInBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
-  profileCard: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 16, marginHorizontal: 16, backgroundColor: "#fff", borderRadius: 16, marginBottom: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
-  avatarLarge: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" },
-  avatarLargeText: { fontFamily: "Inter_700Bold", fontSize: 24, color: "#fff" },
+  profileCard: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingVertical: 20, marginHorizontal: 16, borderRadius: 20, marginBottom: 12, shadowColor: "#1A56DB", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 6 },
+  avatarLarge: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.25)" },
+  avatarLargeText: { fontFamily: "Inter_700Bold", fontSize: 26, color: "#fff" },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 },
-  profileName: { fontFamily: "Inter_600SemiBold", fontSize: 18 },
-  verifiedBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
-  verifiedText: { fontFamily: "Inter_600SemiBold", fontSize: 11 },
-  profileRole: { fontFamily: "Inter_500Medium", fontSize: 14, marginBottom: 4 },
+  profileName: { fontFamily: "Inter_700Bold", fontSize: 18, color: "#fff" },
+  verifiedBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.25)" },
+  verifiedText: { fontFamily: "Inter_600SemiBold", fontSize: 11, color: "#fff" },
+  profileRole: { fontFamily: "Inter_500Medium", fontSize: 14, marginBottom: 4, color: "rgba(255,255,255,0.75)" },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  ratingText: { fontFamily: "Inter_400Regular", fontSize: 13 },
+  ratingText: { fontFamily: "Inter_400Regular", fontSize: 13, color: "rgba(255,255,255,0.85)" },
   statsRow: { flexDirection: "row", gap: 10, marginHorizontal: 16, marginBottom: 12 },
-  statCard: { flex: 1, borderRadius: 14, padding: 14, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  statCard: { flex: 1, borderRadius: 14, padding: 14, alignItems: "center", borderWidth: 1, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 2 },
   statNum: { fontFamily: "Inter_700Bold", fontSize: 22 },
   statLabel: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2, textAlign: "center" },
   section: { marginHorizontal: 16, borderRadius: 16, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },

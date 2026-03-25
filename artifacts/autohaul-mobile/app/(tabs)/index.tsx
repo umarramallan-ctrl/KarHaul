@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TextInput, Pressable,
   ActivityIndicator, RefreshControl, Platform, ScrollView
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -177,39 +178,53 @@ export default function BrowseScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
-      <View style={[styles.header, { paddingTop: topPadding + 12 }]}>
-        <Text style={[styles.headerTitle, { color: C.text }]}>Browse</Text>
+      <LinearGradient
+        colors={["#1A56DB", "#1E40AF"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: topPadding + 16 }]}
+      >
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerBrand}>Traxion</Text>
+            <Text style={styles.headerTitle}>Load Board</Text>
+          </View>
+          {activeTab === "loads" && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{filtered.length} open</Text>
+            </View>
+          )}
+        </View>
 
-        <View style={[styles.tabSwitcher, { backgroundColor: C.surface, borderColor: C.border }]}>
+        <View style={styles.tabSwitcher}>
           <Pressable
-            style={[styles.tabBtn, activeTab === "loads" && { backgroundColor: C.primary }]}
+            style={[styles.tabBtn, activeTab === "loads" && styles.tabBtnActive]}
             onPress={() => setActiveTab("loads")}
           >
-            <Feather name="package" size={13} color={activeTab === "loads" ? "#fff" : C.textSecondary} />
-            <Text style={[styles.tabBtnText, { color: activeTab === "loads" ? "#fff" : C.textSecondary }]}>Open Loads</Text>
+            <Feather name="package" size={13} color={activeTab === "loads" ? "#1A56DB" : "rgba(255,255,255,0.75)"} />
+            <Text style={[styles.tabBtnText, { color: activeTab === "loads" ? "#1A56DB" : "rgba(255,255,255,0.75)" }]}>Open Loads</Text>
           </Pressable>
           <Pressable
-            style={[styles.tabBtn, activeTab === "routes" && { backgroundColor: C.primary }]}
+            style={[styles.tabBtn, activeTab === "routes" && styles.tabBtnActive]}
             onPress={() => setActiveTab("routes")}
           >
-            <Feather name="navigation" size={13} color={activeTab === "routes" ? "#fff" : C.textSecondary} />
-            <Text style={[styles.tabBtnText, { color: activeTab === "routes" ? "#fff" : C.textSecondary }]}>Backhaul Finder</Text>
+            <Feather name="navigation" size={13} color={activeTab === "routes" ? "#1A56DB" : "rgba(255,255,255,0.75)"} />
+            <Text style={[styles.tabBtnText, { color: activeTab === "routes" ? "#1A56DB" : "rgba(255,255,255,0.75)" }]}>Backhaul Finder</Text>
           </Pressable>
         </View>
 
         {activeTab === "loads" && (
           <>
-            <Text style={[styles.headerSub, { color: C.textSecondary }]}>{filtered.length} available shipments</Text>
-            <View style={[styles.searchBar, { backgroundColor: C.surface, borderColor: C.border }]}>
-              <Feather name="search" size={16} color={C.textMuted} />
+            <View style={styles.searchBar}>
+              <Feather name="search" size={16} color="rgba(255,255,255,0.6)" />
               <TextInput
-                style={[styles.searchInput, { color: C.text, fontFamily: "Inter_400Regular" }]}
-                placeholder="Search by vehicle, city, state..."
-                placeholderTextColor={C.textMuted}
+                style={[styles.searchInput, { fontFamily: "Inter_400Regular" }]}
+                placeholder="Search vehicle, city, or state..."
+                placeholderTextColor="rgba(255,255,255,0.5)"
                 value={search}
                 onChangeText={setSearch}
               />
-              {search ? <Pressable onPress={() => setSearch("")}><Feather name="x-circle" size={16} color={C.textMuted} /></Pressable> : null}
+              {search ? <Pressable onPress={() => setSearch("")}><Feather name="x-circle" size={16} color="rgba(255,255,255,0.6)" /></Pressable> : null}
             </View>
             <FlatList
               horizontal
@@ -220,17 +235,17 @@ export default function BrowseScreen() {
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => setTransportFilter(item)}
-                  style={[styles.filterChip, { borderColor: transportFilter === item ? C.primary : C.border }, transportFilter === item && { backgroundColor: C.primary }]}
+                  style={[styles.filterChip, transportFilter === item ? styles.filterChipActive : styles.filterChipInactive]}
                 >
-                  <Text style={[styles.filterChipText, { color: transportFilter === item ? "#fff" : C.textSecondary }]}>
-                    {item === "All" ? "All Types" : item === "open" ? "Open" : "Enclosed"}
+                  <Text style={[styles.filterChipText, { color: transportFilter === item ? "#1A56DB" : "rgba(255,255,255,0.8)" }]}>
+                    {item === "All" ? "All Types" : item === "open" ? "Open Carrier" : "Enclosed"}
                   </Text>
                 </Pressable>
               )}
             />
           </>
         )}
-      </View>
+      </LinearGradient>
 
       {activeTab === "loads" ? (
         isLoading ? (
@@ -261,24 +276,30 @@ export default function BrowseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingBottom: 8 },
-  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 28, marginBottom: 6 },
-  headerSub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 12 },
+  header: { paddingHorizontal: 16, paddingBottom: 16 },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 },
+  headerBrand: { fontFamily: "Inter_400Regular", fontSize: 12, color: "rgba(255,255,255,0.65)", letterSpacing: 1, textTransform: "uppercase" },
+  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 26, color: "#fff" },
+  countBadge: { backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  countBadgeText: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#fff" },
   tabSwitcher: {
-    flexDirection: "row", borderRadius: 12, borderWidth: 1, padding: 4, marginBottom: 12, gap: 4,
+    flexDirection: "row", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.15)", padding: 4, marginBottom: 14, gap: 4,
   },
   tabBtn: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 5, paddingVertical: 8, borderRadius: 9,
+    gap: 5, paddingVertical: 9, borderRadius: 9,
   },
+  tabBtnActive: { backgroundColor: "#fff" },
   tabBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
   searchBar: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 10,
+    borderRadius: 12, backgroundColor: "rgba(255,255,255,0.15)", paddingHorizontal: 14, paddingVertical: 11, marginBottom: 12,
   },
-  searchInput: { flex: 1, fontSize: 15 },
+  searchInput: { flex: 1, fontSize: 15, color: "#fff" },
   filterList: { paddingVertical: 4, gap: 8, paddingRight: 4 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
+  filterChipActive: { backgroundColor: "#fff" },
+  filterChipInactive: { backgroundColor: "rgba(255,255,255,0.15)" },
   filterChipText: { fontFamily: "Inter_500Medium", fontSize: 13 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 40 },
   emptyTitle: { fontFamily: "Inter_600SemiBold", fontSize: 18 },

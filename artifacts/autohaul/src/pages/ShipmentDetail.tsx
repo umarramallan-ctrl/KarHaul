@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle } from "lucide-react";
+import { useWeatherAlert } from "@/lib/weather";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -196,6 +197,21 @@ export default function ShipmentDetail() {
   const canBid = isAuthenticated && isDriver && !isOwner && shipment?.status === 'open';
   const hasMyBid = bidsData?.bids.some(b => b.driverId === profile?.id);
 
+  const { data: originWeather } = useWeatherAlert(shipment?.originCity, shipment?.originState);
+  const { data: destWeather } = useWeatherAlert(shipment?.destinationCity, shipment?.destinationState);
+
+  const weatherAlerts = [
+    originWeather ? { ...originWeather, location: `${shipment?.originCity}, ${shipment?.originState}`, leg: "Pickup" } : null,
+    destWeather ? { ...destWeather, location: `${shipment?.destinationCity}, ${shipment?.destinationState}`, leg: "Delivery" } : null,
+  ].filter(Boolean) as Array<typeof originWeather & { location: string; leg: string }>;
+
+  const WEATHER_ICONS = { "cloud-rain": CloudRain, "cloud-snow": CloudSnow, "zap": Zap, "wind": Wind, "cloud-drizzle": CloudDrizzle } as const;
+  const SEVERITY_STYLES = {
+    advisory: "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200",
+    warning: "bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-200",
+    watch: "bg-red-50 border-red-200 text-red-900 dark:bg-red-950/30 dark:border-red-800 dark:text-red-200",
+  } as const;
+
   function onSubmitBid(values: z.infer<typeof bidSchema>) {
     placeBidMutation.mutate({
       shipmentId,
@@ -261,6 +277,27 @@ export default function ShipmentDetail() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 -mt-12 mb-20 relative z-10">
+        {weatherAlerts.length > 0 && (
+          <div className="mb-6 space-y-3">
+            {weatherAlerts.map((alert, i) => {
+              if (!alert) return null;
+              const IconComp = WEATHER_ICONS[alert.icon as keyof typeof WEATHER_ICONS] || CloudRain;
+              const styles = SEVERITY_STYLES[alert.severity as keyof typeof SEVERITY_STYLES] || SEVERITY_STYLES.advisory;
+              const severityLabel = alert.severity === "watch" ? "WEATHER WATCH" : alert.severity === "warning" ? "WEATHER WARNING" : "WEATHER ADVISORY";
+              return (
+                <div key={i} className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${styles}`}>
+                  <IconComp className="h-5 w-5 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-0.5">{severityLabel} · {alert.leg} Location</p>
+                    <p className="font-semibold text-sm">{alert.headline}</p>
+                    <p className="text-sm opacity-80 mt-0.5">{alert.detail}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Main Info Column */}
