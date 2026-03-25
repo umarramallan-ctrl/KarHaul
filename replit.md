@@ -20,12 +20,14 @@ AutoHaul Connect is a direct auto transport marketplace that connects shippers (
 ## Key Design Decisions
 - **No payment processing** — payment arranged directly between driver and shipper
 - **Roles**: shipper, driver, both, admin — selectable in profile
-- **Auth**: Replit Auth (web, cookie-based OIDC) + token-based auth via AsyncStorage (mobile)
+- **Auth**: Replit Auth (web, cookie-based OIDC) + token-based auth via AsyncStorage (mobile) + Passkey (WebAuthn) login + 2FA (TOTP/SMS)
+- **Two-Factor Auth**: TOTP (speakeasy) + SMS (Twilio if configured, dev-mode console log otherwise). If 2FA is enabled, the `/callback` redirects to `/verify-2fa` before creating a full session. Pending sessions stored in-memory Map with 5-min expiry. Routes: `GET/POST /api/auth/2fa/*`
+- **Passkeys**: WebAuthn via @simplewebauthn/server; `passkey_credentials` table. Routes: `GET/POST /api/auth/passkey/*`
 - **Liability**: Platform is a marketplace only; ToS disclaims liability for transport quality/damages/disputes
 - **Admin features**: verify drivers, suspend users, view platform stats
 
 ## Database Schema (PostgreSQL)
-Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`, `driver_routes`, `saved_drivers`, `condition_photos`, `tracking_checkpoints`
+Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`, `driver_routes`, `saved_drivers`, `condition_photos`, `tracking_checkpoints`, `passkey_credentials`, `sms_codes`
 
 ### Important: DB Schema Index
 `lib/db/src/schema/index.ts` selectively exports to avoid duplicate `usersTable`:

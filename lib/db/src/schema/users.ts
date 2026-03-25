@@ -25,6 +25,10 @@ export const usersTable = pgTable("users", {
   completedJobs: integer("completed_jobs").notNull().default(0),
   termsAccepted: boolean("terms_accepted").notNull().default(false),
   termsAcceptedAt: timestamp("terms_accepted_at"),
+  totpSecret: text("totp_secret"),
+  totpEnabled: boolean("totp_enabled").notNull().default(false),
+  smsOtpEnabled: boolean("sms_otp_enabled").notNull().default(false),
+  twoFaMethod: text("two_fa_method").notNull().default("none"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

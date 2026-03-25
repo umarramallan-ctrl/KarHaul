@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
 import { ShieldCheck, Info } from "lucide-react";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
+import { TwoFASettings } from "@/components/security/TwoFASettings";
 type UpdateProfileBodyRole = "shipper" | "driver" | "both";
 
 const profileSchema = z.object({
@@ -242,6 +243,10 @@ export default function Profile() {
               </Form>
             </CardContent>
           </Card>
+
+          <div className="mt-6">
+            <TwoFASettings />
+          </div>
 
           <div className="mt-6">
             <PasskeyManager />

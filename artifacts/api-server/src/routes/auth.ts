@@ -7,6 +7,8 @@ import {
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
 import { db, usersTable } from "@workspace/db";
+import { pending2FaSessions } from "./two-factor";
+import { randomBytes } from "crypto";
 import {
   clearSession,
   getOidcConfig,
@@ -167,6 +169,32 @@ router.get("/callback", async (req: Request, res: Response) => {
   const dbUser = await upsertUser(
     claims as unknown as Record<string, unknown>,
   );
+
+  // If the user has 2FA enabled, store a pending session and redirect to verify
+  if (dbUser.twoFaMethod && dbUser.twoFaMethod !== "none") {
+    const pendingToken = randomBytes(24).toString("hex");
+    pending2FaSessions.set(pendingToken, {
+      userId: dbUser.id,
+      method: dbUser.twoFaMethod,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    });
+    res.cookie("pending_2fa", pendingToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 5 * 60 * 1000,
+    });
+    res.cookie("pending_2fa_return_to", returnTo, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 5 * 60 * 1000,
+    });
+    res.redirect("/verify-2fa");
+    return;
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const sessionData: SessionData = {

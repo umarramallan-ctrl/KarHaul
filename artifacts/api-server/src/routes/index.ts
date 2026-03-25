@@ -14,6 +14,7 @@ import savedDriversRouter from "./saved-drivers";
 import conditionPhotosRouter from "./condition-photos";
 import trackingRouter from "./tracking";
 import passkeyRouter from "./passkeys";
+import twoFactorRouter from "./two-factor";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(savedDriversRouter);
 router.use(conditionPhotosRouter);
 router.use(trackingRouter);
 router.use(passkeyRouter);
+router.use("/auth/2fa", twoFactorRouter);
 
 export default router;
