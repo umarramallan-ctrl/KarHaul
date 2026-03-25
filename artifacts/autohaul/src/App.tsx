@@ -17,6 +17,8 @@ import Terms from "./pages/Terms";
 import DriverRoutes from "./pages/DriverRoutes";
 import SavedDrivers from "./pages/SavedDrivers";
 import VerifyTwoFactor from "./pages/VerifyTwoFactor";
+import Support from "./pages/Support";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +42,8 @@ function Router() {
       <Route path="/driver-routes" component={DriverRoutes} />
       <Route path="/saved-drivers" component={SavedDrivers} />
       <Route path="/verify-2fa" component={VerifyTwoFactor} />
+      <Route path="/support" component={Support} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );
