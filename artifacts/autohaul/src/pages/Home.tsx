@@ -151,7 +151,7 @@ const NEW_FEATURES = [
     icon: <Zap className="h-6 w-6 text-amber-500" />,
     title: "Pay-Per-Booking, Not Subscriptions",
     badge: "Driver Favorite",
-    desc: "Drivers pay a small flat fee only when they win a job. No $150/month Central Dispatch subscription just to see loads.",
+    desc: "Drivers pay a small flat fee only when they win a job — not a monthly subscription just to see loads. Keep more of what you earn.",
     link: null,
   },
   {
@@ -164,7 +164,7 @@ const NEW_FEATURES = [
 ];
 
 const TESTIMONIALS = [
-  { quote: "I made more on my last run than three months on Central Dispatch combined. I paid nothing upfront.", name: "Mike T.", role: "Owner-Operator, 9 years", stars: 5 },
+  { quote: "I made more on my last run than I had in three months on other platforms combined. I paid nothing upfront.", name: "Mike T.", role: "Owner-Operator, 9 years", stars: 5 },
   { quote: "My dealer was paying brokers $350 per car. Now I deal directly with the same quality drivers for half the price.", name: "Sarah K.", role: "Independent Auto Dealer", stars: 5 },
   { quote: "The backhaul finder is a game changer. I fill my return trips now instead of driving empty.", name: "Carlos R.", role: "Fleet Driver, Dallas TX", stars: 5 },
 ];
@@ -355,7 +355,7 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">What our community says</h2>
-            <p className="text-slate-400">From drivers who left Central Dispatch and shippers who stopped paying broker fees.</p>
+            <p className="text-slate-400">From drivers who ditched expensive subscriptions and shippers who stopped paying broker fees.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
