@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { Truck, Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck } from "lucide-react";
+import { Truck, Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,6 +30,9 @@ export function Navbar() {
     <>
       <Link href="/shipments" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/shipments' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
         Browse Loads
+      </Link>
+      <Link href="/driver-routes" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/driver-routes' ? 'text-primary' : 'text-muted-foreground'} flex items-center gap-1`} onClick={closeMenu}>
+        <Route className="h-3.5 w-3.5" />Backhaul Finder
       </Link>
       
       {isAuthenticated && role === 'shipper' && (
@@ -126,6 +129,22 @@ export function Navbar() {
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
+                  {role === "shipper" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/saved-drivers" className="cursor-pointer flex items-center">
+                        <Heart className="mr-2 h-4 w-4 text-rose-500" />
+                        <span>Saved Drivers</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {role === "driver" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/driver-routes" className="cursor-pointer flex items-center">
+                        <Route className="mr-2 h-4 w-4 text-primary" />
+                        <span>My Routes</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer flex items-center">
                       <UserIcon className="mr-2 h-4 w-4" />

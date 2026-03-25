@@ -127,6 +127,12 @@ export default function AccountScreen() {
         {(profile?.role === "driver" || profile?.role === "both") && (
           <MenuItem icon="truck" label="Driver Details" subtitle={profile?.dotNumber ? `DOT #${profile.dotNumber}` : "Add DOT & insurance info"} onPress={() => router.push("/profile-setup")} />
         )}
+        {(profile?.role === "driver" || profile?.role === "both") && (
+          <MenuItem icon="navigation" label="Post My Route" subtitle="Let shippers find you on backhaul board" onPress={() => {}} />
+        )}
+        {(profile?.role === "shipper" || profile?.role === "both") && (
+          <MenuItem icon="heart" label="Saved Drivers" subtitle="Rebook trusted carriers directly" onPress={() => {}} />
+        )}
         <MenuItem icon="file-text" label="Terms of Service" subtitle="Platform rules and liability" onPress={() => {}} />
       </View>
 

@@ -8,6 +8,10 @@ import bookingsRouter from "./bookings";
 import messagesRouter from "./messages";
 import reviewsRouter from "./reviews";
 import adminRouter from "./admin";
+import priceEstimateRouter from "./price-estimate";
+import driverRoutesRouter from "./driver-routes";
+import savedDriversRouter from "./saved-drivers";
+import conditionPhotosRouter from "./condition-photos";
 
 const router: IRouter = Router();
 
@@ -20,5 +24,9 @@ router.use(bookingsRouter);
 router.use(messagesRouter);
 router.use(reviewsRouter);
 router.use(adminRouter);
+router.use(priceEstimateRouter);
+router.use(driverRoutesRouter);
+router.use(savedDriversRouter);
+router.use(conditionPhotosRouter);
 
 export default router;

@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
-// Page Imports
 import Home from "./pages/Home";
 import Shipments from "./pages/Shipments";
 import ShipmentDetail from "./pages/ShipmentDetail";
@@ -15,13 +14,12 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import Terms from "./pages/Terms";
+import DriverRoutes from "./pages/DriverRoutes";
+import SavedDrivers from "./pages/SavedDrivers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
+    queries: { retry: false, refetchOnWindowFocus: false },
   },
 });
 
@@ -38,6 +36,8 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/terms" component={Terms} />
+      <Route path="/driver-routes" component={DriverRoutes} />
+      <Route path="/saved-drivers" component={SavedDrivers} />
       <Route component={NotFound} />
     </Switch>
   );

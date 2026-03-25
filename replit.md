@@ -25,7 +25,7 @@ AutoHaul Connect is a direct auto transport marketplace that connects shippers (
 - **Admin features**: verify drivers, suspend users, view platform stats
 
 ## Database Schema (PostgreSQL)
-Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`
+Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `messages`, `reviews`, `driver_routes`, `saved_drivers`, `condition_photos`
 
 ### Important: DB Schema Index
 `lib/db/src/schema/index.ts` selectively exports to avoid duplicate `usersTable`:
@@ -41,13 +41,37 @@ Tables: `sessions`, `users`, `shipments`, `bids`, `bookings`, `conversations`, `
 - Messages: `/conversations`, `/messages`
 - Reviews: `/reviews`
 - Admin: `/admin/stats`, `/admin/users/:id/verify`, `/admin/users/:id/suspend`
+- Price Estimate: `POST /price-estimate` — haversine distance-based price range, broker savings shown
+- Driver Routes: `GET/POST /driver-routes`, `PATCH/DELETE /driver-routes/:id` — backhaul board
+- Saved Drivers: `GET/POST /saved-drivers`, `DELETE /saved-drivers/:driverId`
+- Condition Photos: `GET/POST /bookings/:bookingId/photos`
+
+## Differentiating Features
+1. **Backhaul Finder** — Drivers post planned routes; shippers match loads to trucks already heading their way
+2. **Smart Price Estimator** — Real-time estimate with broker savings comparison built into hero
+3. **Save & Rebook Drivers** — Shippers build their own carrier network; rebook trusted drivers directly
+4. **Condition Photo Reports** — Timestamped photos at pickup and delivery protect both parties
+5. **Pay-Per-Booking** — Drivers pay only when they win a job, not $150+/month subscriptions
+6. **Broker Comparison Table** — Homepage shows side-by-side vs. traditional brokers
+
+## Web App Pages
+- `/` — Home with price estimator hero, feature grid, comparison table, testimonials
+- `/shipments` — Browse open loads
+- `/driver-routes` — Backhaul Finder board (new)
+- `/saved-drivers` — Shipper's saved/favorite carrier network (new)
+- `/post-load` — Multi-step shipment creation
+- `/dashboard` — Role-based dashboard (shipper: my loads; driver: my jobs)
+- `/bookings/:id` — Booking detail with condition photos
+- `/messages` — Direct messaging
+- `/profile` — Profile & settings
+- `/admin` — Admin dashboard
 
 ## Mobile App Screens
-- `(tabs)/index` — Browse available loads
+- `(tabs)/index` — Browse loads + Backhaul Finder toggle (new)
 - `(tabs)/my-loads` — Shipper's posted shipments
 - `(tabs)/my-jobs` — Driver's bookings and bids
 - `(tabs)/messages-tab` — Conversations list
-- `(tabs)/account` — Profile and settings
+- `(tabs)/account` — Profile, settings, role-specific features (saved drivers / post route)
 - `auth` — Sign in screen
 - `shipment/[id]` — Load detail + bid placement
 - `messages/[conversationId]` — Chat thread
