@@ -175,7 +175,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative w-full py-20 md:py-28 overflow-hidden bg-slate-900">
         <div className="absolute inset-0 z-0">
-          <img src={`${import.meta.env.BASE_URL}images/hero-truck.png`} alt="Auto transport semi truck" className="w-full h-full object-cover opacity-40 mix-blend-overlay" />
+          <img src={`${import.meta.env.BASE_URL}images/hero-truck.png`} alt="Auto transport semi truck" className="w-full h-full object-cover opacity-40 mix-blend-overlay blur-sm scale-105" />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-transparent" />
         </div>
         <div className="container relative z-10 mx-auto px-4 md:px-6">
