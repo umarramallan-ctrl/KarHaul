@@ -1,0 +1,34 @@
+import { pgTable, text, integer, boolean, real, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const usersTable = pgTable("users", {
+  id: text("id").primaryKey(),
+  authId: text("auth_id").unique(),
+  email: text("email"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  phone: text("phone"),
+  role: text("role").notNull().default("shipper"),
+  profileImageUrl: text("profile_image_url"),
+  bio: text("bio"),
+  dotNumber: text("dot_number"),
+  mcNumber: text("mc_number"),
+  insuranceProvider: text("insurance_provider"),
+  insurancePolicyNumber: text("insurance_policy_number"),
+  truckType: text("truck_type"),
+  truckCapacity: real("truck_capacity"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  isSuspended: boolean("is_suspended").notNull().default(false),
+  averageRating: real("average_rating").notNull().default(0),
+  totalReviews: integer("total_reviews").notNull().default(0),
+  completedJobs: integer("completed_jobs").notNull().default(0),
+  termsAccepted: boolean("terms_accepted").notNull().default(false),
+  termsAcceptedAt: timestamp("terms_accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true, updatedAt: true });
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof usersTable.$inferSelect;

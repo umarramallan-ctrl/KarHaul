@@ -1,0 +1,172 @@
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@workspace/replit-auth-web";
+import { useGetMyProfile } from "@workspace/api-client-react";
+import { Truck, Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+
+export function Navbar() {
+  const [location] = useLocation();
+  const { isAuthenticated, login, logout, user } = useAuth();
+  const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const role = profile?.role;
+  const isVerified = profile?.isVerified;
+
+  const closeMenu = () => setMobileMenuOpen(false);
+
+  const NavLinks = () => (
+    <>
+      <Link href="/shipments" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/shipments' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
+        Browse Loads
+      </Link>
+      
+      {isAuthenticated && role === 'shipper' && (
+        <>
+          <Link href="/dashboard" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/dashboard' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
+            My Shipments
+          </Link>
+          <Button asChild variant="accent" size="sm" className="hidden md:flex ml-2">
+            <Link href="/post-load">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Post a Load
+            </Link>
+          </Button>
+        </>
+      )}
+
+      {isAuthenticated && role === 'driver' && (
+        <Link href="/dashboard" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/dashboard' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
+          My Jobs
+        </Link>
+      )}
+
+      {isAuthenticated && role === 'admin' && (
+        <Link href="/admin" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/admin' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
+          Admin Dashboard
+        </Link>
+      )}
+    </>
+  );
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md shadow-sm">
+      <div className="container mx-auto px-4 md:px-6 flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
+            <div className="bg-primary text-primary-foreground p-1.5 rounded-lg group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+              <Truck className="h-5 w-5" />
+            </div>
+            <span className="font-display font-bold text-xl tracking-tight hidden sm:inline-block">
+              AutoHaul <span className="text-primary">Connect</span>
+            </span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6 ml-6">
+            <NavLinks />
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {!isAuthenticated ? (
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" onClick={login}>Log in</Button>
+              <Button onClick={login}>Sign up</Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link href="/messages" className="text-muted-foreground hover:text-primary transition-colors relative">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+              </Link>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9 border border-border">
+                      <AvatarImage src={profile?.profileImageUrl || user?.profileImage} alt={profile?.firstName || 'User'} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {profile?.firstName?.[0] || user?.username?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none flex items-center gap-1">
+                        {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : user?.username}
+                        {isVerified && <ShieldCheck className="h-3 w-3 text-primary" />}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {profile?.email || 'Complete your profile'}
+                      </p>
+                      {role && (
+                        <Badge variant="outline" className="w-fit mt-1 uppercase text-[10px]">
+                          {role}
+                        </Badge>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer flex items-center">
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer flex items-center">
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Profile & Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t bg-background p-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
+          <NavLinks />
+          {isAuthenticated && role === 'shipper' && (
+            <Button asChild variant="accent" className="w-full justify-start mt-2">
+              <Link href="/post-load" onClick={closeMenu}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Post a Load
+              </Link>
+            </Button>
+          )}
+          {!isAuthenticated && (
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" className="w-full justify-center" onClick={login}>Log in</Button>
+              <Button className="w-full justify-center" onClick={login}>Sign up</Button>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
+  );
+}

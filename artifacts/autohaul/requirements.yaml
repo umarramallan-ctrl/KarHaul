@@ -1,0 +1,23 @@
+packages:
+  "framer-motion": "For smooth page transitions and beautiful staggered entry animations"
+  "date-fns": "For formatting pickup/delivery dates and relative times (e.g. '2 days ago')"
+  "recharts": "For the Admin Dashboard statistics and charts"
+  "react-hook-form": "For robust form state management in posting loads and profile"
+  "@hookform/resolvers": "For integrating Zod validation with react-hook-form"
+  "zod": "For schema validation on forms"
+
+images:
+  - path: "artifacts/autohaul/public/images/hero-truck.png"
+    description: "Cinematic, modern sleek auto transport semi-truck carrying cars, driving on a clean highway at dusk. High quality, photorealistic, professional logistics theme, dark blue and amber lighting. Wide format."
+    aspect_ratio: "16:9"
+  - path: "artifacts/autohaul/public/images/abstract-bg.png"
+    description: "Abstract gradient mesh background in deep navy blue, steel gray, and subtle warm amber accents. Very clean, modern tech feel, soft light leaks, premium corporate."
+    aspect_ratio: "16:9"
+  - path: "artifacts/autohaul/public/images/trust-shield.png"
+    description: "Minimalist 3D geometric trust badge or shield icon, rendered in sleek metal and glowing blue. Premium, trustworthy, high-end 3D icon style on a transparent background."
+    aspect_ratio: "1:1"
+
+notes:
+  - Using generated hooks from @workspace/api-client-react for all API interactions
+  - Using @workspace/replit-auth-web for authentication
+  - Implemented role-based routing (Shipper vs Driver vs Admin)

@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/mobile/"
+title = "AutoHaul Connect Mobile"
+version = "1.0.0"
+id = "artifacts/autohaul-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/mobile/" ]
+localPort = 22727
+
+[services.development]
+run = "pnpm --filter @workspace/autohaul-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/autohaul-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/autohaul-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "22727"
+BASE_PATH = "/mobile/"

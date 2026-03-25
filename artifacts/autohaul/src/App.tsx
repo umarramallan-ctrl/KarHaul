@@ -1,0 +1,59 @@
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+
+// Page Imports
+import Home from "./pages/Home";
+import Shipments from "./pages/Shipments";
+import ShipmentDetail from "./pages/ShipmentDetail";
+import CreateShipment from "./pages/CreateShipment";
+import DashboardRouter from "./pages/dashboard/DashboardRouter";
+import BookingDetail from "./pages/BookingDetail";
+import Messages from "./pages/Messages";
+import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
+import Terms from "./pages/Terms";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/shipments" component={Shipments} />
+      <Route path="/shipments/:id" component={ShipmentDetail} />
+      <Route path="/post-load" component={CreateShipment} />
+      <Route path="/dashboard" component={DashboardRouter} />
+      <Route path="/bookings/:id" component={BookingDetail} />
+      <Route path="/messages" component={Messages} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/terms" component={Terms} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;

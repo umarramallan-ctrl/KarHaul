@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: AutoHaul Connect API - direct car transport marketplace
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: shipments
+    description: Shipment listings
+  - name: bids
+    description: Bid management
+  - name: bookings
+    description: Booking management
+  - name: messages
+    description: In-app messaging
+  - name: reviews
+    description: Ratings and reviews
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,519 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurrentAuthUserResponse"
+
+  /users/profile:
+    get:
+      operationId: getMyProfile
+      tags: [users]
+      summary: Get current user's profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+    put:
+      operationId: updateMyProfile
+      tags: [users]
+      summary: Update current user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      tags: [users]
+      summary: Get user profile by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+
+  /shipments:
+    get:
+      operationId: listShipments
+      tags: [shipments]
+      summary: List all open shipment listings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, assigned, in_transit, delivered, cancelled]
+        - name: originState
+          in: query
+          schema:
+            type: string
+        - name: destinationState
+          in: query
+          schema:
+            type: string
+        - name: vehicleType
+          in: query
+          schema:
+            type: string
+        - name: transportType
+          in: query
+          schema:
+            type: string
+            enum: [open, enclosed]
+        - name: page
+          in: query
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of shipments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentListResponse"
+    post:
+      operationId: createShipment
+      tags: [shipments]
+      summary: Create a new shipment listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShipmentBody"
+      responses:
+        "201":
+          description: Created shipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+        "401":
+          description: Unauthorized
+
+  /shipments/{shipmentId}:
+    get:
+      operationId: getShipment
+      tags: [shipments]
+      summary: Get shipment by ID
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shipment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+        "404":
+          description: Not found
+    put:
+      operationId: updateShipment
+      tags: [shipments]
+      summary: Update a shipment listing
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateShipmentBody"
+      responses:
+        "200":
+          description: Updated shipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+    delete:
+      operationId: deleteShipment
+      tags: [shipments]
+      summary: Cancel/delete a shipment
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /shipments/my:
+    get:
+      operationId: getMyShipments
+      tags: [shipments]
+      summary: Get current user's shipments (as shipper)
+      responses:
+        "200":
+          description: My shipments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentListResponse"
+
+  /shipments/{shipmentId}/bids:
+    get:
+      operationId: getShipmentBids
+      tags: [bids]
+      summary: Get all bids for a shipment
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bids
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidListResponse"
+    post:
+      operationId: placeBid
+      tags: [bids]
+      summary: Place a bid on a shipment
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaceBidBody"
+      responses:
+        "201":
+          description: Bid placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "401":
+          description: Unauthorized
+
+  /bids/{bidId}/accept:
+    post:
+      operationId: acceptBid
+      tags: [bids]
+      summary: Accept a bid and create a booking
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "401":
+          description: Unauthorized
+
+  /bids/my:
+    get:
+      operationId: getMyBids
+      tags: [bids]
+      summary: Get current driver's bids
+      responses:
+        "200":
+          description: My bids
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidListResponse"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings for current user
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+
+  /bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}/status:
+    put:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status (driver updates pickup/delivery)
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingStatusBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /messages/{conversationId}:
+    get:
+      operationId: getMessages
+      tags: [messages]
+      summary: Get messages in a conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageListResponse"
+
+  /messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [messages]
+      summary: List conversations for current user
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationListResponse"
+
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review for a completed booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewBody"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/user/{userId}:
+    get:
+      operationId: getUserReviews
+      tags: [reviews]
+      summary: Get reviews for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewListResponse"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Admin - list all users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListResponse"
+
+  /admin/shipments:
+    get:
+      operationId: adminListShipments
+      tags: [admin]
+      summary: Admin - list all shipments
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: All shipments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShipmentListResponse"
+
+  /admin/users/{userId}/suspend:
+    post:
+      operationId: adminSuspendUser
+      tags: [admin]
+      summary: Admin - suspend a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User suspended
+
+  /admin/users/{userId}/verify:
+    post:
+      operationId: adminVerifyDriver
+      tags: [admin]
+      summary: Admin - verify a driver
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Driver verified
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - platform statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +562,583 @@ components:
       required:
         - status
 
+    GetCurrentAuthUserResponse:
+      type: object
+      properties:
+        isAuthenticated:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/AuthUser"
+      required:
+        - isAuthenticated
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        profileImage:
+          type: string
+      required:
+        - id
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        authId:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [shipper, driver, both, admin]
+        profileImageUrl:
+          type: string
+        bio:
+          type: string
+        dotNumber:
+          type: string
+        mcNumber:
+          type: string
+        insuranceProvider:
+          type: string
+        insurancePolicyNumber:
+          type: string
+        truckType:
+          type: string
+        truckCapacity:
+          type: number
+        isVerified:
+          type: boolean
+        isSuspended:
+          type: boolean
+        averageRating:
+          type: number
+        totalReviews:
+          type: number
+        completedJobs:
+          type: number
+        termsAccepted:
+          type: boolean
+        termsAcceptedAt:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - role
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [shipper, driver, both]
+        bio:
+          type: string
+        dotNumber:
+          type: string
+        mcNumber:
+          type: string
+        insuranceProvider:
+          type: string
+        insurancePolicyNumber:
+          type: string
+        truckType:
+          type: string
+        truckCapacity:
+          type: number
+        termsAccepted:
+          type: boolean
+
+    Shipment:
+      type: object
+      properties:
+        id:
+          type: string
+        shipperId:
+          type: string
+        shipper:
+          $ref: "#/components/schemas/UserProfile"
+        title:
+          type: string
+        vehicleYear:
+          type: number
+        vehicleMake:
+          type: string
+        vehicleModel:
+          type: string
+        vehicleType:
+          type: string
+          enum: [sedan, suv, truck, van, motorcycle, rv, exotic, other]
+        vehicleCondition:
+          type: string
+          enum: [running, non_running]
+        vin:
+          type: string
+        transportType:
+          type: string
+          enum: [open, enclosed]
+        originAddress:
+          type: string
+        originCity:
+          type: string
+        originState:
+          type: string
+        originZip:
+          type: string
+        destinationAddress:
+          type: string
+        destinationCity:
+          type: string
+        destinationState:
+          type: string
+        destinationZip:
+          type: string
+        pickupDateFrom:
+          type: string
+        pickupDateTo:
+          type: string
+        budgetMin:
+          type: number
+        budgetMax:
+          type: number
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [open, assigned, in_transit, delivered, cancelled]
+        bidCount:
+          type: number
+        assignedDriverId:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - shipperId
+        - vehicleYear
+        - vehicleMake
+        - vehicleModel
+        - vehicleType
+        - vehicleCondition
+        - transportType
+        - originCity
+        - originState
+        - destinationCity
+        - destinationState
+        - status
+
+    CreateShipmentBody:
+      type: object
+      properties:
+        vehicleYear:
+          type: number
+        vehicleMake:
+          type: string
+        vehicleModel:
+          type: string
+        vehicleType:
+          type: string
+          enum: [sedan, suv, truck, van, motorcycle, rv, exotic, other]
+        vehicleCondition:
+          type: string
+          enum: [running, non_running]
+        vin:
+          type: string
+        transportType:
+          type: string
+          enum: [open, enclosed]
+        originAddress:
+          type: string
+        originCity:
+          type: string
+        originState:
+          type: string
+        originZip:
+          type: string
+        destinationAddress:
+          type: string
+        destinationCity:
+          type: string
+        destinationState:
+          type: string
+        destinationZip:
+          type: string
+        pickupDateFrom:
+          type: string
+        pickupDateTo:
+          type: string
+        budgetMin:
+          type: number
+        budgetMax:
+          type: number
+        notes:
+          type: string
+      required:
+        - vehicleYear
+        - vehicleMake
+        - vehicleModel
+        - vehicleType
+        - vehicleCondition
+        - transportType
+        - originCity
+        - originState
+        - originZip
+        - destinationCity
+        - destinationState
+        - destinationZip
+
+    UpdateShipmentBody:
+      type: object
+      properties:
+        notes:
+          type: string
+        budgetMin:
+          type: number
+        budgetMax:
+          type: number
+        pickupDateFrom:
+          type: string
+        pickupDateTo:
+          type: string
+        status:
+          type: string
+          enum: [open, cancelled]
+
+    ShipmentListResponse:
+      type: object
+      properties:
+        shipments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Shipment"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+      required:
+        - shipments
+        - total
+
+    Bid:
+      type: object
+      properties:
+        id:
+          type: string
+        shipmentId:
+          type: string
+        driverId:
+          type: string
+        driver:
+          $ref: "#/components/schemas/UserProfile"
+        amount:
+          type: number
+        note:
+          type: string
+        estimatedPickupDate:
+          type: string
+        estimatedDeliveryDate:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, rejected, withdrawn]
+        createdAt:
+          type: string
+      required:
+        - id
+        - shipmentId
+        - driverId
+        - amount
+        - status
+
+    PlaceBidBody:
+      type: object
+      properties:
+        amount:
+          type: number
+        note:
+          type: string
+        estimatedPickupDate:
+          type: string
+        estimatedDeliveryDate:
+          type: string
+      required:
+        - amount
+
+    BidListResponse:
+      type: object
+      properties:
+        bids:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bid"
+        total:
+          type: number
+      required:
+        - bids
+        - total
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+        shipmentId:
+          type: string
+        shipment:
+          $ref: "#/components/schemas/Shipment"
+        driverId:
+          type: string
+        driver:
+          $ref: "#/components/schemas/UserProfile"
+        shipperId:
+          type: string
+        shipper:
+          $ref: "#/components/schemas/UserProfile"
+        agreedPrice:
+          type: number
+        status:
+          type: string
+          enum: [confirmed, picked_up, in_transit, delivered, disputed, cancelled]
+        pickupConfirmedAt:
+          type: string
+        deliveryConfirmedAt:
+          type: string
+        trackingNotes:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - shipmentId
+        - driverId
+        - shipperId
+        - agreedPrice
+        - status
+
+    UpdateBookingStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [picked_up, in_transit, delivered]
+        trackingNotes:
+          type: string
+      required:
+        - status
+
+    BookingListResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: number
+      required:
+        - bookings
+        - total
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        senderId:
+          type: string
+        senderName:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - conversationId
+        - senderId
+        - content
+
+    SendMessageBody:
+      type: object
+      properties:
+        recipientId:
+          type: string
+        shipmentId:
+          type: string
+        content:
+          type: string
+      required:
+        - recipientId
+        - content
+
+    MessageListResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+        conversationId:
+          type: string
+      required:
+        - messages
+        - conversationId
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        otherUserId:
+          type: string
+        otherUserName:
+          type: string
+        otherUserAvatar:
+          type: string
+        shipmentId:
+          type: string
+        shipmentTitle:
+          type: string
+        lastMessage:
+          type: string
+        lastMessageAt:
+          type: string
+        unreadCount:
+          type: number
+      required:
+        - id
+        - otherUserId
+
+    ConversationListResponse:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Conversation"
+      required:
+        - conversations
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        bookingId:
+          type: string
+        reviewerId:
+          type: string
+        reviewerName:
+          type: string
+        revieweeId:
+          type: string
+        rating:
+          type: number
+        comment:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - bookingId
+        - reviewerId
+        - revieweeId
+        - rating
+
+    CreateReviewBody:
+      type: object
+      properties:
+        bookingId:
+          type: string
+        revieweeId:
+          type: string
+        rating:
+          type: number
+        comment:
+          type: string
+      required:
+        - bookingId
+        - revieweeId
+        - rating
+
+    ReviewListResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        averageRating:
+          type: number
+        total:
+          type: number
+      required:
+        - reviews
+        - total
+
+    AdminUserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserProfile"
+        total:
+          type: number
+      required:
+        - users
+        - total
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: number
+        totalShippers:
+          type: number
+        totalDrivers:
+          type: number
+        totalShipments:
+          type: number
+        openShipments:
+          type: number
+        completedShipments:
+          type: number
+        totalBookings:
+          type: number
+        totalRevenue:
+          type: number
+      required:
+        - totalUsers
+        - totalShipments
+        - totalBookings
