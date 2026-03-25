@@ -1,31 +1,32 @@
 kind = "web"
-previewPath = "/"
-title = "AutoHaul Connect"
-version = "1.0.0"
-id = "artifacts/autohaul"
-router = "path"
+  previewPath = "/"
+  title = "Traxion"
+  version = "1.0.0"
+  id = "artifacts/autohaul"
+  router = "path"
 
-[[integratedSkills]]
-name = "react-vite"
-version = "1.0.0"
+  [[integratedSkills]]
+  name = "react-vite"
+  version = "1.0.0"
 
-[[services]]
-name = "web"
-paths = [ "/" ]
-localPort = 24909
+  [[services]]
+  name = "web"
+  paths = [ "/" ]
+  localPort = 24909
 
-[services.development]
-run = "pnpm --filter @workspace/autohaul run dev"
+  [services.development]
+  run = "pnpm --filter @workspace/autohaul run dev"
 
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/autohaul", "run", "build" ]
-publicDir = "artifacts/autohaul/dist/public"
-serve = "static"
+  [services.production]
+  build = [ "pnpm", "--filter", "@workspace/autohaul", "run", "build" ]
+  publicDir = "artifacts/autohaul/dist/public"
+  serve = "static"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+  [[services.production.rewrites]]
+  from = "/*"
+  to = "/index.html"
 
-[services.env]
-PORT = "24909"
-BASE_PATH = "/"
+  [services.env]
+  PORT = "24909"
+  BASE_PATH = "/"
+  

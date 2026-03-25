@@ -54,26 +54,26 @@ export default function Terms() {
               <div className="not-prose bg-red-50 dark:bg-red-950/30 p-5 rounded-lg border border-red-200 dark:border-red-900 mb-6">
                 <h3 className="text-base font-bold text-red-900 dark:text-red-400 mb-2">IMPORTANT — READ BEFORE USING</h3>
                 <p className="text-sm text-red-800 dark:text-red-300">
-                  These Terms of Service constitute a legally binding agreement between you and AutoHaul Connect. By creating an account or using the Platform, you agree to these Terms in their entirety. If you do not agree, you must not use the Platform.
+                  These Terms of Service constitute a legally binding agreement between you and Traxion. By creating an account or using the Platform, you agree to these Terms in their entirety. If you do not agree, you must not use the Platform.
                 </p>
               </div>
 
-              <h3>1. About AutoHaul Connect</h3>
+              <h3>1. About Traxion</h3>
               <p>
-                AutoHaul Connect ("Platform," "we," "our," "us") is a technology marketplace operated at autohaulconnect.com that allows individuals and businesses ("Shippers") to post vehicle transport requests and independent licensed motor carriers ("Carriers" or "Drivers") to submit bids on those requests. <strong>AutoHaul Connect is not a motor carrier, freight broker, freight forwarder, or transportation provider of any kind.</strong> We do not employ drivers, own vehicles, dispatch transport, or handle freight.
+                Traxion ("Platform," "we," "our," "us") is a technology marketplace operated at traxion.com that allows individuals and businesses ("Shippers") to post vehicle transport requests and independent licensed motor carriers ("Carriers" or "Drivers") to submit bids on those requests. <strong>Traxion is not a motor carrier, freight broker, freight forwarder, or transportation provider of any kind.</strong> We do not employ drivers, own vehicles, dispatch transport, or handle freight.
               </p>
 
               <h3>2. Eligibility</h3>
               <p>You must be at least 18 years of age to use the Platform. By using the Platform, you represent and warrant that you are 18 or older and have the legal capacity to enter binding contracts. If you are using the Platform on behalf of a business entity, you represent that you are authorized to bind that entity to these Terms.</p>
 
               <h3>3. Account Registration and Security</h3>
-              <p>You agree to provide accurate, current, and complete information during registration and to keep your account information updated. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at support@autohaulconnect.com if you suspect unauthorized access. We offer two-factor authentication (TOTP and SMS) and passkey authentication — we strongly recommend enabling these for your security.</p>
+              <p>You agree to provide accurate, current, and complete information during registration and to keep your account information updated. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at support@traxion.com if you suspect unauthorized access. We offer two-factor authentication (TOTP and SMS) and passkey authentication — we strongly recommend enabling these for your security.</p>
 
               <h3>4. Platform Fees</h3>
-              <p>AutoHaul Connect charges a <strong>3% service fee to Shippers only</strong>, calculated on the agreed transport price at the time a bid is accepted. This fee is clearly displayed before acceptance. Carriers and Drivers pay no fees to use the Platform. The platform fee does not cover the cost of transport, insurance, fuel, or any aspect of the physical move — it covers access to the Platform's technology, matching infrastructure, messaging system, and tracking features.</p>
+              <p>Traxion charges a <strong>3% service fee to Shippers only</strong>, calculated on the agreed transport price at the time a bid is accepted. This fee is clearly displayed before acceptance. Carriers and Drivers pay no fees to use the Platform. The platform fee does not cover the cost of transport, insurance, fuel, or any aspect of the physical move — it covers access to the Platform's technology, matching infrastructure, messaging system, and tracking features.</p>
 
               <h3>5. Transport Transactions</h3>
-              <p>All transport agreements are made directly between the Shipper and the Carrier. AutoHaul Connect does not process, hold, or guarantee any payments for transport services. Payment terms, methods, and schedules must be negotiated and agreed upon by the transacting parties using the Platform's messaging system or in the Bill of Lading. AutoHaul Connect has no obligation to resolve payment disputes between users.</p>
+              <p>All transport agreements are made directly between the Shipper and the Carrier. Traxion does not process, hold, or guarantee any payments for transport services. Payment terms, methods, and schedules must be negotiated and agreed upon by the transacting parties using the Platform's messaging system or in the Bill of Lading. Traxion has no obligation to resolve payment disputes between users.</p>
 
               <h3>6. Carrier Obligations</h3>
               <p>Carriers represent and warrant at all times that they:</p>
@@ -116,7 +116,7 @@ export default function Terms() {
               </ul>
 
               <h3>11. Intellectual Property</h3>
-              <p>The AutoHaul Connect name, logo, platform design, software, and all related content are the intellectual property of AutoHaul Connect and are protected by applicable copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, or create derivative works from Platform content without express written permission.</p>
+              <p>The Traxion name, logo, platform design, software, and all related content are the intellectual property of Traxion and are protected by applicable copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, or create derivative works from Platform content without express written permission.</p>
 
               <h3>12. Disclaimers</h3>
               <p>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES. WE DO NOT WARRANT THE ACCURACY, COMPLETENESS, OR RELIABILITY OF ANY CARRIER CREDENTIALS, REVIEWS, OR USER-SUBMITTED INFORMATION.</p>
@@ -125,7 +125,7 @@ export default function Terms() {
               <p>TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, AUTOHAUL CONNECT AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AFFILIATES, AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, LOSS OF DATA, VEHICLE DAMAGE, PERSONAL INJURY, PROPERTY DAMAGE, OR BUSINESS INTERRUPTION, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE PLATFORM OR ANY TRANSPORT ARRANGED THROUGH IT, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THESE TERMS OR YOUR USE OF THE PLATFORM SHALL NOT EXCEED THE PLATFORM FEES PAID BY YOU IN THE SIX (6) MONTHS PRECEDING THE CLAIM.</p>
 
               <h3>14. Indemnification</h3>
-              <p>You agree to indemnify, defend, and hold harmless AutoHaul Connect and its officers, directors, employees, and affiliates from and against any claims, liabilities, damages, losses, and expenses (including reasonable attorney's fees) arising out of or in any way connected with: (a) your use of the Platform; (b) your violation of these Terms; (c) your violation of any third-party rights, including any carrier or shipper; or (d) any transport arranged through the Platform.</p>
+              <p>You agree to indemnify, defend, and hold harmless Traxion and its officers, directors, employees, and affiliates from and against any claims, liabilities, damages, losses, and expenses (including reasonable attorney's fees) arising out of or in any way connected with: (a) your use of the Platform; (b) your violation of these Terms; (c) your violation of any third-party rights, including any carrier or shipper; or (d) any transport arranged through the Platform.</p>
 
               <h3>15. Dispute Resolution and Governing Law</h3>
               <p>These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of law provisions. Any dispute arising from these Terms or your use of the Platform shall first be subject to good-faith informal resolution. If not resolved within 30 days, disputes shall be resolved by binding arbitration under the rules of the American Arbitration Association (AAA), conducted in English, with proceedings held in New Castle County, Delaware. Class action arbitrations are expressly waived — each party must bring claims in their individual capacity only.</p>
@@ -134,10 +134,10 @@ export default function Terms() {
               <p>We reserve the right to modify these Terms at any time. When we make material changes, we will notify registered users by email and/or prominent Platform notice at least 14 days before the changes take effect. Your continued use of the Platform after changes take effect constitutes acceptance of the revised Terms.</p>
 
               <h3>17. Termination</h3>
-              <p>We may suspend or terminate your account at any time for violation of these Terms, fraudulent activity, or conduct we deem harmful to the Platform or its users. You may close your account at any time by contacting support@autohaulconnect.com. Termination does not relieve you of any obligations incurred before the termination date.</p>
+              <p>We may suspend or terminate your account at any time for violation of these Terms, fraudulent activity, or conduct we deem harmful to the Platform or its users. You may close your account at any time by contacting support@traxion.com. Termination does not relieve you of any obligations incurred before the termination date.</p>
 
               <h3>18. Contact</h3>
-              <p>Questions about these Terms should be directed to legal@autohaulconnect.com.</p>
+              <p>Questions about these Terms should be directed to legal@traxion.com.</p>
             </>
           )}
 
@@ -155,7 +155,7 @@ export default function Terms() {
               </div>
 
               <h3>1. Nature of the Platform</h3>
-              <p>AutoHaul Connect is a neutral technology marketplace. We provide software tools to connect shippers with carriers. We are not a party to any transport transaction. We do not:</p>
+              <p>Traxion is a neutral technology marketplace. We provide software tools to connect shippers with carriers. We are not a party to any transport transaction. We do not:</p>
               <ul>
                 <li>Own, operate, lease, or control any transport vehicle</li>
                 <li>Employ or supervise any driver or carrier</li>
@@ -167,37 +167,37 @@ export default function Terms() {
 
               <h3>2. Vehicle Damage Disclaimer</h3>
               <p>
-                AutoHaul Connect expressly disclaims all liability for damage to vehicles during loading, transport, unloading, or storage. This includes but is not limited to: scratches, dents, mechanical damage, theft, total loss, weather damage, or fire. All claims for vehicle damage must be filed directly with the Carrier's cargo insurance provider. A properly executed and notated Bill of Lading is required for any valid cargo insurance claim.
+                Traxion expressly disclaims all liability for damage to vehicles during loading, transport, unloading, or storage. This includes but is not limited to: scratches, dents, mechanical damage, theft, total loss, weather damage, or fire. All claims for vehicle damage must be filed directly with the Carrier's cargo insurance provider. A properly executed and notated Bill of Lading is required for any valid cargo insurance claim.
               </p>
 
               <h3>3. Carrier Performance Disclaimer</h3>
               <p>
-                AutoHaul Connect does not guarantee that any Carrier will: perform the transport as agreed, arrive on time, maintain adequate insurance at the time of transport, or honor any verbal or written commitment. Users accept that carrier interactions carry inherent risk and that the Platform's Verified badge reflects a one-time credential check, not ongoing real-time compliance monitoring.
+                Traxion does not guarantee that any Carrier will: perform the transport as agreed, arrive on time, maintain adequate insurance at the time of transport, or honor any verbal or written commitment. Users accept that carrier interactions carry inherent risk and that the Platform's Verified badge reflects a one-time credential check, not ongoing real-time compliance monitoring.
               </p>
 
               <h3>4. Payment Dispute Disclaimer</h3>
               <p>
-                AutoHaul Connect does not hold, process, or escrow any transport payments. All payment disputes are strictly between Shippers and Carriers. AutoHaul Connect will not intervene in, mediate, or compensate for any financial dispute arising from a transport transaction.
+                Traxion does not hold, process, or escrow any transport payments. All payment disputes are strictly between Shippers and Carriers. Traxion will not intervene in, mediate, or compensate for any financial dispute arising from a transport transaction.
               </p>
 
               <h3>5. Shipper Waiver of Claims Against Platform</h3>
               <p>
-                By accepting a carrier's bid and proceeding with transport through the Platform, Shippers irrevocably waive any and all claims against AutoHaul Connect arising from: vehicle damage, late delivery, carrier failure, payment disputes, misrepresentation by carriers, or any other event related to the transport. This waiver is a condition of using the Platform.
+                By accepting a carrier's bid and proceeding with transport through the Platform, Shippers irrevocably waive any and all claims against Traxion arising from: vehicle damage, late delivery, carrier failure, payment disputes, misrepresentation by carriers, or any other event related to the transport. This waiver is a condition of using the Platform.
               </p>
 
               <h3>6. Carrier Waiver of Claims Against Platform</h3>
               <p>
-                By using the Platform to find and accept transport work, Carriers irrevocably waive any and all claims against AutoHaul Connect arising from: shipper payment disputes, shipper misrepresentation of vehicle condition, unreimbursed transport costs, or any loss incurred in the performance of transport services.
+                By using the Platform to find and accept transport work, Carriers irrevocably waive any and all claims against Traxion arising from: shipper payment disputes, shipper misrepresentation of vehicle condition, unreimbursed transport costs, or any loss incurred in the performance of transport services.
               </p>
 
               <h3>7. Force Majeure</h3>
               <p>
-                Neither AutoHaul Connect nor Carriers shall be held liable for delays or failures caused by events outside their reasonable control, including but not limited to: natural disasters, severe weather, road closures, government actions, pandemics, labor disputes, or civil unrest. Shippers acknowledge that transport timelines are estimates subject to such events.
+                Neither Traxion nor Carriers shall be held liable for delays or failures caused by events outside their reasonable control, including but not limited to: natural disasters, severe weather, road closures, government actions, pandemics, labor disputes, or civil unrest. Shippers acknowledge that transport timelines are estimates subject to such events.
               </p>
 
               <h3>8. Indemnification Obligations</h3>
               <p>
-                Both Shippers and Carriers agree to indemnify, defend, and hold AutoHaul Connect and its affiliates, officers, directors, and employees harmless from and against any claims, damages, liabilities, costs, and expenses (including attorney's fees) arising from their use of the Platform, their transport transactions, their breach of these Terms, or their violation of any applicable law or regulation.
+                Both Shippers and Carriers agree to indemnify, defend, and hold Traxion and its affiliates, officers, directors, and employees harmless from and against any claims, damages, liabilities, costs, and expenses (including attorney's fees) arising from their use of the Platform, their transport transactions, their breach of these Terms, or their violation of any applicable law or regulation.
               </p>
 
               <h3>9. Severability</h3>
@@ -231,7 +231,7 @@ export default function Terms() {
               </ul>
 
               <h3>Your Rights</h3>
-              <p>You can access, update, export, or delete your data. California residents have CCPA rights; EEA residents have GDPR rights. Contact privacy@autohaulconnect.com.</p>
+              <p>You can access, update, export, or delete your data. California residents have CCPA rights; EEA residents have GDPR rights. Contact privacy@traxion.com.</p>
 
               <p><a href="/privacy">View Full Privacy Policy →</a></p>
             </>
@@ -299,14 +299,14 @@ export default function Terms() {
               </ul>
 
               <h3>7. FMCSA Safety Ratings</h3>
-              <p>AutoHaul Connect recommends that shippers check carrier FMCSA Safety Ratings before contracting for transport. Ratings include:</p>
+              <p>Traxion recommends that shippers check carrier FMCSA Safety Ratings before contracting for transport. Ratings include:</p>
               <ul>
                 <li><strong>Satisfactory</strong> — Carrier has met federal safety standards</li>
                 <li><strong>Conditional</strong> — Carrier has identified safety deficiencies that must be corrected</li>
                 <li><strong>Unsatisfactory</strong> — Carrier has serious safety deficiencies and is prohibited from operating</li>
                 <li><strong>None/Unrated</strong> — No recent compliance review; does not indicate non-compliance</li>
               </ul>
-              <p>Carriers with Unsatisfactory safety ratings are not permitted to use the AutoHaul Connect platform.</p>
+              <p>Carriers with Unsatisfactory safety ratings are not permitted to use the Traxion platform.</p>
 
               <h3>8. Violations and Enforcement</h3>
               <p>Carriers found to be operating without valid authority, with lapsed insurance, or in violation of these requirements will have their accounts suspended pending investigation. Serious violations (fraudulent credentials, vehicle theft, FMCSA violations) will result in permanent ban and, where appropriate, referral to law enforcement and FMCSA.</p>
@@ -320,7 +320,7 @@ export default function Terms() {
               <p className="lead">Last Updated: {EFFECTIVE_DATE}</p>
 
               <p>
-                This Cookie Policy explains how AutoHaul Connect uses cookies and similar technologies when you visit autohaulconnect.com. By using the Platform, you consent to our use of cookies as described in this policy.
+                This Cookie Policy explains how Traxion uses cookies and similar technologies when you visit traxion.com. By using the Platform, you consent to our use of cookies as described in this policy.
               </p>
 
               <h3>1. What Are Cookies?</h3>
@@ -386,7 +386,7 @@ export default function Terms() {
               </div>
 
               <h3>3. Cookies We Do Not Use</h3>
-              <p>AutoHaul Connect does <strong>not</strong> use:</p>
+              <p>Traxion does <strong>not</strong> use:</p>
               <ul>
                 <li>Third-party advertising or tracking cookies</li>
                 <li>Cross-site behavioral tracking technologies</li>
@@ -418,7 +418,7 @@ export default function Terms() {
 
               <h3>7. Contact</h3>
               <p>
-                Questions about this Cookie Policy: privacy@autohaulconnect.com
+                Questions about this Cookie Policy: privacy@traxion.com
               </p>
             </>
           )}

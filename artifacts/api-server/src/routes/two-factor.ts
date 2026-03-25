@@ -29,8 +29,8 @@ router.get("/totp/setup", async (req: Request, res: Response) => {
 
     const generated = speakeasy.generateSecret({
       length: 20,
-      name: `AutoHaul Connect (${user.email ?? user.firstName ?? "user"})`,
-      issuer: "AutoHaul Connect",
+      name: `Traxion (${user.email ?? user.firstName ?? "user"})`,
+      issuer: "Traxion",
     });
     const secret = generated.base32;
     const uri = generated.otpauth_url ?? "";
@@ -102,7 +102,7 @@ async function sendSmsCode(phone: string, code: string): Promise<void> {
     const twilio = (await import("twilio")).default;
     const client = twilio(sid, token);
     await client.messages.create({
-      body: `Your AutoHaul Connect verification code is: ${code}`,
+      body: `Your Traxion verification code is: ${code}`,
       from,
       to: phone,
     });

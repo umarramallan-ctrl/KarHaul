@@ -1,8 +1,8 @@
-# AutoHaul Connect — Workspace
+# Traxion — Workspace
 
 ## Overview
 
-AutoHaul Connect is a direct auto transport marketplace that connects shippers (individuals/dealers) with drivers, eliminating middlemen/brokers. Built as a pnpm monorepo with TypeScript.
+Traxion is a direct auto transport marketplace that connects shippers (individuals/dealers) with drivers, eliminating middlemen/brokers. Built as a pnpm monorepo with TypeScript.
 
 ## Platform Architecture
 

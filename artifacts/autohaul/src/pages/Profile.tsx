@@ -102,7 +102,7 @@ export default function Profile() {
           
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold">Profile Setup</h1>
-            <p className="text-muted-foreground">Complete your account to start using AutoHaul Connect.</p>
+            <p className="text-muted-foreground">Complete your account to start using Traxion.</p>
           </div>
 
           <Card className="shadow-lg border-t-4 border-t-primary">
@@ -229,7 +229,7 @@ export default function Profile() {
                         <div className="space-y-1">
                           <FormLabel className="text-foreground font-semibold text-base cursor-pointer">I accept the Terms of Service & Liability Waiver</FormLabel>
                           <FormDescription className="text-muted-foreground text-sm">
-                            I understand that AutoHaul Connect is strictly a software platform connecting independent shippers and carriers. AutoHaul Connect is NOT a broker or motor carrier and assumes ZERO liability for vehicle damage, delays, driver actions, or payment disputes.
+                            I understand that Traxion is strictly a software platform connecting independent shippers and carriers. Traxion is NOT a broker or motor carrier and assumes ZERO liability for vehicle damage, delays, driver actions, or payment disputes.
                           </FormDescription>
                         </div>
                       </FormItem>

@@ -74,7 +74,7 @@ export function Navbar() {
               <CarCarrierIcon className="h-5 w-6" />
             </div>
             <span className="font-display font-bold text-xl tracking-tight hidden sm:inline-block">
-              AutoHaul <span className="text-primary">Connect</span>
+              Trax<span className="text-primary">ion</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 ml-6">

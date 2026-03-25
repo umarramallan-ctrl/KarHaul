@@ -349,7 +349,7 @@ export default function CreateShipment() {
                               <div className="space-y-1 leading-tight">
                                 <FormLabel className="text-red-900 dark:text-red-300 font-semibold text-sm">Legal Disclaimer & Liability Waiver</FormLabel>
                                 <FormDescription className="text-red-800/80 dark:text-red-400/80 text-xs">
-                                  I acknowledge that AutoHaul Connect is a technology platform connecting independent parties. The platform takes no fee and assumes ZERO LIABILITY for vehicle damage, delays, driver no-shows, or payment disputes. All contracts and payments are strictly between the shipper and the carrier.
+                                  I acknowledge that Traxion is a technology platform connecting independent parties. The platform takes no fee and assumes ZERO LIABILITY for vehicle damage, delays, driver no-shows, or payment disputes. All contracts and payments are strictly between the shipper and the carrier.
                                 </FormDescription>
                               </div>
                             </FormItem>

@@ -270,7 +270,7 @@ export default function Home() {
       <section className="py-20 bg-slate-50 dark:bg-slate-900/40">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">AutoHaul vs. Traditional Brokers</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Traxion vs. Traditional Brokers</h2>
             <p className="text-muted-foreground text-lg">The same drivers. Without the middleman tax.</p>
           </div>
           <div className="max-w-3xl mx-auto">
@@ -278,7 +278,7 @@ export default function Home() {
               <div className="grid grid-cols-3 bg-slate-800 dark:bg-slate-900 text-white text-sm font-semibold">
                 <div className="p-4">Feature</div>
                 <div className="p-4 text-center border-l border-slate-700 text-slate-400">Traditional Brokers</div>
-                <div className="p-4 text-center border-l border-slate-700 text-primary">AutoHaul Connect</div>
+                <div className="p-4 text-center border-l border-slate-700 text-primary">Traxion</div>
               </div>
               {COMPARISON.map((row, i) => (
                 <div key={i} className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? "bg-white dark:bg-slate-800/60" : "bg-slate-50/80 dark:bg-slate-800/30"}`}>
