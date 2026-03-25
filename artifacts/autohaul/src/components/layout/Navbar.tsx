@@ -2,7 +2,8 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { Truck, Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart } from "lucide-react";
+import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart } from "lucide-react";
+import { CarCarrierIcon } from "@/components/icons/CarCarrierIcon";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -69,7 +70,7 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
             <div className="bg-primary text-primary-foreground p-1.5 rounded-lg group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-              <Truck className="h-5 w-5" />
+              <CarCarrierIcon className="h-5 w-6" />
             </div>
             <span className="font-display font-bold text-xl tracking-tight hidden sm:inline-block">
               AutoHaul <span className="text-primary">Connect</span>

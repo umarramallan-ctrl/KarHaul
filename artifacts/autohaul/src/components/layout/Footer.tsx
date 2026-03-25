@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Truck } from "lucide-react";
+import { CarCarrierIcon } from "@/components/icons/CarCarrierIcon";
 
 export function Footer() {
   return (
@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4 text-white hover:text-primary transition-colors">
-              <Truck className="h-6 w-6" />
+              <CarCarrierIcon className="h-6 w-7" />
               <span className="font-display font-bold text-xl tracking-tight">
                 AutoHaul
               </span>
