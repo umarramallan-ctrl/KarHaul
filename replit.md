@@ -106,3 +106,38 @@ Every package extends `tsconfig.base.json` with `composite: true`. Always typech
 - Mobile: `pnpm --filter @workspace/autohaul-mobile run dev`
 - DB push: `pnpm --filter @workspace/db run push`
 - API codegen: `pnpm --filter @workspace/api-spec run codegen`
+
+---
+
+## Change Log
+
+### Branding — Full rebrand to EVAUL
+- Platform renamed from "Traxion" to **EVAUL** (parent company: The EvoPoint LLC) across all user-facing surfaces: web navbar, page titles, meta tags, Privacy/Terms/Support pages, mobile app header, and app.json.
+- Navbar logo split: `EV` white + `AUL` blue (primary color `#1A56DB`).
+- New favicon: blue square with bold white "E" lettermark (`/public/favicon.svg`).
+- New OG/share image: dark navy card with EVAUL wordmark, auto transport truck, and tagline "Auto transport without the middleman" (`/public/og-image.png`, 1200×630).
+- Full Open Graph + Twitter Card meta suite added to `index.html`. **After deploying, replace the two `YOUR_DOMAIN` placeholders in `index.html` with the real domain (e.g. `evaul.replit.app`).**
+- Internal directory/package names (`autohaul`, `autohaul-mobile`) intentionally left unchanged — they are invisible to users and renaming them would break auth URI schemes and storage keys.
+
+### Messaging — Quick Reply Templates
+- **File**: `artifacts/autohaul/src/pages/Messages.tsx`
+- Added a ⚡ button to the message composer that opens a scrollable chip tray of pre-written templates.
+- 8 driver templates and 8 shipper templates, shown based on the logged-in user's role.
+- Tapping a chip fills the compose box (does not auto-send); user can edit before sending.
+
+### Weather Alerts on Shipment Detail
+- **Files**: `artifacts/autohaul/src/lib/weather.ts`, `artifacts/autohaul/src/pages/ShipmentDetail.tsx`
+- `useWeatherAlert(city, state)` hook fetches Open-Meteo geocoding + forecast (free, no API key required). 15-minute stale time.
+- Color-coded alert banners (advisory / warning / watch) appear on the ShipmentDetail page for both pickup and delivery locations when adverse weather is detected.
+
+### Mobile App Visual Overhaul
+- **Files**: `artifacts/autohaul-mobile/app/(tabs)/index.tsx`, `account.tsx`, `components/ShipmentCard.tsx`
+- Browse screen: gradient blue header with EVAUL wordmark.
+- ShipmentCard: colored left-border accent keyed to shipment status.
+- Account screen: gradient profile card with white text; colored stat cards for bids/bookings/earnings.
+
+### Notes & Gotchas
+- **DB schema export rule**: `lib/db/src/schema/index.ts` exports `sessionsTable` from `auth.ts` and everything else from individual files. `usersTable` lives in `users.ts` — never re-export it from `auth.ts` or there will be a duplicate export conflict.
+- **Mobile auth Zod types**: manually added to `lib/api-zod/src/generated/api.ts` — running codegen (`orval`) will overwrite them. Re-add after any codegen run.
+- **SMS**: Twilio is used if `TWILIO_*` env vars are set; otherwise 2FA codes are printed to the server console (safe for development).
+- **Hosting recommendation**: Cloudflare Registrar for domain (~$10/yr), Replit for launch, Railway for scaling.
