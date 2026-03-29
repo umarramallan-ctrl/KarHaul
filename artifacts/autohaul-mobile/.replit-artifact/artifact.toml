@@ -1,6 +1,6 @@
 kind = "mobile"
   previewPath = "/mobile/"
-title = "EVAUL Mobile"
+title = "EvoHaul Mobile"
   version = "1.0.0"
   id = "artifacts/autohaul-mobile"
   router = "expo-domain"
@@ -25,4 +25,3 @@ title = "EVAUL Mobile"
   [services.env]
   PORT = "22727"
   BASE_PATH = "/mobile/"
-  

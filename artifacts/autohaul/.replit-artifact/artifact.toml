@@ -1,6 +1,6 @@
 kind = "web"
   previewPath = "/"
-title = "EVAUL"
+title = "EvoHaul"
   version = "1.0.0"
   id = "artifacts/autohaul"
   router = "path"
@@ -29,4 +29,3 @@ title = "EVAUL"
   [services.env]
   PORT = "24909"
   BASE_PATH = "/"
-  
