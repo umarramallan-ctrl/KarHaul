@@ -340,7 +340,7 @@ export default function BookingDetail() {
                         <DollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div>
                           <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee Breakdown</p>
-                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">A 3% platform maintenance fee ({formatCurrency(platformFee)}) is charged to the shipper on top of the agreed transport price. This keeps EVAUL free for drivers and funds platform safety, insurance verification, and support. You still save significantly versus broker-arranged transport.</p>
+                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">A 3% platform maintenance fee ({formatCurrency(platformFee)}) is charged to the shipper on top of the agreed transport price. This keeps EvoHaul free for drivers and funds platform safety, insurance verification, and support. You still save significantly versus broker-arranged transport.</p>
                         </div>
                       </div>
                     </CardContent>
@@ -408,7 +408,7 @@ export default function BookingDetail() {
                 <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 text-sm">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                    <p className="text-amber-800 dark:text-amber-400"><strong>Payment Reminder:</strong> EVAUL does not process payments. Payment terms are arranged directly between shipper and carrier.</p>
+                    <p className="text-amber-800 dark:text-amber-400"><strong>Payment Reminder:</strong> EvoHaul does not process payments. Payment terms are arranged directly between shipper and carrier.</p>
                   </div>
                 </div>
               </div>

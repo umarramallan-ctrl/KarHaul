@@ -1,7 +1,8 @@
 import { pgTable, text, real, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const driverRoutesTable = pgTable("driver_routes", {
-  id: text("id").primaryKey().default("gen_random_uuid()"),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   driverId: text("driver_id").notNull(),
   originCity: text("origin_city").notNull(),
   originState: text("origin_state").notNull(),

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter @workspace/api-server run typecheck)",
+      "Bash(pnpm --filter @workspace/autohaul run typecheck)",
+      "Bash(pnpm --filter @workspace/api-server add express-rate-limit)",
+      "Bash(pnpm --filter @workspace/autohaul-mobile run typecheck)",
+      "Bash(pnpm --filter @workspace/autohaul-mobile exec tsc -p tsconfig.json --noEmit)",
+      "Bash(xargs ls:*)",
+      "Bash(pnpm:*)",
+      "Bash(grep -r \"EVAUL\\\\|Evaul\\\\|evaul\\\\|Autohaul\\\\|autohaul\\\\|AutoHaul\" /home/runner/workspace --include=*.json --include=*.yaml --include=*.md --max-depth=2 -l)",
+      "Bash(grep -r \"EVAUL\\\\|Evaul\\\\|evaul\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html --include=*.json -n)",
+      "Bash(grep -r \"Autohaul\\\\|autohaul\\\\|AutoHaul\\\\|AUTOHAUL\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html --include=*.json -n)",
+      "Bash(grep -rn \"EVAUL\\\\|Evaul\\\\|evaul\\\\|Autohaul\\\\|autohaul\" /home/runner/workspace/artifacts/autohaul-mobile --include=*.ts --include=*.tsx --include=*.json)",
+      "Bash(grep -rn \"EVAUL\\\\|evaul\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html)"
+    ]
+  }
+}

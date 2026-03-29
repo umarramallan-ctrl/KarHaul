@@ -4,6 +4,8 @@ import { messagesTable, conversationsTable, usersTable } from "@workspace/db";
 import { eq, or, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { checkMessageContent } from "../lib/message-filter";
+import { createNotification } from "../lib/notify";
+import { messageLimiter } from "../lib/rate-limit";
 
 const router: IRouter = Router();
 
@@ -73,7 +75,7 @@ router.get("/messages/:conversationId", async (req, res) => {
   res.json({ messages: enriched, conversationId });
 });
 
-router.post("/messages", async (req, res) => {
+router.post("/messages", messageLimiter, async (req, res) => {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -120,7 +122,19 @@ router.post("/messages", async (req, res) => {
     isRead: 0,
   });
   const [msg] = await db.select().from(messagesTable).where(eq(messagesTable.id, msgId)).limit(1);
-  res.status(201).json({ ...msg, senderName: `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "User" });
+
+  // Notify the recipient
+  const senderName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "Someone";
+  const preview = content.length > 60 ? content.slice(0, 57) + "…" : content;
+  await createNotification({
+    userId: recipientId,
+    type: "new_message",
+    title: `New message from ${senderName}`,
+    body: preview,
+    linkPath: "/messages",
+  });
+
+  res.status(201).json({ ...msg, senderName });
 });
 
 export default router;

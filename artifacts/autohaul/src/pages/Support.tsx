@@ -27,11 +27,11 @@ const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "What does the 3% platform fee cover?",
-      a: "EVAUL charges a single 3% service fee to shippers on the agreed transport price. This fee covers platform maintenance, identity verification of carriers, secure messaging, milestone tracking, and in-app communication tools. There are no hidden fees, subscriptions, or broker markups. Drivers pay nothing to use the platform.",
+      a: "EvoHaul charges a single 3% service fee to shippers on the agreed transport price. This fee covers platform maintenance, identity verification of carriers, secure messaging, milestone tracking, and in-app communication tools. There are no hidden fees, subscriptions, or broker markups. Drivers pay nothing to use the platform.",
     },
     {
       q: "How and when do I pay the carrier?",
-      a: "Payment is arranged directly between you and the carrier — EVAUL does not process or hold transport payments. Most carriers accept cash on delivery, Zelle, wire transfer, or certified check. Always agree on payment terms in writing (via in-app messages) before pickup. The 3% platform fee is noted on your booking confirmation.",
+      a: "Payment is arranged directly between you and the carrier — EvoHaul does not process or hold transport payments. Most carriers accept cash on delivery, Zelle, wire transfer, or certified check. Always agree on payment terms in writing (via in-app messages) before pickup. The 3% platform fee is noted on your booking confirmation.",
     },
     {
       q: "What is a Bill of Lading (BOL) and why do I need it?",
@@ -39,7 +39,7 @@ const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "What happens if my vehicle is damaged during transport?",
-      a: "If you notice damage at delivery, note it on the carrier's Bill of Lading BEFORE signing — do not sign a clean BOL for a damaged vehicle. Take dated photos immediately. File a claim directly with the carrier's cargo insurance provider. EVAUL is not a carrier and does not mediate or compensate for damage claims; the platform's Terms of Service contain a full liability disclaimer.",
+      a: "If you notice damage at delivery, note it on the carrier's Bill of Lading BEFORE signing — do not sign a clean BOL for a damaged vehicle. Take dated photos immediately. File a claim directly with the carrier's cargo insurance provider. EvoHaul is not a carrier and does not mediate or compensate for damage claims; the platform's Terms of Service contain a full liability disclaimer.",
     },
     {
       q: "Can I cancel after accepting a bid?",
@@ -47,13 +47,13 @@ const FAQS: Record<string, FaqItem[]> = {
     },
     {
       q: "What if the carrier doesn't show up?",
-      a: "Contact the carrier directly via the in-app call button or messaging. If you cannot reach them, you may cancel the booking and relist your shipment. EVAUL does not guarantee carrier performance — always vet carriers carefully and avoid paying any deposit before pickup without written confirmation.",
+      a: "Contact the carrier directly via the in-app call button or messaging. If you cannot reach them, you may cancel the booking and relist your shipment. EvoHaul does not guarantee carrier performance — always vet carriers carefully and avoid paying any deposit before pickup without written confirmation.",
     },
   ],
   "Carriers & Drivers": [
     {
-      q: "Is it free for drivers to use EVAUL?",
-      a: "Yes — completely free. EVAUL charges zero fees to carriers or drivers. You can browse loads, submit bids, communicate with shippers, and manage bookings at no cost. The platform's 3% fee is charged to the shipper only.",
+      q: "Is it free for drivers to use EvoHaul?",
+      a: "Yes — completely free. EvoHaul charges zero fees to carriers or drivers. You can browse loads, submit bids, communicate with shippers, and manage bookings at no cost. The platform's 3% fee is charged to the shipper only.",
     },
     {
       q: "What documents do I need to register as a carrier?",
@@ -160,7 +160,7 @@ export default function Support() {
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-3">How can we help?</h1>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Find answers, learn about safety requirements, or reach out to the EVAUL team.
+            Find answers, learn about safety requirements, or reach out to the EvoHaul team.
           </p>
         </div>
       </div>
@@ -227,7 +227,7 @@ export default function Support() {
               {[
                 { icon: DollarSign, title: "Platform Fees", desc: "3% charged to shippers only. Drivers always free.", color: "text-green-600 bg-green-50" },
                 { icon: FileText, title: "Bill of Lading", desc: "Always complete a BOL with photos at pickup and delivery.", color: "text-blue-600 bg-blue-50" },
-                { icon: AlertTriangle, title: "Damage Claims", desc: "File directly with the carrier's cargo insurance — not EVAUL.", color: "text-amber-600 bg-amber-50" },
+                { icon: AlertTriangle, title: "Damage Claims", desc: "File directly with the carrier's cargo insurance — not EvoHaul.", color: "text-amber-600 bg-amber-50" },
               ].map(({ icon: Icon, title, desc, color }) => (
                 <Card key={title} className="border-0 bg-muted/30">
                   <CardContent className="pt-5 pb-5">
@@ -346,7 +346,7 @@ export default function Support() {
                   <div className="text-sm">
                     <strong className="text-amber-800 dark:text-amber-400">Platform Liability Notice</strong>
                     <p className="text-amber-700 dark:text-amber-500 mt-1">
-                      EVAUL is a technology platform, not a motor carrier or freight broker. All transport liability exists strictly between the shipper and the contracted carrier. EVAUL does not hold, mediate, or insure any cargo. See our <a href="/terms" className="underline font-medium">Terms of Service</a> for the full liability disclaimer.
+                      EvoHaul is a technology platform, not a motor carrier or freight broker. All transport liability exists strictly between the shipper and the contracted carrier. EvoHaul does not hold, mediate, or insure any cargo. See our <a href="/terms" className="underline font-medium">Terms of Service</a> for the full liability disclaimer.
                     </p>
                   </div>
                 </div>
@@ -423,7 +423,7 @@ export default function Support() {
                       <Mail className="h-4 w-4 text-primary" />
                       <p className="font-semibold text-sm">Email Support</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">support@evaul.com</p>
+                    <p className="text-sm text-muted-foreground">support@evohaul.com</p>
                     <Badge variant="secondary" className="mt-1 text-xs">1–2 business days</Badge>
                   </div>
                   <div className="border-t pt-4">

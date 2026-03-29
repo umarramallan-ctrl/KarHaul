@@ -55,7 +55,7 @@ export default function AuthScreen() {
         <View style={[styles.logoCircle, { backgroundColor: C.primary }]}>
           <Feather name="truck" size={40} color="#fff" />
         </View>
-        <Text style={[styles.title, { color: C.text }]}>EVAUL</Text>
+        <Text style={[styles.title, { color: C.text }]}>EvoHaul</Text>
         <Text style={[styles.subtitle, { color: C.textSecondary }]}>
           The direct marketplace for auto transport — no brokers, no middlemen.
         </Text>
@@ -94,7 +94,7 @@ export default function AuthScreen() {
         <View style={[styles.disclaimer, { backgroundColor: "#F8FAFC", borderColor: C.border }]}>
           <Feather name="info" size={14} color={C.textMuted} />
           <Text style={[styles.disclaimerText, { color: C.textMuted }]}>
-            By signing in you agree to our Terms of Service. EVAUL is a marketplace only — all transport is arranged directly between shippers and drivers.
+            By signing in you agree to our Terms of Service. EvoHaul is a marketplace only — all transport is arranged directly between shippers and drivers.
           </Text>
         </View>
       </View>

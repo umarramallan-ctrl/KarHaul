@@ -1,7 +1,8 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const conditionPhotosTable = pgTable("condition_photos", {
-  id: text("id").primaryKey().default("gen_random_uuid()"),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   bookingId: text("booking_id").notNull(),
   uploadedBy: text("uploaded_by").notNull(),
   phase: text("phase").notNull(),

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { bookingsTable, shipmentsTable, usersTable } from "@workspace/db";
 import { eq, or, desc } from "drizzle-orm";
+import { createNotification } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -72,6 +73,25 @@ router.put("/bookings/:bookingId/status", async (req, res) => {
   }
   await db.update(bookingsTable).set(updateData).where(eq(bookingsTable.id, bookingId));
   const [updated] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
+
+  // Notify the shipper about status changes
+  const statusLabels: Record<string, string> = {
+    picked_up: "Vehicle picked up",
+    in_transit: "Vehicle in transit",
+    delivered: "Vehicle delivered",
+    cancelled: "Booking cancelled",
+  };
+  const label = statusLabels[status];
+  if (label) {
+    await createNotification({
+      userId: booking.shipperId,
+      type: "booking_status",
+      title: label,
+      body: `Your booking status has been updated to: ${status.replace(/_/g, " ")}.`,
+      linkPath: `/bookings/${bookingId}`,
+    });
+  }
+
   res.json(updated);
 });
 

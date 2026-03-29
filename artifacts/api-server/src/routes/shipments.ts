@@ -30,14 +30,30 @@ router.get("/shipments/my", async (req, res) => {
 });
 
 router.get("/shipments", async (req, res) => {
-  const { status, originState, destinationState, vehicleType, transportType, page, limit } = req.query;
+  const {
+    status, originState, destinationState, vehicleType, transportType,
+    vehicleCondition, search, minBudget, maxBudget,
+  } = req.query;
+
   const conditions: any[] = [];
   if (status) conditions.push(eq(shipmentsTable.status, status as string));
   if (originState) conditions.push(eq(shipmentsTable.originState, originState as string));
   if (destinationState) conditions.push(eq(shipmentsTable.destinationState, destinationState as string));
   if (vehicleType) conditions.push(eq(shipmentsTable.vehicleType, vehicleType as string));
   if (transportType) conditions.push(eq(shipmentsTable.transportType, transportType as string));
-  
+  if (vehicleCondition) conditions.push(eq(shipmentsTable.vehicleCondition, vehicleCondition as string));
+  if (minBudget) conditions.push(sql`coalesce(${shipmentsTable.budgetMax}, ${shipmentsTable.budgetMin}) >= ${Number(minBudget)}`);
+  if (maxBudget) conditions.push(sql`coalesce(${shipmentsTable.budgetMin}, ${shipmentsTable.budgetMax}) <= ${Number(maxBudget)}`);
+  if (search) {
+    const term = `%${(search as string).toLowerCase()}%`;
+    conditions.push(sql`(
+      lower(${shipmentsTable.vehicleMake}) like ${term} or
+      lower(${shipmentsTable.vehicleModel}) like ${term} or
+      lower(${shipmentsTable.originCity}) like ${term} or
+      lower(${shipmentsTable.destinationCity}) like ${term}
+    )`);
+  }
+
   const rows = conditions.length > 0
     ? await db.select().from(shipmentsTable).where(and(...conditions)).orderBy(desc(shipmentsTable.createdAt))
     : await db.select().from(shipmentsTable).orderBy(desc(shipmentsTable.createdAt));

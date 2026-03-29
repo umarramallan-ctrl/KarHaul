@@ -186,7 +186,7 @@ export default function BrowseScreen() {
       >
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerBrand}>EVAUL</Text>
+            <Text style={styles.headerBrand}>EvoHaul</Text>
             <Text style={styles.headerTitle}>Load Board</Text>
           </View>
           {activeTab === "loads" && (

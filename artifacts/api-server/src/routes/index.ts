@@ -15,6 +15,7 @@ import conditionPhotosRouter from "./condition-photos";
 import trackingRouter from "./tracking";
 import passkeyRouter from "./passkeys";
 import twoFactorRouter from "./two-factor";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(conditionPhotosRouter);
 router.use(trackingRouter);
 router.use(passkeyRouter);
 router.use("/auth/2fa", twoFactorRouter);
+router.use(notificationsRouter);
 
 export default router;

@@ -79,7 +79,7 @@ export default function VerifyTwoFactor() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
       <div className="flex items-center gap-2 mb-8">
         <CarCarrierIcon className="h-5 w-6 text-primary" />
-        <span className="text-xl font-bold text-white">EVAUL <span className="text-primary">Connect</span></span>
+        <span className="text-xl font-bold text-white">EvoHaul <span className="text-primary">Connect</span></span>
       </div>
 
       <Card className="w-full max-w-md">

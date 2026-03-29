@@ -59,7 +59,7 @@ export default function AccountScreen() {
           <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF" }]}>
             <Feather name="user" size={40} color={C.primary} />
           </View>
-          <Text style={[styles.authTitle, { color: C.text }]}>Welcome to EVAUL</Text>
+          <Text style={[styles.authTitle, { color: C.text }]}>Welcome to EvoHaul</Text>
           <Text style={[styles.authSub, { color: C.textSecondary }]}>Direct connections between shippers and drivers — no brokers, no middlemen.</Text>
           <Pressable style={[styles.signInBtn, { backgroundColor: C.primary }]} onPress={() => router.push("/auth")}>
             <Text style={styles.signInBtnText}>Get Started</Text>
@@ -137,7 +137,7 @@ export default function AccountScreen() {
           <MenuItem icon="navigation" label="Post My Route" subtitle="Let shippers find you on backhaul board" onPress={() => {}} />
         )}
         {(profile?.role === "shipper" || profile?.role === "both") && (
-          <MenuItem icon="heart" label="Saved Drivers" subtitle="Rebook trusted carriers directly" onPress={() => {}} />
+          <MenuItem icon="heart" label="Saved Drivers" subtitle="Rebook trusted carriers directly" onPress={() => router.push("/saved-drivers")} />
         )}
         <MenuItem icon="file-text" label="Terms of Service" subtitle="Platform rules and liability" onPress={() => {}} />
       </View>

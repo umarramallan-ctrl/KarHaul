@@ -209,7 +209,7 @@ export default function CreateShipmentScreen() {
             <View style={[styles.disclaimerBox, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A" }]}>
               <Feather name="info" size={14} color="#A16207" />
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#A16207", flex: 1, lineHeight: 18 }}>
-                EVAUL connects you with drivers directly. Arrange payment terms directly with your driver. The platform assumes no liability for transport.
+                EvoHaul connects you with drivers directly. Arrange payment terms directly with your driver. The platform assumes no liability for transport.
               </Text>
             </View>
           </View>

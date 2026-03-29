@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, trackingCheckpointsTable, bookingsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { createNotification } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -58,6 +59,24 @@ router.post("/bookings/:bookingId/tracking", async (req: Request, res: Response)
   }).returning();
 
   res.status(201).json(checkpoint);
+
+  // Notify the shipper about the new checkpoint
+  const milestoneLabels: Record<string, string> = {
+    departed_origin: "Driver departed origin",
+    en_route: "Driver is en route",
+    checkpoint: "New checkpoint update",
+    weather_delay: "Weather delay reported",
+    near_destination: "Driver near destination",
+    custom: "Tracking update",
+  };
+  const locationStr = city && state ? ` — ${city}, ${state}` : state ? ` — ${state}` : "";
+  await createNotification({
+    userId: booking.shipperId,
+    type: "new_checkpoint",
+    title: milestoneLabels[milestone] ?? "Tracking update",
+    body: `${milestoneLabels[milestone] ?? "Update"}${locationStr}.${notes ? " " + notes : ""}`,
+    linkPath: `/bookings/${bookingId}`,
+  });
 });
 
 router.post("/bookings/:bookingId/call-request", async (req: Request, res: Response) => {
@@ -65,8 +84,9 @@ router.post("/bookings/:bookingId/call-request", async (req: Request, res: Respo
   const dbUser = await getDbUser((req.user as any).id);
   const { bookingId } = req.params;
 
-  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingsTable.id)).limit(1);
-  const isParty = !booking || booking.driverId === dbUser?.id || booking.shipperId === dbUser?.id;
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
+  if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
+  const isParty = booking.driverId === dbUser?.id || booking.shipperId === dbUser?.id;
   if (!isParty) { res.status(403).json({ error: "Forbidden" }); return; }
 
   res.json({ success: true, message: "Call initiated. Both parties notified via the app.", sessionId: crypto.randomUUID() });

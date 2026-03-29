@@ -4,11 +4,24 @@ modules = ["nodejs-24"]
 id = "artifacts/api-server"
 
 [[artifacts]]
+id = "artifacts/autohaul"
+
+[[artifacts]]
 id = "artifacts/mockup-sandbox"
+
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
+build = ["sh", "-c", "BASE_PATH=/ pnpm run build"]
+run = ["pnpm", "--filter", "@workspace/api-server", "run", "start"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
@@ -16,6 +29,21 @@ env = { "CI" = "true" }
 
 [workflows]
 runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
+waitForPort = 8080
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/autohaul run dev"
+waitForPort = 5173
 
 [agent]
 stack = "PNPM_WORKSPACE"
