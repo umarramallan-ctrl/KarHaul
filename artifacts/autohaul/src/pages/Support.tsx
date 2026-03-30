@@ -10,8 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ChevronDown, ChevronUp, HelpCircle, ShieldCheck, Mail,
   Phone, Truck, Package, DollarSign, FileText, AlertTriangle,
-  Clock, CheckCircle2, Search,
+  Clock, CheckCircle2, Search, Star, MessageSquarePlus,
 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@workspace/replit-auth-web";
 
 interface FaqItem { q: string; a: string }
 
@@ -128,18 +130,60 @@ function FaqSection({ items }: { items: FaqItem[] }) {
   );
 }
 
+const CATEGORIES = [
+  { value: "app_experience", label: "App Experience" },
+  { value: "feature_request", label: "Feature Request" },
+  { value: "bug_report", label: "Bug Report" },
+  { value: "general", label: "General" },
+];
+
+function FeedbackStars({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map(s => (
+        <button key={s} type="button" onClick={() => onChange(s)}
+          onMouseEnter={() => setHover(s)} onMouseLeave={() => setHover(0)}>
+          <Star className={`h-7 w-7 transition-colors ${s <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+async function postFeedback(data: Record<string, any>) {
+  const res = await fetch("/api/feedback", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
+  return res.json();
+}
+
 export default function Support() {
   const initialTab = (() => {
     const p = new URLSearchParams(window.location.search).get("tab");
     if (p === "safety") return "safety";
     if (p === "contact") return "contact";
+    if (p === "feedback") return "feedback";
     return "help";
   })();
-  const [activeTab, setActiveTab] = useState<"help" | "safety" | "contact">(initialTab);
+  const [activeTab, setActiveTab] = useState<"help" | "safety" | "contact" | "feedback">(initialTab);
   const [faqCategory, setFaqCategory] = useState("Shippers");
   const [search, setSearch] = useState("");
   const [contactForm, setContactForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [feedbackForm, setFeedbackForm] = useState({ category: "app_experience", rating: 0, message: "", email: "" });
+  const [feedbackDone, setFeedbackDone] = useState(false);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+
+  const feedbackMutation = useMutation({
+    mutationFn: postFeedback,
+    onSuccess: () => setFeedbackDone(true),
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
 
   const filteredFaqs = FAQS[faqCategory].filter(
     f => !search || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase())
@@ -167,18 +211,18 @@ export default function Support() {
 
       <div className="container max-w-5xl mx-auto px-4 py-10">
         {/* Tab nav */}
-        <div className="flex gap-2 mb-8 border-b">
-          {(["help", "safety", "contact"] as const).map(tab => (
+        <div className="flex gap-2 mb-8 border-b overflow-x-auto">
+          {(["help", "safety", "contact", "feedback"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors capitalize ${
+              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab === "help" ? "Help Center" : tab === "safety" ? "Safety & Insurance" : "Contact Us"}
+              {tab === "help" ? "Help Center" : tab === "safety" ? "Safety & Insurance" : tab === "contact" ? "Contact Us" : "Share Feedback"}
             </button>
           ))}
         </div>
@@ -458,6 +502,100 @@ export default function Support() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        )}
+        {/* ── Share Feedback ── */}
+        {activeTab === "feedback" && (
+          <div className="max-w-xl mx-auto">
+            {feedbackDone ? (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Thank you!</h2>
+                <p className="text-muted-foreground mb-6">Your feedback helps us improve EvoHaul for everyone.</p>
+                <Button variant="outline" onClick={() => { setFeedbackDone(false); setFeedbackForm({ category: "app_experience", rating: 0, message: "", email: "" }); }}>
+                  Submit more feedback
+                </Button>
+              </div>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MessageSquarePlus className="h-5 w-5 text-primary" /> Share Your Experience
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">Tell us what's working, what's not, or what you'd love to see next.</p>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {/* Category */}
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CATEGORIES.map(c => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setFeedbackForm(f => ({ ...f, category: c.value }))}
+                          className={`border-2 rounded-lg px-3 py-2 text-sm font-medium text-left transition-colors ${
+                            feedbackForm.category === c.value
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="space-y-2">
+                    <Label>Overall Experience <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <FeedbackStars value={feedbackForm.rating} onChange={v => setFeedbackForm(f => ({ ...f, rating: v }))} />
+                  </div>
+
+                  {/* Message */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fb-message">Your Feedback <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="fb-message"
+                      placeholder="Describe your experience, report a bug, or suggest a feature…"
+                      rows={5}
+                      className="resize-none"
+                      value={feedbackForm.message}
+                      onChange={e => setFeedbackForm(f => ({ ...f, message: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Email — only if not logged in */}
+                  {!isAuthenticated && (
+                    <div className="space-y-2">
+                      <Label htmlFor="fb-email">Email <span className="text-muted-foreground font-normal">(optional — for follow-up)</span></Label>
+                      <Input
+                        id="fb-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={feedbackForm.email}
+                        onChange={e => setFeedbackForm(f => ({ ...f, email: e.target.value }))}
+                      />
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full"
+                    disabled={!feedbackForm.message.trim() || feedbackMutation.isPending}
+                    onClick={() => feedbackMutation.mutate({
+                      category: feedbackForm.category,
+                      rating: feedbackForm.rating || undefined,
+                      message: feedbackForm.message,
+                      email: feedbackForm.email || undefined,
+                    })}
+                  >
+                    {feedbackMutation.isPending ? "Submitting…" : "Submit Feedback"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

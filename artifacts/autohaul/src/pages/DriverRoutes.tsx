@@ -290,6 +290,9 @@ export default function DriverRoutes() {
                               <span className="text-xs text-muted-foreground">{route.driver.averageRating.toFixed(1)} ({route.driver.totalReviews})</span>
                             </div>
                           )}
+                          {(route.driver.completedJobs ?? 0) > 0 && (
+                            <span className="text-xs text-muted-foreground">{route.driver.completedJobs} hauls completed</span>
+                          )}
                         </div>
                       </div>
                       {isAuthenticated && (

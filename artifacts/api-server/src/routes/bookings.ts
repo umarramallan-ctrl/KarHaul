@@ -69,7 +69,12 @@ router.put("/bookings/:bookingId/status", async (req, res) => {
   if (status === "delivered") {
     updateData.deliveryConfirmedAt = new Date();
     await db.update(shipmentsTable).set({ status: "delivered", updatedAt: new Date() }).where(eq(shipmentsTable.id, booking.shipmentId));
+    // Increment completed count for both the driver and the shipper
     await db.update(usersTable).set({ completedJobs: (dbUser.completedJobs || 0) + 1 }).where(eq(usersTable.id, dbUser.id));
+    const [shipper] = await db.select().from(usersTable).where(eq(usersTable.id, booking.shipperId)).limit(1);
+    if (shipper) {
+      await db.update(usersTable).set({ completedJobs: (shipper.completedJobs || 0) + 1 }).where(eq(usersTable.id, booking.shipperId));
+    }
   }
   await db.update(bookingsTable).set(updateData).where(eq(bookingsTable.id, bookingId));
   const [updated] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);

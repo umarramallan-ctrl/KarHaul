@@ -16,6 +16,7 @@ import trackingRouter from "./tracking";
 import passkeyRouter from "./passkeys";
 import twoFactorRouter from "./two-factor";
 import notificationsRouter from "./notifications";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(trackingRouter);
 router.use(passkeyRouter);
 router.use("/auth/2fa", twoFactorRouter);
 router.use(notificationsRouter);
+router.use(feedbackRouter);
 
 export default router;

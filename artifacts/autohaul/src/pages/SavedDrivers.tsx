@@ -98,7 +98,7 @@ export default function SavedDrivers() {
                         {d?.completedJobs > 0 && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Truck className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{d.completedJobs}</strong> completed jobs</span>
+                            <span><strong className="text-foreground">{d.completedJobs}</strong> hauls completed</span>
                           </div>
                         )}
                         {d?.truckType && (

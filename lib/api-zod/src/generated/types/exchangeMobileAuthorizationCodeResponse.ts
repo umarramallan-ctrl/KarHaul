@@ -5,10 +5,7 @@
  * EvoHaul Connect API - direct car transport marketplace
  * OpenAPI spec version: 1.0.0
  */
-import type { Review } from "./review";
 
-export interface ReviewListResponse {
-  reviews: Review[];
-  averageRating?: number;
-  total: number;
+export interface ExchangeMobileAuthorizationCodeResponse {
+  token: string;
 }

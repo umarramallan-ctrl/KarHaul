@@ -12,6 +12,7 @@ export const shipmentsTable = pgTable("shipments", {
   vehicleCondition: text("vehicle_condition").notNull(),
   vin: text("vin"),
   transportType: text("transport_type").notNull(),
+  serviceType: text("service_type"),
   originAddress: text("origin_address"),
   originCity: text("origin_city").notNull(),
   originState: text("origin_state").notNull(),

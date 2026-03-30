@@ -261,6 +261,11 @@ export default function ShipmentDetail() {
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <Badge className={getStatusColor(shipment.status)}>{shipment.status.replace('_', ' ').toUpperCase()}</Badge>
             <Badge variant="outline" className="text-white border-white/30 capitalize bg-white/5">{shipment.transportType} Transport</Badge>
+            {(shipment as any).serviceType && (
+              <Badge variant="outline" className="text-white border-white/30 bg-white/5">
+                {(shipment as any).serviceType === 'door_to_door' ? 'Door to Door' : 'Door to Port'}
+              </Badge>
+            )}
             {shipment.vehicleCondition === 'non_running' && (
               <Badge variant="destructive">INOP / Non-Running</Badge>
             )}
@@ -522,7 +527,7 @@ export default function ShipmentDetail() {
                                   </div>
                                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                                     <span className="flex items-center"><Truck className="h-3 w-3 mr-1"/> {bid.driver?.truckType || 'Carrier'}</span>
-                                    <span>{bid.driver?.completedJobs || 0} jobs</span>
+                                    <span>{bid.driver?.completedJobs || 0} hauls completed</span>
                                     <span>★ {bid.driver?.averageRating?.toFixed(1) || 'New'}</span>
                                   </div>
                                   {bid.note && (
@@ -704,8 +709,11 @@ export default function ShipmentDetail() {
                   </div>
                   <div>
                     <div className="font-semibold">{shipment.shipper?.firstName} {shipment.shipper?.lastName}</div>
-                    <div className="text-xs text-muted-foreground flex items-center">
-                      ⭐ {shipment.shipper?.averageRating?.toFixed(1) || 'New'} ({shipment.shipper?.totalReviews || 0} reviews)
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <span>⭐ {shipment.shipper?.averageRating?.toFixed(1) || 'New'} ({shipment.shipper?.totalReviews || 0} reviews)</span>
+                      {(shipment.shipper?.completedJobs ?? 0) > 0 && (
+                        <span>· {shipment.shipper?.completedJobs} hauls completed</span>
+                      )}
                     </div>
                   </div>
                 </div>

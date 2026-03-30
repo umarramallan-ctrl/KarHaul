@@ -19,6 +19,7 @@ import { useState } from "react";
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
 type ShipmentVehicleCondition = "running" | "non_running";
 type ShipmentTransportType = "open" | "enclosed";
+type ShipmentServiceType = "door_to_door" | "door_to_port";
 
 const LOCATION_TYPES = [
   { value: "residential", label: "Residential Address", icon: Home, description: "Private home or apartment. Carriers should confirm truck access before arrival.", warning: null },
@@ -39,6 +40,7 @@ const formSchema = z.object({
   vehicleCondition: z.enum(["running", "non_running"]),
   vin: z.string().optional(),
   transportType: z.enum(["open", "enclosed"]),
+  serviceType: z.enum(["door_to_door", "door_to_port"]).optional(),
 
   originCity: z.string().min(2, "City is required"),
   originState: z.string().length(2, "Use 2-letter state code"),
@@ -360,6 +362,32 @@ export default function CreateShipment() {
                                 </div>
                               </div>
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="serviceType" render={({ field }) => (
+                          <FormItem className="space-y-3">
+                            <FormLabel>Service Type</FormLabel>
+                            <FormControl>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div
+                                  className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${field.value === 'door_to_door' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                                  onClick={() => field.onChange('door_to_door')}
+                                >
+                                  <h4 className="font-bold mb-1">Door to Door</h4>
+                                  <p className="text-xs text-muted-foreground">Pickup and delivery directly at your specified addresses.</p>
+                                </div>
+                                <div
+                                  className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${field.value === 'door_to_port' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                                  onClick={() => field.onChange('door_to_port')}
+                                >
+                                  <h4 className="font-bold mb-1">Door to Port</h4>
+                                  <p className="text-xs text-muted-foreground">Pickup at your address, delivery to a port or marine terminal.</p>
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormDescription className="text-xs">Optional — select if your shipment has specific service requirements.</FormDescription>
                             <FormMessage />
                           </FormItem>
                         )} />

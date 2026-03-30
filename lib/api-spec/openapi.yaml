@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Api
   version: 1.0.0
-  description: AutoHaul Connect API - direct car transport marketplace
+  description: EvoHaul Connect API - direct car transport marketplace
 servers:
   - url: /api
     description: Base API path
@@ -427,6 +427,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConversationListResponse"
 
+  /feedback:
+    post:
+      operationId: submitFeedback
+      tags: [feedback]
+      summary: Submit user feedback about the platform
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeedbackBody"
+      responses:
+        "201":
+          description: Feedback submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+
   /reviews:
     post:
       operationId: createReview
@@ -445,6 +464,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Review"
+
+  /mobile-auth/token-exchange:
+    post:
+      operationId: exchangeMobileAuthorizationCode
+      tags: [auth]
+      summary: Exchange authorization code for a session token (mobile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExchangeMobileAuthorizationCodeBody"
+      responses:
+        "200":
+          description: Session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExchangeMobileAuthorizationCodeResponse"
+
+  /mobile-auth/logout:
+    post:
+      operationId: logoutMobileSession
+      tags: [auth]
+      summary: Logout mobile session
+      responses:
+        "200":
+          description: Logout result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutMobileSessionResponse"
+
+  /reviews/booking/{bookingId}:
+    get:
+      operationId: getBookingReviews
+      tags: [reviews]
+      summary: Get reviews for a specific booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reviews for the booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewListResponse"
 
   /reviews/user/{userId}:
     get:
@@ -699,6 +769,9 @@ components:
         transportType:
           type: string
           enum: [open, enclosed]
+        serviceType:
+          type: string
+          enum: [door_to_door, door_to_port]
         originAddress:
           type: string
         originCity:
@@ -771,6 +844,9 @@ components:
         transportType:
           type: string
           enum: [open, enclosed]
+        serviceType:
+          type: string
+          enum: [door_to_door, door_to_port]
         originAddress:
           type: string
         originCity:
@@ -1060,9 +1136,17 @@ components:
           type: string
         reviewerName:
           type: string
+        reviewerRole:
+          type: string
         revieweeId:
           type: string
         rating:
+          type: number
+        timelyPickup:
+          type: number
+        deliveryOnTime:
+          type: number
+        timelyPayment:
           type: number
         comment:
           type: string
@@ -1083,6 +1167,12 @@ components:
         revieweeId:
           type: string
         rating:
+          type: number
+        timelyPickup:
+          type: number
+        deliveryOnTime:
+          type: number
+        timelyPayment:
           type: number
         comment:
           type: string
@@ -1142,3 +1232,64 @@ components:
         - totalUsers
         - totalShipments
         - totalBookings
+
+    ExchangeMobileAuthorizationCodeBody:
+      type: object
+      properties:
+        code:
+          type: string
+        code_verifier:
+          type: string
+        redirect_uri:
+          type: string
+        state:
+          type: string
+        nonce:
+          type: string
+      required:
+        - code
+        - code_verifier
+        - redirect_uri
+        - state
+
+    ExchangeMobileAuthorizationCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    LogoutMobileSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    CreateFeedbackBody:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [app_experience, feature_request, bug_report, general]
+        rating:
+          type: number
+        message:
+          type: string
+        email:
+          type: string
+      required:
+        - category
+        - message
+
+    FeedbackResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id

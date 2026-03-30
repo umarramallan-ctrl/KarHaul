@@ -7,7 +7,11 @@ export const reviewsTable = pgTable("reviews", {
   bookingId: text("booking_id").notNull(),
   reviewerId: text("reviewer_id").notNull(),
   revieweeId: text("reviewee_id").notNull(),
+  reviewerRole: text("reviewer_role"),
   rating: real("rating").notNull(),
+  timelyPickup: real("timely_pickup"),
+  deliveryOnTime: real("delivery_on_time"),
+  timelyPayment: real("timely_payment"),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

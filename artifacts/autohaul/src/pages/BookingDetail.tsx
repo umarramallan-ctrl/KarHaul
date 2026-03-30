@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -189,6 +189,158 @@ function InAppCallButton({ otherName }: { otherName: string }) {
   );
 }
 
+function StarRating({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            className="focus:outline-none"
+          >
+            <Star
+              className={`h-6 w-6 transition-colors ${
+                star <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function fetchBookingReviews(bookingId: string) {
+  const res = await fetch(`${BASE}/api/reviews/booking/${bookingId}`, { credentials: "include" });
+  if (!res.ok) return { reviews: [], total: 0 };
+  return res.json();
+}
+
+async function submitReview(data: Record<string, any>) {
+  const res = await fetch(`${BASE}/api/reviews`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed to submit review"); }
+  return res.json();
+}
+
+function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName }: {
+  bookingId: string;
+  isShipper: boolean;
+  isDriver: boolean;
+  revieweeId: string;
+  revieweeName: string;
+}) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [rating, setRating] = useState(0);
+  const [timelyPickup, setTimelyPickup] = useState(0);
+  const [deliveryOnTime, setDeliveryOnTime] = useState(0);
+  const [timelyPayment, setTimelyPayment] = useState(0);
+  const [comment, setComment] = useState("");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["bookingReviews", bookingId],
+    queryFn: () => fetchBookingReviews(bookingId),
+  });
+
+  const myReview = data?.reviews?.find((r: any) =>
+    (isShipper && r.reviewerRole === "shipper") ||
+    (isDriver && r.reviewerRole === "driver")
+  );
+
+  const mutation = useMutation({
+    mutationFn: submitReview,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookingReviews", bookingId] });
+      toast({ title: "Review submitted", description: "Thank you for your feedback!" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const handleSubmit = () => {
+    if (!rating) { toast({ title: "Rating required", description: "Please set an overall rating.", variant: "destructive" }); return; }
+    const payload: Record<string, any> = { bookingId, revieweeId, rating, comment: comment || undefined };
+    if (isShipper) {
+      if (timelyPickup) payload.timelyPickup = timelyPickup;
+      if (deliveryOnTime) payload.deliveryOnTime = deliveryOnTime;
+    }
+    if (isDriver && timelyPayment) payload.timelyPayment = timelyPayment;
+    mutation.mutate(payload);
+  };
+
+  if (isLoading) return null;
+
+  return (
+    <Card className="mb-6 border-primary/20">
+      <CardHeader className="pb-3 bg-primary/5 rounded-t-xl">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+          {myReview ? `Your Review of ${revieweeName}` : `Rate ${revieweeName}`}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-5">
+        {myReview ? (
+          <div className="space-y-3">
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(s => (
+                <Star key={s} className={`h-5 w-5 ${s <= myReview.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+              ))}
+              <span className="text-sm text-muted-foreground ml-1">{myReview.rating}/5 overall</span>
+            </div>
+            {myReview.timelyPickup && (
+              <p className="text-sm text-muted-foreground">Timely Pickup: {myReview.timelyPickup}/5</p>
+            )}
+            {myReview.deliveryOnTime && (
+              <p className="text-sm text-muted-foreground">Delivery on Time: {myReview.deliveryOnTime}/5</p>
+            )}
+            {myReview.timelyPayment && (
+              <p className="text-sm text-muted-foreground">Timely Payment: {myReview.timelyPayment}/5</p>
+            )}
+            {myReview.comment && (
+              <p className="text-sm italic text-muted-foreground">"{myReview.comment}"</p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <StarRating value={rating} onChange={setRating} label="Overall Rating *" />
+            {isShipper && (
+              <>
+                <StarRating value={timelyPickup} onChange={setTimelyPickup} label="Timely Pickup" />
+                <StarRating value={deliveryOnTime} onChange={setDeliveryOnTime} label="Delivery on Time" />
+              </>
+            )}
+            {isDriver && (
+              <StarRating value={timelyPayment} onChange={setTimelyPayment} label="Timely Payment" />
+            )}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Comment (optional)</label>
+              <Textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder="Share details about your experience..."
+                className="resize-none h-20"
+              />
+            </div>
+            <Button onClick={handleSubmit} disabled={mutation.isPending} className="w-full">
+              {mutation.isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</> : "Submit Review"}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BookingDetail() {
   const [, params] = useRoute("/bookings/:id");
   const bookingId = params?.id || "";
@@ -301,6 +453,17 @@ export default function BookingDetail() {
             {/* Location Tracking */}
             <TrackingPanel bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />
 
+            {/* Review Panel — shown after delivery */}
+            {b.status === "delivered" && (isShipper || isDriver) && (
+              <ReviewPanel
+                bookingId={bookingId}
+                isShipper={isShipper}
+                isDriver={isDriver}
+                revieweeId={isShipper ? b.driverId : b.shipperId}
+                revieweeName={isShipper ? `${b.driver?.firstName || "Driver"}` : `${b.shipper?.firstName || "Shipper"}`}
+              />
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <Card>
@@ -313,6 +476,11 @@ export default function BookingDetail() {
                       <div className="flex gap-2 text-sm mt-2">
                         <Badge variant="secondary">{b.shipment?.vehicleType}</Badge>
                         <Badge variant="outline">{b.shipment?.transportType} transport</Badge>
+                        {(b.shipment as any)?.serviceType && (
+                          <Badge variant="outline">
+                            {(b.shipment as any).serviceType === 'door_to_door' ? 'Door to Door' : 'Door to Port'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="relative pl-6 space-y-8 border-l-2 border-muted ml-3">
@@ -369,6 +537,10 @@ export default function BookingDetail() {
                       </div>
                       <div className="space-y-1.5 text-sm bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border">
                         <div className="flex justify-between"><span className="text-muted-foreground">Equipment:</span><span className="font-medium">{b.driver?.truckType || "Auto Carrier"}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Hauls completed:</span><span className="font-medium">{b.driver?.completedJobs ?? 0}</span></div>
+                        {(b.driver?.averageRating ?? 0) > 0 && (
+                          <div className="flex justify-between"><span className="text-muted-foreground">Rating:</span><span className="font-medium">★ {b.driver?.averageRating?.toFixed(1)} ({b.driver?.totalReviews} reviews)</span></div>
+                        )}
                       </div>
                       <Button className="w-full gap-2" asChild>
                         <Link href="/messages"><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
@@ -388,7 +560,10 @@ export default function BookingDetail() {
                         <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center">
                           <User className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <div className="font-bold text-lg">{b.shipper?.firstName} {b.shipper?.lastName}</div>
+                        <div>
+                          <div className="font-bold text-lg">{b.shipper?.firstName} {b.shipper?.lastName}</div>
+                          <div className="text-xs text-muted-foreground">{b.shipper?.completedJobs ?? 0} hauls completed</div>
+                        </div>
                       </div>
                       <Button className="w-full gap-2" variant="outline" asChild>
                         <Link href="/messages"><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
