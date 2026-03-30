@@ -1,6 +1,6 @@
 kind = "mobile"
   previewPath = "/mobile/"
-title = "EvoHaul Mobile"
+title = "KarHaul Mobile"
   version = "1.0.0"
   id = "artifacts/autohaul-mobile"
   router = "expo-domain"

@@ -236,7 +236,7 @@ export default function ShipmentDetailScreen() {
             <View style={[styles.disclaimerBox, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A" }]}>
               <Feather name="alert-circle" size={14} color="#A16207" />
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#A16207", flex: 1, lineHeight: 18 }}>
-                By bidding, you agree to transport this vehicle if accepted. Payment is arranged directly with the shipper. EvoHaul is not responsible for disputes.
+                By bidding, you agree to transport this vehicle if accepted. Payment is arranged directly with the shipper. KarHaul is not responsible for disputes.
               </Text>
             </View>
             <Pressable

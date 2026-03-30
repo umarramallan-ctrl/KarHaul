@@ -14,7 +14,7 @@ import crypto from "crypto";
 
 const router: IRouter = Router();
 
-const RP_NAME = "EvoHaul";
+const RP_NAME = "KarHaul";
 const challenges = new Map<string, { challenge: string; userId?: string; expires: number }>();
 
 function getOrigin(req: Request): string {

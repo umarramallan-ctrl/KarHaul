@@ -10,7 +10,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-4 text-white hover:text-primary transition-colors">
               <CarCarrierIcon className="h-6 w-7" />
               <span className="font-display font-bold text-xl tracking-tight">
-                EvoHaul
+                KarHaul
               </span>
             </Link>
             <p className="text-sm text-slate-400 mb-6 max-w-xs">
@@ -51,9 +51,9 @@ export function Footer() {
         </div>
 
         <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p>© {new Date().getFullYear()} EvoHaul. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} KarHaul. All rights reserved.</p>
           <p className="text-xs max-w-xl text-center md:text-right">
-            EvoHaul is a technology platform, not a motor carrier or freight broker.
+            KarHaul is a technology platform, not a motor carrier or freight broker.
             All transport liability remains strictly between the shipper and the contracted carrier.
           </p>
         </div>

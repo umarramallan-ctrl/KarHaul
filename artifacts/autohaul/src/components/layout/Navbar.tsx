@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart, Bell } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CarCarrierIcon } from "@/components/icons/CarCarrierIcon";
 import { PasskeyLoginButton } from "@/components/passkeys/PasskeyLoginButton";
 import { useState } from "react";
@@ -124,7 +125,7 @@ export function Navbar() {
               <CarCarrierIcon className="h-5 w-6" />
             </div>
             <span className="font-display font-bold text-xl tracking-tight hidden sm:inline-block">
-              Evo<span className="text-primary">Haul</span>
+              Kar<span className="text-primary">Haul</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 ml-6">
@@ -133,6 +134,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {!isAuthenticated ? (
             <div className="hidden md:flex items-center gap-3">
               <Button variant="ghost" onClick={login}>Log in</Button>

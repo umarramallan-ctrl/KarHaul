@@ -10,7 +10,7 @@ export default function Privacy() {
         <p className="lead text-muted-foreground">Effective Date: {EFFECTIVE_DATE} &nbsp;|&nbsp; Last Updated: {EFFECTIVE_DATE}</p>
 
         <p>
-          EvoHaul ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and platform services at evohaul.com (the "Platform"). Please read this policy carefully. By using the Platform, you agree to the practices described here.
+          KarHaul ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and platform services at karhaul.com (the "Platform"). Please read this policy carefully. By using the Platform, you agree to the practices described here.
         </p>
 
         <h2>1. Information We Collect</h2>
@@ -76,7 +76,7 @@ export default function Privacy() {
 
         <h3>3.3 Legal Requirements</h3>
         <p>
-          We may disclose your information if required to do so by law, regulation, or valid legal process (such as a court order or subpoena), or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of EvoHaul, our users, or the public.
+          We may disclose your information if required to do so by law, regulation, or valid legal process (such as a court order or subpoena), or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of KarHaul, our users, or the public.
         </p>
 
         <h3>3.4 Business Transfers</h3>
@@ -116,22 +116,22 @@ export default function Privacy() {
         <p>You may update your profile information at any time through your Profile & Settings page.</p>
 
         <h3>6.2 Data Access and Portability</h3>
-        <p>You may request a copy of the personal data we hold about you by contacting us at privacy@evohaul.com. We will provide the data in a commonly used, machine-readable format within 30 days.</p>
+        <p>You may request a copy of the personal data we hold about you by contacting us at privacy@karhaul.com. We will provide the data in a commonly used, machine-readable format within 30 days.</p>
 
         <h3>6.3 Deletion</h3>
-        <p>You may request deletion of your account and associated personal data by contacting support@evohaul.com. We will process your request within 30 days, subject to any legal retention obligations.</p>
+        <p>You may request deletion of your account and associated personal data by contacting support@karhaul.com. We will process your request within 30 days, subject to any legal retention obligations.</p>
 
         <h3>6.4 Opt-Out of Communications</h3>
         <p>You may opt out of non-essential email communications by using the unsubscribe link in any marketing email. You cannot opt out of transactional notifications required for platform operations (booking confirmations, bid notifications, security alerts).</p>
 
         <h3>6.5 California Residents (CCPA)</h3>
         <p>
-          California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected, the right to delete personal information, and the right to opt out of the sale of personal information (which we do not conduct). To exercise these rights, contact us at privacy@evohaul.com.
+          California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected, the right to delete personal information, and the right to opt out of the sale of personal information (which we do not conduct). To exercise these rights, contact us at privacy@karhaul.com.
         </p>
 
         <h3>6.6 European Economic Area Residents (GDPR)</h3>
         <p>
-          If you are located in the EEA, you have rights under the General Data Protection Regulation (GDPR) including the right to access, rectify, erase, restrict processing, and port your personal data, as well as the right to object to processing based on legitimate interests. Our legal basis for processing is your consent (account creation), contract performance (providing marketplace services), and legitimate interests (security, fraud prevention, platform improvement). Contact us at privacy@evohaul.com to exercise these rights.
+          If you are located in the EEA, you have rights under the General Data Protection Regulation (GDPR) including the right to access, rectify, erase, restrict processing, and port your personal data, as well as the right to object to processing based on legitimate interests. Our legal basis for processing is your consent (account creation), contract performance (providing marketplace services), and legitimate interests (security, fraud prevention, platform improvement). Contact us at privacy@karhaul.com to exercise these rights.
         </p>
 
         <h2>7. Cookies and Tracking</h2>
@@ -149,7 +149,7 @@ export default function Privacy() {
 
         <h2>8. Children's Privacy</h2>
         <p>
-          EvoHaul is not directed to individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a minor has created an account, we will terminate the account and delete the associated data promptly. If you believe a minor has submitted personal information, contact us at privacy@evohaul.com.
+          KarHaul is not directed to individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a minor has created an account, we will terminate the account and delete the associated data promptly. If you believe a minor has submitted personal information, contact us at privacy@karhaul.com.
         </p>
 
         <h2>9. Third-Party Links</h2>
@@ -167,9 +167,9 @@ export default function Privacy() {
           If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:
         </p>
         <ul>
-          <li><strong>Email:</strong> privacy@evohaul.com</li>
-          <li><strong>Support:</strong> support@evohaul.com</li>
-          <li><strong>Support Center:</strong> <a href="/support">evohaul.com/support</a></li>
+          <li><strong>Email:</strong> privacy@karhaul.com</li>
+          <li><strong>Support:</strong> support@karhaul.com</li>
+          <li><strong>Support Center:</strong> <a href="/support">karhaul.com/support</a></li>
         </ul>
         <p>
           We will respond to all privacy-related inquiries within 30 days.

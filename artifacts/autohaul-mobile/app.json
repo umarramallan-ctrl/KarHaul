@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "EVOHAUL",
-    "slug": "evohaul",
+    "slug": "karhaul",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "evohaul",
+    "scheme": "karhaul",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.evohaul.app"
+      "bundleIdentifier": "com.karhaul.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#1A56DB"
       },
-      "package": "com.evohaul.app"
+      "package": "com.karhaul.app"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
