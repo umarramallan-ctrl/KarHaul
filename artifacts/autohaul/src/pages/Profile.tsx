@@ -95,7 +95,7 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight mb-2">Profile & Settings</h1>
-                <p className="text-slate-400">Complete your account to start using EVAUL.</p>
+                <p className="text-slate-400">Complete your account to start using KarHaul.</p>
               </div>
               {profile?.isVerified && (
                 <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 px-4 py-2 rounded-xl text-sm font-bold">
@@ -218,7 +218,7 @@ export default function Profile() {
                       <div className="space-y-1">
                         <FormLabel className="text-red-300 font-bold text-sm cursor-pointer">I accept the Terms of Service & Liability Waiver</FormLabel>
                         <FormDescription className="text-red-400/60 text-xs leading-relaxed">
-                          I understand that EVAUL is strictly a software platform connecting independent shippers and carriers. EVAUL assumes ZERO liability for vehicle damage, delays, driver actions, or payment disputes.
+                          I understand that KarHaul is strictly a software platform connecting independent shippers and carriers. KarHaul assumes ZERO liability for vehicle damage, delays, driver actions, or payment disputes.
                         </FormDescription>
                       </div>
                     </FormItem>

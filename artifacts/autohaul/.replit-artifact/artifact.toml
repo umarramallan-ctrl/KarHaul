@@ -12,7 +12,7 @@ title = "KarHaul"
   [[services]]
   name = "web"
   paths = [ "/" ]
-  localPort = 24909
+  localPort = 5173
 
   [services.development]
   run = "pnpm --filter @workspace/autohaul run dev"
@@ -27,5 +27,5 @@ title = "KarHaul"
   to = "/index.html"
 
   [services.env]
-  PORT = "24909"
+  PORT = "5173"
   BASE_PATH = "/"

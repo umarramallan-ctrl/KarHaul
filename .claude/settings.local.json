@@ -37,7 +37,22 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(mkdir -p /tmp/zip_extract)",
+      "Bash(unzip -o attached_assets/files_1774909912135.zip -d /tmp/zip_extract)",
+      "Bash(python3 -c \"import zipfile; z = zipfile.ZipFile\\(''/home/runner/workspace/attached_assets/files_1774909912135.zip''\\); z.extractall\\(''/tmp/zip_extract''\\); print\\(''Files:'', len\\(z.namelist\\(\\)\\)\\); print\\(''\\\\n''.join\\(z.namelist\\(\\)[:50]\\)\\)\")",
+      "Read(//usr/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(grep:*)",
+      "Bash(do)",
+      "Bash(cp /tmp/zip_extract/$f /home/runner/workspace/artifacts/autohaul/src/pages/$f)",
+      "Bash(echo \"Copied $f\")",
+      "Bash(done)",
+      "Bash(BASE_PATH=/ pnpm --filter @workspace/autohaul exec vite build)",
+      "Bash(jobs)",
+      "Bash(netstat -tlnp)"
     ]
   }
 }
