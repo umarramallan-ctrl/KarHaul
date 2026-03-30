@@ -12,7 +12,32 @@
       "Bash(grep -r \"EVAUL\\\\|Evaul\\\\|evaul\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html --include=*.json -n)",
       "Bash(grep -r \"Autohaul\\\\|autohaul\\\\|AutoHaul\\\\|AUTOHAUL\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html --include=*.json -n)",
       "Bash(grep -rn \"EVAUL\\\\|Evaul\\\\|evaul\\\\|Autohaul\\\\|autohaul\" /home/runner/workspace/artifacts/autohaul-mobile --include=*.ts --include=*.tsx --include=*.json)",
-      "Bash(grep -rn \"EVAUL\\\\|evaul\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html)"
+      "Bash(grep -rn \"EVAUL\\\\|evaul\" /home/runner/workspace/artifacts --include=*.ts --include=*.tsx --include=*.html)",
+      "Bash(curl -s http://localhost:8080/api/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -s http://localhost:8080/api/health/status)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:8080/)",
+      "Bash(echo $DATABASE_URL)",
+      "Bash(printenv)",
+      "Bash(curl -s http://localhost:8080/api/auth/user)",
+      "Bash(psql $DATABASE_URL -c \"SELECT 1\")",
+      "Bash(curl -s http://localhost:5173/src/main.tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/src/main.tsx)",
+      "Bash(curl -sv http://localhost:5173)",
+      "Bash(curl:*)",
+      "Bash(node ./build.mjs)",
+      "Bash(/home/runner/workspace/lib/api-spec/openapi.yaml:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\(''''optimized'''',{}\\).keys\\(\\)\\)[:10]\\)\")",
+      "Bash(xargs sed:*)",
+      "Bash(git -C /home/runner/workspace status)",
+      "Bash(git -C /home/runner/workspace log --oneline -3)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git:*)"
     ]
   }
 }
