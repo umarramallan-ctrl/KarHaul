@@ -52,7 +52,9 @@
       "Bash(done)",
       "Bash(BASE_PATH=/ pnpm --filter @workspace/autohaul exec vite build)",
       "Bash(jobs)",
-      "Bash(netstat -tlnp)"
+      "Bash(netstat -tlnp)",
+      "Bash(while read:*)",
+      "Bash(do grep:*)"
     ]
   }
 }
