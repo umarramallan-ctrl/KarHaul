@@ -79,7 +79,7 @@ router.post("/driver-routes", async (req: Request, res: Response) => {
 router.patch("/driver-routes/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = req.params.id as string;
   try {
     const [existing] = await db.select().from(driverRoutesTable).where(eq(driverRoutesTable.id, id));
     if (!existing || existing.driverId !== userId) { res.status(403).json({ error: "Not authorized" }); return; }
@@ -97,7 +97,7 @@ router.patch("/driver-routes/:id", async (req: Request, res: Response) => {
 router.delete("/driver-routes/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = req.params.id as string;
   try {
     const [existing] = await db.select().from(driverRoutesTable).where(eq(driverRoutesTable.id, id));
     if (!existing || existing.driverId !== userId) { res.status(403).json({ error: "Not authorized" }); return; }

@@ -55,9 +55,8 @@ export default function Shipments() {
   if (minBudget) activeFilters.minBudget = minBudget;
   if (maxBudget) activeFilters.maxBudget = maxBudget;
 
-  const { data, isLoading } = useListShipments({
-    query: { queryKey: ["/api/shipments", activeFilters] },
-    request: { query: activeFilters as any },
+  const { data, isLoading } = useListShipments(activeFilters as any, {
+    query: { queryKey: ["/api/shipments", activeFilters] } as any,
   });
 
   function clearAll() {

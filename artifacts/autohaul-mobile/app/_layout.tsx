@@ -12,7 +12,8 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { AuthProvider } from "@/lib/auth";
+import { ClerkProvider } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
@@ -21,6 +22,18 @@ if (domain) setBaseUrl(`https://${domain}`);
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+const tokenCache = {
+  async getToken(key: string) {
+    return SecureStore.getItemAsync(key);
+  },
+  async saveToken(key: string, value: string) {
+    return SecureStore.setItemAsync(key, value);
+  },
+  async clearToken(key: string) {
+    return SecureStore.deleteItemAsync(key);
+  },
+};
 
 function RootLayoutNav() {
   return (
@@ -56,13 +69,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <AuthProvider>
+        <ClerkProvider
+          publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+          tokenCache={tokenCache}
+        >
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
               <RootLayoutNav />
-            </AuthProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </ClerkProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

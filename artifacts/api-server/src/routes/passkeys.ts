@@ -5,7 +5,7 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
-import type { AuthenticatorTransportFuture } from "@simplewebauthn/types";
+import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { db, passkeyCredentialsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createSession, SESSION_TTL } from "../lib/auth";
@@ -56,7 +56,7 @@ router.get("/auth/passkey/register/options", async (req: Request, res: Response)
     rpName: RP_NAME,
     rpID: getRpId(req),
     userID: new TextEncoder().encode(dbUser.id),
-    userName: dbUser.email || dbUser.authId,
+    userName: dbUser.email ?? dbUser.authId ?? "user",
     userDisplayName: [dbUser.firstName, dbUser.lastName].filter(Boolean).join(" ") || dbUser.email || "User",
     attestationType: "none",
     excludeCredentials,
@@ -172,7 +172,7 @@ router.post("/auth/passkey/login/verify", async (req: Request, res: Response) =>
   if (!user) { res.status(400).json({ error: "User account not found" }); return; }
 
   const sessionData: SessionData = {
-    user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, profileImageUrl: user.profileImageUrl },
+    user: { id: user.id, firstName: user.firstName ?? undefined, lastName: user.lastName ?? undefined, profileImage: user.profileImageUrl ?? undefined },
     access_token: "passkey",
   };
 
@@ -194,7 +194,7 @@ router.get("/auth/passkey/list", async (req: Request, res: Response) => {
 router.delete("/auth/passkey/:passkeyId", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const dbUser = await getDbUser((req.user as any).id);
-  const [pk] = await db.select().from(passkeyCredentialsTable).where(eq(passkeyCredentialsTable.id, req.params.passkeyId)).limit(1);
+  const [pk] = await db.select().from(passkeyCredentialsTable).where(eq(passkeyCredentialsTable.id, req.params.passkeyId as string)).limit(1);
   if (!pk || pk.userId !== dbUser?.id) { res.status(403).json({ error: "Not found" }); return; }
   await db.delete(passkeyCredentialsTable).where(eq(passkeyCredentialsTable.id, pk.id));
   res.json({ success: true });

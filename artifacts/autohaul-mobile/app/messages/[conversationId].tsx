@@ -26,7 +26,7 @@ export default function MessagesScreen() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["messages", conversationId],
-    queryFn: () => getMessages({ conversationId: conversationId! }),
+    queryFn: () => getMessages(conversationId!),
     enabled: !isNew && isAuthenticated,
     refetchInterval: 5000,
   });

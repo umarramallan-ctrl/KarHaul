@@ -50,7 +50,7 @@ export default function BookingDetailScreen() {
   const [cpForm, setCpForm] = useState({ city: "", state: "", milestone: "en_route", notes: "" });
   const [calling, setCalling] = useState<string | null>(null);
 
-  const { data: booking, isLoading } = useQuery({ queryKey: ["booking", id], queryFn: () => getBooking({ bookingId: id! }) });
+  const { data: booking, isLoading } = useQuery({ queryKey: ["booking", id], queryFn: () => getBooking(id!) });
   const { data: myProfile } = useQuery({ queryKey: ["my-profile"], queryFn: getMyProfile, enabled: isAuthenticated });
   const { data: trackingData, refetch: refetchTracking } = useQuery({
     queryKey: ["tracking-mobile", id],
@@ -60,7 +60,7 @@ export default function BookingDetailScreen() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: (status: string) => updateBookingStatus({ bookingId: id! }, { status: status as any }),
+    mutationFn: (status: string) => updateBookingStatus(id!, { status: status as any }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["booking", id] }); qc.invalidateQueries({ queryKey: ["my-bookings"] }); },
   });
 

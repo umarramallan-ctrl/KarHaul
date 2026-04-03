@@ -13,7 +13,7 @@ async function getDbUser(authId: string) {
 router.get("/bookings/:bookingId/tracking", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const dbUser = await getDbUser((req.user as any).id);
-  const { bookingId } = req.params;
+  const bookingId = req.params.bookingId as string;
 
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
   if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
@@ -33,7 +33,7 @@ router.get("/bookings/:bookingId/tracking", async (req: Request, res: Response) 
 router.post("/bookings/:bookingId/tracking", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const dbUser = await getDbUser((req.user as any).id);
-  const { bookingId } = req.params;
+  const bookingId = req.params.bookingId as string;
 
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
   if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
@@ -82,7 +82,7 @@ router.post("/bookings/:bookingId/tracking", async (req: Request, res: Response)
 router.post("/bookings/:bookingId/call-request", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const dbUser = await getDbUser((req.user as any).id);
-  const { bookingId } = req.params;
+  const bookingId = req.params.bookingId as string;
 
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
   if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }

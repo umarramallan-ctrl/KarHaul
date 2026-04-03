@@ -9,8 +9,8 @@ import { Loader2 } from "lucide-react";
 
 export default function DashboardRouter() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useGetMyProfile({ 
-    query: { enabled: isAuthenticated } 
+  const { data: profile, isLoading: profileLoading } = useGetMyProfile({
+    query: { enabled: isAuthenticated } as any,
   });
   const [, setLocation] = useLocation();
 

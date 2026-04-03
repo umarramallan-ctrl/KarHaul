@@ -32,7 +32,7 @@ router.patch("/notifications/:id/read", async (req: Request, res: Response) => {
   const dbUser = await getDbUser((req.user as any).id);
   if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
 
-  const { id } = req.params;
+  const id = req.params.id as string;
   await db
     .update(notificationsTable)
     .set({ isRead: true })

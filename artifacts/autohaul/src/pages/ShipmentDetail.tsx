@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -167,14 +167,14 @@ export default function ShipmentDetail() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   
-  const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } });
-  
+  const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } as any });
+
   const { data: shipment, isLoading, refetch: refetchShipment } = useGetShipment(shipmentId, {
-    query: { enabled: !!shipmentId }
+    query: { enabled: !!shipmentId } as any,
   });
-  
+
   const { data: bidsData, refetch: refetchBids } = useGetShipmentBids(shipmentId, {
-    query: { enabled: !!shipmentId }
+    query: { enabled: !!shipmentId } as any,
   });
 
   const placeBidMutation = usePlaceBid();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable,
-  Platform, Alert, ActivityIndicator
+  Platform, Alert, ActivityIndicator, type KeyboardTypeOptions,
 } from "react-native";
 import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -139,7 +139,7 @@ export default function ProfileSetupScreen() {
   );
 }
 
-function Field({ label, value, onChangeText, placeholder, keyboardType }: any) {
+function Field({ label, value, onChangeText, placeholder, keyboardType }: { label: string; value: string; onChangeText: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions }) {
   const C = Colors.light;
   return (
     <View style={fStyles.field}>

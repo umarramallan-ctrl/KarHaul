@@ -76,6 +76,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "@simplewebauthn/browser": "^13.3.0",
     "qrcode.react": "^4.2.0"
   }

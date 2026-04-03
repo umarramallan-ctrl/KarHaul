@@ -6,7 +6,7 @@ const router: IRouter = Router();
 
 router.get("/bookings/:bookingId/photos", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const { bookingId } = req.params;
+  const bookingId = req.params.bookingId as string;
   try {
     const photos = await db.select().from(conditionPhotosTable)
       .where(eq(conditionPhotosTable.bookingId, bookingId))
@@ -20,7 +20,7 @@ router.get("/bookings/:bookingId/photos", async (req: Request, res: Response) =>
 router.post("/bookings/:bookingId/photos", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
   const userId = req.user!.id;
-  const { bookingId } = req.params;
+  const bookingId = req.params.bookingId as string;
   const { photoUrl, phase, caption } = req.body;
   if (!photoUrl || !phase) { res.status(400).json({ error: "photoUrl and phase are required" }); return; }
   if (!["pickup", "delivery"].includes(phase)) { res.status(400).json({ error: "phase must be 'pickup' or 'delivery'" }); return; }

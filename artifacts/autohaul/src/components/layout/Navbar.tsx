@@ -47,7 +47,7 @@ export function Navbar() {
   const [location, setLocation] = useLocation();
   const navigate = setLocation;
   const { isAuthenticated, login, logout, user } = useAuth();
-  const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } });
+  const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } as any });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -93,7 +93,7 @@ export function Navbar() {
           <Link href="/dashboard" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/dashboard' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
             My Shipments
           </Link>
-          <Button asChild variant="accent" size="sm" className="hidden md:flex ml-2">
+          <Button asChild variant="default" size="sm" className="hidden md:flex ml-2">
             <Link href="/post-load">
               <PlusCircle className="mr-2 h-4 w-4" />
               Post a Load
@@ -272,7 +272,7 @@ export function Navbar() {
         <div className="md:hidden border-t bg-background p-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
           <NavLinks />
           {isAuthenticated && role === 'shipper' && (
-            <Button asChild variant="accent" className="w-full justify-start mt-2">
+            <Button asChild variant="default" className="w-full justify-start mt-2">
               <Link href="/post-load" onClick={closeMenu}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Post a Load

@@ -12,8 +12,8 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useGetMyProfile({ 
-    query: { enabled: isAuthenticated, retry: false } 
+  const { data: profile, isLoading: profileLoading } = useGetMyProfile({
+    query: { enabled: isAuthenticated, retry: false } as any,
   });
   const [location, setLocation] = useLocation();
 

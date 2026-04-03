@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelative, getStatusColor, formatVehicleName } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle } from "lucide-react";
+import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle, DollarSign } from "lucide-react";
 
 export default function ShipperDashboard() {
   const { data: shipmentsData, isLoading: loadingShipments } = useGetMyShipments();

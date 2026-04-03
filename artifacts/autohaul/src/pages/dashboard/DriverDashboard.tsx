@@ -24,7 +24,7 @@ export default function DriverDashboard() {
               <h1 className="text-3xl font-display font-bold">Driver Dashboard</h1>
               <p className="text-slate-300 mt-1">Manage your active hauls and pending bids.</p>
             </div>
-            <Button asChild variant="accent" className="hover-elevate shadow-md shadow-accent/20">
+            <Button asChild variant="default" className="hover-elevate shadow-md shadow-accent/20">
               <Link href="/shipments">
                 <Search className="mr-2 h-4 w-4" /> Find More Loads
               </Link>

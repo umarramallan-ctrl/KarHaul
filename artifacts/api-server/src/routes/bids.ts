@@ -33,7 +33,7 @@ router.post("/shipments/:shipmentId/bids", bidLimiter, async (req, res) => {
     res.status(400).json({ error: "Profile not found" });
     return;
   }
-  const { shipmentId } = req.params;
+  const shipmentId = req.params.shipmentId as string;
   const body = req.body;
 
   // Prevent duplicate pending bid from the same driver

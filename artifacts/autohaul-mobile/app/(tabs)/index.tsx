@@ -151,7 +151,7 @@ export default function BrowseScreen() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["shipments", "open", transportFilter],
-    queryFn: () => listShipments({ status: "open", transportType: transportFilter !== "All" ? transportFilter : undefined }),
+    queryFn: () => listShipments({ status: "open", transportType: transportFilter !== "All" ? (transportFilter as any) : undefined }),
   });
 
   const onRefresh = useCallback(async () => {

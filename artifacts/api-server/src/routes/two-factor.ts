@@ -275,11 +275,11 @@ router.post("/verify", async (req: Request, res: Response) => {
     const sid = await createSession({
       user: {
         id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        profileImage: user.profileImageUrl ?? undefined,
       },
+      access_token: "2fa",
     });
 
     res.cookie("sid", sid, {

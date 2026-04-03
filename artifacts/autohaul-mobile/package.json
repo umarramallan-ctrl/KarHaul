@@ -54,5 +54,9 @@
     "typescript": "~5.9.2",
     "zod": "catalog:",
     "zod-validation-error": "^3.4.0"
+  },
+  "dependencies": {
+    "@clerk/clerk-expo": "^2.19.31",
+    "expo-secure-store": "^55.0.9"
   }
 }

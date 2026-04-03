@@ -54,7 +54,10 @@
       "Bash(jobs)",
       "Bash(netstat -tlnp)",
       "Bash(while read:*)",
-      "Bash(do grep:*)"
+      "Bash(do grep:*)",
+      "Bash(find /home/runner/workspace/node_modules/@simplewebauthn -name *.d.ts)",
+      "Bash(PORT=3000 pnpm --filter @workspace/mockup-sandbox run build)",
+      "Bash(PORT=3000 BASE_PATH=/ pnpm --filter @workspace/mockup-sandbox run build)"
     ]
   }
 }

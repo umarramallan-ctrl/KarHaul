@@ -57,7 +57,7 @@ router.post("/saved-drivers", async (req: Request, res: Response) => {
 router.delete("/saved-drivers/:driverId", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
   const userId = req.user!.id;
-  const { driverId } = req.params;
+  const driverId = req.params.driverId as string;
   try {
     await db.delete(savedDriversTable)
       .where(and(eq(savedDriversTable.shipperId, userId), eq(savedDriversTable.driverId, driverId)));

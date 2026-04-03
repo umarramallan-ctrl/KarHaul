@@ -31,13 +31,13 @@ export default function ShipmentDetailScreen() {
   const [bidAmount, setBidAmount] = useState("");
   const [bidNote, setBidNote] = useState("");
 
-  const { data: shipment, isLoading } = useQuery({ queryKey: ["shipment", id], queryFn: () => getShipment({ shipmentId: id! }) });
-  const { data: bidsData } = useQuery({ queryKey: ["shipment-bids", id], queryFn: () => getShipmentBids({ shipmentId: id! }) });
+  const { data: shipment, isLoading } = useQuery({ queryKey: ["shipment", id], queryFn: () => getShipment(id!) });
+  const { data: bidsData } = useQuery({ queryKey: ["shipment-bids", id], queryFn: () => getShipmentBids(id!) });
   const { data: myProfile } = useQuery({ queryKey: ["my-profile"], queryFn: getMyProfile, enabled: isAuthenticated });
 
   const bidMutation = useMutation({
     mutationFn: (data: { amount: number; note?: string }) =>
-      placeBid({ shipmentId: id! }, { amount: data.amount, note: data.note }),
+      placeBid(id!, { amount: data.amount, note: data.note }),
     onSuccess: () => {
       setShowBidModal(false);
       setBidAmount("");
@@ -49,7 +49,7 @@ export default function ShipmentDetailScreen() {
   });
 
   const acceptMutation = useMutation({
-    mutationFn: (bidId: string) => acceptBid({ bidId }),
+    mutationFn: (bidId: string) => acceptBid(bidId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["shipment", id] });
       qc.invalidateQueries({ queryKey: ["shipment-bids", id] });

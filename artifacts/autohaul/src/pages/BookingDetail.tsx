@@ -347,7 +347,7 @@ export default function BookingDetail() {
   const { toast } = useToast();
 
   const { data: profile } = useGetMyProfile();
-  const { data: booking, isLoading, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } });
+  const { data: booking, isLoading, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
   const updateStatusMutation = useUpdateBookingStatus();
   const [notes, setNotes] = useState("");
 

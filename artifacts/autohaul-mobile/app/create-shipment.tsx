@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable,
-  Platform, Alert, ActivityIndicator
+  Platform, Alert, ActivityIndicator, type KeyboardTypeOptions,
 } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -246,7 +246,7 @@ export default function CreateShipmentScreen() {
   );
 }
 
-function F({ label, value, onChange, placeholder, keyboardType }: any) {
+function F({ label, value, onChange, placeholder, keyboardType }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions }) {
   const C = Colors.light;
   return (
     <View style={{ marginBottom: 12 }}>
