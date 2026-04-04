@@ -2,26 +2,11 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
-import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Check, TrendingDown, Route, Heart, Camera, Zap, User, Building2, FileText, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Check, TrendingDown, Route, Heart, Camera, Zap, User, Building2, FileText, CreditCard, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-
-const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
-
-const STATE_COORDS: Record<string, [number, number]> = {
-  AL:[32.8,-86.9],AK:[64.2,-153.4],AZ:[34.3,-111.6],AR:[34.9,-92.4],CA:[36.8,-119.4],
-  CO:[39.0,-105.5],CT:[41.6,-72.7],DE:[38.9,-75.5],FL:[28.7,-82.5],GA:[32.7,-83.4],
-  HI:[20.5,-157.0],ID:[44.4,-114.6],IL:[40.0,-89.2],IN:[39.9,-86.3],IA:[42.1,-93.6],
-  KS:[38.5,-98.4],KY:[37.7,-84.9],LA:[31.2,-91.8],ME:[45.4,-69.2],MD:[39.0,-76.7],
-  MA:[42.3,-71.8],MI:[44.3,-85.4],MN:[46.4,-93.1],MS:[32.7,-89.7],MO:[38.4,-92.5],
-  MT:[47.0,-110.5],NE:[41.5,-99.7],NV:[39.3,-116.6],NH:[43.7,-71.6],NJ:[40.1,-74.3],
-  NM:[34.3,-106.0],NY:[42.9,-75.5],NC:[35.6,-79.8],ND:[47.5,-100.5],OH:[40.4,-82.8],
-  OK:[35.6,-97.5],OR:[44.1,-120.5],PA:[40.9,-77.8],RI:[41.7,-71.5],SC:[33.9,-80.9],
-  SD:[44.4,-100.2],TN:[35.9,-86.7],TX:[31.5,-99.3],UT:[39.3,-111.1],VT:[44.1,-72.7],
-  VA:[37.8,-78.2],WA:[47.4,-120.6],WV:[38.6,-80.6],WI:[44.3,-89.6],WY:[43.0,-107.5],
-  DC:[38.9,-77.0],
-};
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8, toRad = (d: number) => (d * Math.PI) / 180;
@@ -30,45 +15,86 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function calcEstimate(originState: string, destinationState: string, vehicleType: string, transportType: string, vehicleCondition: string) {
-  const o = STATE_COORDS[originState], d = STATE_COORDS[destinationState];
-  if (!o || !d) return null;
-  const miles = Math.round(haversine(o[0], o[1], d[0], d[1]));
-  let cpm = miles < 250 ? 1.80 : miles < 600 ? 1.20 : miles < 1200 ? 0.90 : 0.70;
-  const vMult: Record<string, number> = { sedan:1.0, suv:1.1, truck:1.2, van:1.15, coupe:1.0, convertible:1.05, pickup_truck:1.2, minivan:1.15, motorcycle:0.85, rv:1.8, exotic:1.6, other:1.0 };
-  const base = Math.max(250, Math.round(miles * cpm * (vMult[vehicleType]||1.0) * (transportType==="enclosed"?1.45:1.0) * (vehicleCondition==="non_running"?1.25:1.0)));
-  const max = Math.round(base * 1.25);
-  return { estimatedMin: base, estimatedMax: max, distanceMiles: miles, brokerSavings: Math.round((base+max)/2*0.25) };
+async function geocode(query: string): Promise<[number, number] | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=us`;
+    const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+    const data = await res.json();
+    if (!data.length) return null;
+    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  } catch {
+    return null;
+  }
 }
 
+type EstimateResult = { estimatedMin: number; estimatedMax: number; distanceMiles: number; brokerSavings: number };
+
+const VEHICLE_MULT: Record<string, number> = {
+  sedan:1.0, suv:1.1, truck:1.2, van:1.15, coupe:1.0,
+  convertible:1.05, pickup_truck:1.2, minivan:1.15,
+};
+
 function PriceEstimator() {
-  const [form, setForm] = useState({ originState: "", destinationState: "", vehicleType: "sedan", transportType: "open", vehicleCondition: "running" });
-  const [result, setResult] = useState<ReturnType<typeof calcEstimate>>(null);
-  const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setResult(null); };
-  const handleEstimate = () => setResult(calcEstimate(form.originState, form.destinationState, form.vehicleType, form.transportType, form.vehicleCondition));
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [vehicleType, setVehicleType] = useState("sedan");
+  const [transportType, setTransportType] = useState("open");
+  const [vehicleCondition, setVehicleCondition] = useState("running");
+  const [result, setResult] = useState<EstimateResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleEstimate() {
+    if (!origin.trim() || !destination.trim()) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    const [oCoords, dCoords] = await Promise.all([geocode(origin), geocode(destination)]);
+    setLoading(false);
+    if (!oCoords) { setError("Couldn't find origin — try a zip code or 'City, State'."); return; }
+    if (!dCoords) { setError("Couldn't find destination — try a zip code or 'City, State'."); return; }
+    const miles = Math.round(haversine(oCoords[0], oCoords[1], dCoords[0], dCoords[1]));
+    const rate = transportType === "enclosed" ? 1.50 : 1.00;
+    const condMult = vehicleCondition === "non_running" ? 1.25 : 1.0;
+    const base = Math.max(300, Math.round(miles * rate * (VEHICLE_MULT[vehicleType] ?? 1.0) * condMult));
+    const max = Math.round(base * 1.25);
+    setResult({ estimatedMin: base, estimatedMax: max, distanceMiles: miles, brokerSavings: Math.round((base + max) / 2 * 0.25) });
+  }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Origin State</label>
-          <Select value={form.originState} onValueChange={v => set("originState", v)}>
-            <SelectTrigger className="h-11"><SelectValue placeholder="From..." /></SelectTrigger>
-            <SelectContent side="bottom" avoidCollisions={false} className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Origin</label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              className="h-11 pl-9"
+              placeholder="Zip, city, or address"
+              value={origin}
+              onChange={e => { setOrigin(e.target.value); setResult(null); setError(null); }}
+              onKeyDown={e => e.key === "Enter" && handleEstimate()}
+            />
+          </div>
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Destination State</label>
-          <Select value={form.destinationState} onValueChange={v => set("destinationState", v)}>
-            <SelectTrigger className="h-11"><SelectValue placeholder="To..." /></SelectTrigger>
-            <SelectContent side="bottom" avoidCollisions={false} className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Destination</label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              className="h-11 pl-9"
+              placeholder="Zip, city, or address"
+              value={destination}
+              onChange={e => { setDestination(e.target.value); setResult(null); setError(null); }}
+              onKeyDown={e => e.key === "Enter" && handleEstimate()}
+            />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Vehicle</label>
-          <Select value={form.vehicleType} onValueChange={v => set("vehicleType", v)}>
+          <Select value={vehicleType} onValueChange={v => { setVehicleType(v); setResult(null); }}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
             <SelectContent side="bottom">
               <SelectItem value="sedan">Sedan</SelectItem>
@@ -84,9 +110,9 @@ function PriceEstimator() {
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Carrier Type</label>
-          <Select value={form.transportType} onValueChange={v => set("transportType", v)}>
+          <Select value={transportType} onValueChange={v => { setTransportType(v); setResult(null); }}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom">
               <SelectItem value="open">Open</SelectItem>
               <SelectItem value="enclosed">Enclosed</SelectItem>
             </SelectContent>
@@ -94,9 +120,9 @@ function PriceEstimator() {
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Condition</label>
-          <Select value={form.vehicleCondition} onValueChange={v => set("vehicleCondition", v)}>
+          <Select value={vehicleCondition} onValueChange={v => { setVehicleCondition(v); setResult(null); }}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom">
               <SelectItem value="running">Running</SelectItem>
               <SelectItem value="non_running">Non-Running</SelectItem>
             </SelectContent>
@@ -104,15 +130,17 @@ function PriceEstimator() {
         </div>
       </div>
 
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
       <Button
         className="w-full h-11 font-semibold"
         onClick={handleEstimate}
-        disabled={!form.originState || !form.destinationState}
+        disabled={!origin.trim() || !destination.trim() || loading}
       >
-        Get Free Estimate
+        {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Looking up locations…</> : "Get Free Estimate"}
       </Button>
 
-      {result && !result.error && (
+      {result && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div>
