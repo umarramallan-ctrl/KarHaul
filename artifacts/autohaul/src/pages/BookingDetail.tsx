@@ -233,6 +233,17 @@ async function submitReview(data: Record<string, any>) {
   return res.json();
 }
 
+const CRITERIA_DISPLAY: { key: string; label: string }[] = [
+  { key: "timelyPickup",              label: "Pickup on Time" },
+  { key: "deliveryOnTime",            label: "Delivery on Time" },
+  { key: "vehicleCondition",          label: "Vehicle Condition" },
+  { key: "communication",             label: "Communication" },
+  { key: "professionalism",           label: "Professionalism" },
+  { key: "timelyPayment",             label: "Timely Payment" },
+  { key: "accurateVehicleDescription",label: "Accurate Description" },
+  { key: "easyAccess",                label: "Easy Access" },
+];
+
 function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName }: {
   bookingId: string;
   isShipper: boolean;
@@ -242,10 +253,20 @@ function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName 
 }) {
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  // Overall
   const [rating, setRating] = useState(0);
-  const [timelyPickup, setTimelyPickup] = useState(0);
-  const [deliveryOnTime, setDeliveryOnTime] = useState(0);
-  const [timelyPayment, setTimelyPayment] = useState(0);
+  // Shipper → Driver
+  const [timelyPickup,    setTimelyPickup]    = useState(0);
+  const [deliveryOnTime,  setDeliveryOnTime]  = useState(0);
+  const [vehicleCondition,setVehicleCondition]= useState(0);
+  const [professionalism, setProfessionalism] = useState(0);
+  // Driver → Shipper
+  const [timelyPayment,              setTimelyPayment]              = useState(0);
+  const [accurateVehicleDescription, setAccurateVehicleDescription] = useState(0);
+  const [easyAccess,                 setEasyAccess]                 = useState(0);
+  // Both
+  const [communication, setCommunication] = useState(0);
   const [comment, setComment] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -255,7 +276,7 @@ function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName 
 
   const myReview = data?.reviews?.find((r: any) =>
     (isShipper && r.reviewerRole === "shipper") ||
-    (isDriver && r.reviewerRole === "driver")
+    (isDriver  && r.reviewerRole === "driver")
   );
 
   const mutation = useMutation({
@@ -271,18 +292,25 @@ function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName 
     if (!rating) { toast({ title: "Rating required", description: "Please set an overall rating.", variant: "destructive" }); return; }
     const payload: Record<string, any> = { bookingId, revieweeId, rating, comment: comment || undefined };
     if (isShipper) {
-      if (timelyPickup) payload.timelyPickup = timelyPickup;
-      if (deliveryOnTime) payload.deliveryOnTime = deliveryOnTime;
+      if (timelyPickup)     payload.timelyPickup     = timelyPickup;
+      if (deliveryOnTime)   payload.deliveryOnTime   = deliveryOnTime;
+      if (vehicleCondition) payload.vehicleCondition = vehicleCondition;
+      if (professionalism)  payload.professionalism  = professionalism;
     }
-    if (isDriver && timelyPayment) payload.timelyPayment = timelyPayment;
+    if (isDriver) {
+      if (timelyPayment)               payload.timelyPayment               = timelyPayment;
+      if (accurateVehicleDescription)  payload.accurateVehicleDescription  = accurateVehicleDescription;
+      if (easyAccess)                  payload.easyAccess                  = easyAccess;
+    }
+    if (communication) payload.communication = communication;
     mutation.mutate(payload);
   };
 
   if (isLoading) return null;
 
   return (
-    <Card className="mb-6 border-primary/20">
-      <CardHeader className="pb-3 bg-primary/5 rounded-t-xl">
+    <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
+      <CardHeader className="pb-3 border-b border-amber-500/20">
         <CardTitle className="flex items-center gap-2 text-base">
           <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
           {myReview ? `Your Review of ${revieweeName}` : `Rate ${revieweeName}`}
@@ -291,48 +319,61 @@ function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName 
       <CardContent className="pt-5">
         {myReview ? (
           <div className="space-y-3">
-            <div className="flex gap-1">
+            <div className="flex items-center gap-2">
               {[1,2,3,4,5].map(s => (
                 <Star key={s} className={`h-5 w-5 ${s <= myReview.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
               ))}
-              <span className="text-sm text-muted-foreground ml-1">{myReview.rating}/5 overall</span>
+              <span className="text-sm font-semibold">{myReview.rating}/5 overall</span>
             </div>
-            {myReview.timelyPickup && (
-              <p className="text-sm text-muted-foreground">Timely Pickup: {myReview.timelyPickup}/5</p>
-            )}
-            {myReview.deliveryOnTime && (
-              <p className="text-sm text-muted-foreground">Delivery on Time: {myReview.deliveryOnTime}/5</p>
-            )}
-            {myReview.timelyPayment && (
-              <p className="text-sm text-muted-foreground">Timely Payment: {myReview.timelyPayment}/5</p>
-            )}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+              {CRITERIA_DISPLAY.map(c => myReview[c.key] != null && (
+                <p key={c.key} className="text-sm text-muted-foreground">
+                  {c.label}: <span className="text-amber-500 font-semibold">{myReview[c.key]}/5</span>
+                </p>
+              ))}
+            </div>
             {myReview.comment && (
-              <p className="text-sm italic text-muted-foreground">"{myReview.comment}"</p>
+              <p className="text-sm italic text-muted-foreground border-t pt-3">"{myReview.comment}"</p>
             )}
           </div>
         ) : (
           <div className="space-y-5">
             <StarRating value={rating} onChange={setRating} label="Overall Rating *" />
+
             {isShipper && (
               <>
-                <StarRating value={timelyPickup} onChange={setTimelyPickup} label="Timely Pickup" />
-                <StarRating value={deliveryOnTime} onChange={setDeliveryOnTime} label="Delivery on Time" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-t pt-4">Driver Performance</p>
+                <StarRating value={timelyPickup}     onChange={setTimelyPickup}     label="Pickup on Time" />
+                <StarRating value={deliveryOnTime}   onChange={setDeliveryOnTime}   label="Delivery on Time" />
+                <StarRating value={vehicleCondition} onChange={setVehicleCondition} label="Vehicle Condition at Delivery" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-t pt-4">Interaction</p>
+                <StarRating value={communication}    onChange={setCommunication}    label="Communication & Responsiveness" />
+                <StarRating value={professionalism}  onChange={setProfessionalism}  label="Professionalism" />
               </>
             )}
+
             {isDriver && (
-              <StarRating value={timelyPayment} onChange={setTimelyPayment} label="Timely Payment" />
+              <>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-t pt-4">Shipper Information</p>
+                <StarRating value={timelyPayment}               onChange={setTimelyPayment}               label="Timely Payment" />
+                <StarRating value={accurateVehicleDescription}  onChange={setAccurateVehicleDescription}  label="Accurate Vehicle Description" />
+                <StarRating value={easyAccess}                  onChange={setEasyAccess}                  label="Easy Pickup / Dropoff Access" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-t pt-4">Interaction</p>
+                <StarRating value={communication} onChange={setCommunication} label="Communication & Responsiveness" />
+              </>
             )}
+
             <div>
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Comment (optional)</label>
               <Textarea
                 value={comment}
                 onChange={e => setComment(e.target.value)}
                 placeholder="Share details about your experience..."
-                className="resize-none h-20"
+                className="resize-none h-24"
               />
             </div>
             <Button onClick={handleSubmit} disabled={mutation.isPending} className="w-full">
-              {mutation.isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</> : "Submit Review"}
+              {mutation.isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting…</> : "Submit Review"}
             </Button>
           </div>
         )}

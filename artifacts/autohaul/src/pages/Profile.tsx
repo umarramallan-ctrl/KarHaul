@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { ShieldCheck, Truck, User, Lock, Key } from "lucide-react";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
 import { TwoFASettings } from "@/components/security/TwoFASettings";
+import { UserRatingsCard } from "@/components/UserRatingsCard";
 import { motion } from "framer-motion";
 
 type UpdateProfileBodyRole = "shipper" | "driver" | "both";
@@ -238,6 +239,18 @@ export default function Profile() {
             <Section title="Passkeys" icon={<Key className="h-4 w-4" />}>
               <PasskeyManager />
             </Section>
+
+            {/* Ratings & Reviews */}
+            {profile?.id && (
+              <div>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="h-px flex-1 bg-slate-800" />
+                  <h2 className="font-bold text-white text-sm uppercase tracking-wider">My Ratings & Reviews</h2>
+                  <div className="h-px flex-1 bg-slate-800" />
+                </div>
+                <UserRatingsCard userId={profile.id} role={profile.role} />
+              </div>
+            )}
           </div>
         </div>
       </MainLayout>

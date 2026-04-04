@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Calendar, DollarSign, Search, Filter, Loader2, ArrowRight, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, X, Truck } from "lucide-react";
+import { MapPin, Calendar, DollarSign, Search, Filter, Loader2, ArrowRight, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, X, Truck, Star, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 
 const LOCATION_BADGE: Record<string, { label: string; icon: any; cls: string }> = {
@@ -256,6 +256,30 @@ export default function Shipments() {
                             <span className="text-xs text-slate-600">{formatRelative(shipment.createdAt)}</span>
                           </div>
                         </div>
+
+                        {/* Shipper reputation */}
+                        {(shipment as any).shipper && (
+                          <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                              {(shipment as any).shipper.firstName?.[0] || "S"}
+                            </div>
+                            <span className="text-xs text-slate-400 truncate">
+                              {(shipment as any).shipper.firstName} {(shipment as any).shipper.lastName}
+                            </span>
+                            {(shipment as any).shipper.averageRating > 0 && (
+                              <span className="flex items-center gap-0.5 text-xs text-amber-400 font-semibold ml-auto shrink-0">
+                                <Star className="h-3 w-3 fill-amber-400" />
+                                {(shipment as any).shipper.averageRating.toFixed(1)}
+                              </span>
+                            )}
+                            {(shipment as any).shipper.completedJobs > 0 && (
+                              <span className="flex items-center gap-1 text-xs text-slate-500 shrink-0">
+                                <Briefcase className="h-3 w-3" />
+                                {(shipment as any).shipper.completedJobs} hauls
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* CTA footer */}

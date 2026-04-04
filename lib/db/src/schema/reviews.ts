@@ -9,9 +9,16 @@ export const reviewsTable = pgTable("reviews", {
   revieweeId: text("reviewee_id").notNull(),
   reviewerRole: text("reviewer_role"),
   rating: real("rating").notNull(),
+  // Shipper → Driver criteria
   timelyPickup: real("timely_pickup"),
   deliveryOnTime: real("delivery_on_time"),
+  vehicleCondition: real("vehicle_condition"),
+  communication: real("communication"),
+  professionalism: real("professionalism"),
+  // Driver → Shipper criteria
   timelyPayment: real("timely_payment"),
+  accurateVehicleDescription: real("accurate_vehicle_description"),
+  easyAccess: real("easy_access"),
   comment: text("comment"),
   isApproved: boolean("is_approved").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),

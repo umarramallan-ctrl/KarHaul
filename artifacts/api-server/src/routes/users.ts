@@ -70,12 +70,14 @@ router.put("/users/profile", async (req, res) => {
 
 router.get("/users/:userId", async (req, res) => {
   const { userId } = req.params;
-  const user = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-  if (user.length === 0) {
+  const users = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (users.length === 0) {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json(user[0]);
+  // Strip sensitive fields before returning public profile
+  const { totpSecret, authId, email, phone, insurancePolicyNumber, ...publicUser } = users[0];
+  res.json(publicUser);
 });
 
 export default router;

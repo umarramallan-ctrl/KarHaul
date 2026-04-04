@@ -16,6 +16,7 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import Terms from "./pages/Terms";
+import UserProfile from "./pages/UserProfile";
 import DriverRoutes from "./pages/DriverRoutes";
 import SavedDrivers from "./pages/SavedDrivers";
 import VerifyTwoFactor from "./pages/VerifyTwoFactor";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/verify-2fa" component={VerifyTwoFactor} />
       <Route path="/support" component={Support} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/users/:userId" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
   );

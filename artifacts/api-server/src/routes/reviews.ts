@@ -78,9 +78,13 @@ router.post("/reviews", async (req, res) => {
 
   const reviewerRole = isShipper ? "shipper" : "driver";
 
+  const {
+    vehicleCondition, communication, professionalism,
+    accurateVehicleDescription, easyAccess,
+  } = req.body;
+
   const id = randomUUID();
   const trimmedComment = comment?.trim() || null;
-  // Auto-approve reviews with rating >= 4 that include a written comment
   const isApproved = rating >= 4 && !!trimmedComment;
 
   await db.insert(reviewsTable).values({
@@ -90,10 +94,17 @@ router.post("/reviews", async (req, res) => {
     revieweeId,
     reviewerRole,
     rating,
-    // Shippers rate drivers on pickup & delivery; drivers rate shippers on payment
-    timelyPickup: isShipper ? (timelyPickup ?? null) : null,
-    deliveryOnTime: isShipper ? (deliveryOnTime ?? null) : null,
-    timelyPayment: isDriver ? (timelyPayment ?? null) : null,
+    // Shipper → Driver
+    timelyPickup:    isShipper ? (timelyPickup    ?? null) : null,
+    deliveryOnTime:  isShipper ? (deliveryOnTime  ?? null) : null,
+    vehicleCondition:isShipper ? (vehicleCondition?? null) : null,
+    professionalism: isShipper ? (professionalism ?? null) : null,
+    // Driver → Shipper
+    timelyPayment:             isDriver ? (timelyPayment             ?? null) : null,
+    accurateVehicleDescription:isDriver ? (accurateVehicleDescription?? null) : null,
+    easyAccess:                isDriver ? (easyAccess                ?? null) : null,
+    // Both
+    communication: communication ?? null,
     comment: trimmedComment,
     isApproved,
   });
@@ -156,13 +167,27 @@ router.get("/reviews/user/:userId", async (req, res) => {
   const reviews = await db.select().from(reviewsTable).where(eq(reviewsTable.revieweeId, userId)).orderBy(desc(reviewsTable.createdAt));
   const enriched = await Promise.all(reviews.map(async (r) => {
     const [reviewer] = await db.select().from(usersTable).where(eq(usersTable.id, r.reviewerId)).limit(1);
+    const firstName = reviewer?.firstName || "";
+    const lastInitial = reviewer?.lastName ? `${reviewer.lastName[0]}.` : "";
     return {
       ...r,
-      reviewerName: reviewer ? `${reviewer.firstName || ""} ${reviewer.lastName || ""}`.trim() || "User" : "User",
+      reviewerName: [firstName, lastInitial].filter(Boolean).join(" ") || "User",
     };
   }));
   const avgRating = enriched.length > 0 ? enriched.reduce((s, r) => s + r.rating, 0) / enriched.length : 0;
-  res.json({ reviews: enriched, averageRating: avgRating, total: enriched.length });
+
+  // Compute per-criteria averages across all reviews
+  const criteriaKeys = [
+    "timelyPickup", "deliveryOnTime", "vehicleCondition", "communication", "professionalism",
+    "timelyPayment", "accurateVehicleDescription", "easyAccess",
+  ] as const;
+  const criteriaAverages: Record<string, number> = {};
+  for (const key of criteriaKeys) {
+    const vals = enriched.map(r => (r as any)[key]).filter((v): v is number => v != null);
+    if (vals.length > 0) criteriaAverages[key] = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+  }
+
+  res.json({ reviews: enriched, averageRating: Math.round(avgRating * 10) / 10, total: enriched.length, criteriaAverages });
 });
 
 export default router;
