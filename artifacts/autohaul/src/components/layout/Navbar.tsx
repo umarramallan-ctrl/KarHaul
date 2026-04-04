@@ -125,7 +125,7 @@ export function Navbar() {
               <CarCarrierIcon className="h-5 w-6" />
             </div>
             <span className="font-display font-bold text-xl tracking-tight hidden sm:inline-block">
-              EV<span className="text-primary">AUL</span>
+              Kar<span className="text-primary">Haul</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 ml-6">
