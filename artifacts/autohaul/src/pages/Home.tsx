@@ -31,14 +31,14 @@ function PriceEstimator() {
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Origin State</label>
           <Select value={form.originState} onValueChange={v => set("originState", v)}>
             <SelectTrigger className="h-11"><SelectValue placeholder="From..." /></SelectTrigger>
-            <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            <SelectContent side="bottom" avoidCollisions={false} className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Destination State</label>
           <Select value={form.destinationState} onValueChange={v => set("destinationState", v)}>
             <SelectTrigger className="h-11"><SelectValue placeholder="To..." /></SelectTrigger>
-            <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            <SelectContent side="bottom" avoidCollisions={false} className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
@@ -47,8 +47,15 @@ function PriceEstimator() {
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">Vehicle</label>
           <Select value={form.vehicleType} onValueChange={v => set("vehicleType", v)}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {["sedan","suv","truck","van","motorcycle","rv","exotic","other"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            <SelectContent side="bottom">
+              <SelectItem value="sedan">Sedan</SelectItem>
+              <SelectItem value="suv">SUV</SelectItem>
+              <SelectItem value="truck">Truck</SelectItem>
+              <SelectItem value="van">Van</SelectItem>
+              <SelectItem value="coupe">Coupe</SelectItem>
+              <SelectItem value="convertible">Convertible</SelectItem>
+              <SelectItem value="pickup_truck">Pickup Truck</SelectItem>
+              <SelectItem value="minivan">Minivan</SelectItem>
             </SelectContent>
           </Select>
         </div>

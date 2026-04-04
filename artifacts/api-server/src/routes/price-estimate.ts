@@ -36,6 +36,7 @@ function estimatePrice(distanceMiles: number, vehicleType: string, transportType
   const vehicleMultipliers: Record<string, number> = {
     sedan: 1.0, suv: 1.1, truck: 1.2, van: 1.15, motorcycle: 0.85,
     rv: 1.8, exotic: 1.6, other: 1.0,
+    coupe: 1.0, convertible: 1.05, pickup_truck: 1.2, minivan: 1.15,
   };
   const vehicleMult = vehicleMultipliers[vehicleType] || 1.0;
   const transportMult = transportType === "enclosed" ? 1.45 : 1.0;

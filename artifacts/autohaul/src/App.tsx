@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { AuthGuard } from "@/components/AuthGuard";
 
 import Home from "./pages/Home";
 import Shipments from "./pages/Shipments";
@@ -31,7 +32,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/shipments" component={Shipments} />
+      <Route path="/shipments">{() => <AuthGuard><Shipments /></AuthGuard>}</Route>
       <Route path="/shipments/:id" component={ShipmentDetail} />
       <Route path="/post-load" component={CreateShipment} />
       <Route path="/dashboard" component={DashboardRouter} />
