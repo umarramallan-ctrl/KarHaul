@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { reviewsTable, usersTable, bookingsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
+import { createNotification } from "../lib/notify";
 import { randomUUID } from "crypto";
 
 const router: IRouter = Router();
@@ -10,6 +11,28 @@ async function getDbUser(authId: string) {
   const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
   return users[0] || null;
 }
+
+// Public endpoint — returns approved 4-5 star reviews for homepage testimonials
+router.get("/reviews/featured", async (req, res) => {
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(eq(reviewsTable.isApproved, true))
+    .orderBy(desc(reviewsTable.createdAt))
+    .limit(6);
+
+  const enriched = await Promise.all(reviews.map(async (r) => {
+    const [reviewer] = await db.select().from(usersTable).where(eq(usersTable.id, r.reviewerId)).limit(1);
+    const firstName = reviewer?.firstName || "";
+    const lastInitial = reviewer?.lastName ? `${reviewer.lastName[0]}.` : "";
+    return {
+      ...r,
+      reviewerName: [firstName, lastInitial].filter(Boolean).join(" ") || "User",
+    };
+  }));
+
+  res.json({ reviews: enriched });
+});
 
 router.post("/reviews", async (req, res) => {
   if (!req.isAuthenticated()) {
@@ -56,6 +79,10 @@ router.post("/reviews", async (req, res) => {
   const reviewerRole = isShipper ? "shipper" : "driver";
 
   const id = randomUUID();
+  const trimmedComment = comment?.trim() || null;
+  // Auto-approve reviews with rating >= 4 that include a written comment
+  const isApproved = rating >= 4 && !!trimmedComment;
+
   await db.insert(reviewsTable).values({
     id,
     bookingId,
@@ -67,7 +94,18 @@ router.post("/reviews", async (req, res) => {
     timelyPickup: isShipper ? (timelyPickup ?? null) : null,
     deliveryOnTime: isShipper ? (deliveryOnTime ?? null) : null,
     timelyPayment: isDriver ? (timelyPayment ?? null) : null,
-    comment: comment || null,
+    comment: trimmedComment,
+    isApproved,
+  });
+
+  // Notify the reviewee that they received a new review
+  const reviewerName = [dbUser.firstName, dbUser.lastName].filter(Boolean).join(" ") || "Someone";
+  await createNotification({
+    userId: revieweeId,
+    type: "booking_status",
+    title: "You received a new review",
+    body: `${reviewerName} left you a ${rating}-star review.`,
+    linkPath: `/bookings/${bookingId}`,
   });
 
   const allReviews = await db.select().from(reviewsTable).where(eq(reviewsTable.revieweeId, revieweeId));

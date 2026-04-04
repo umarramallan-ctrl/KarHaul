@@ -1,4 +1,4 @@
-import { pgTable, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, real, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,7 @@ export const reviewsTable = pgTable("reviews", {
   deliveryOnTime: real("delivery_on_time"),
   timelyPayment: real("timely_payment"),
   comment: text("comment"),
+  isApproved: boolean("is_approved").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

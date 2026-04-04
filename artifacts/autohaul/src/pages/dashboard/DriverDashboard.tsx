@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelative, getStatusColor, formatVehicleName } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, ArrowRight, DollarSign, Clock } from "lucide-react";
+import { Search, MapPin, ArrowRight, DollarSign, Clock, Star, CheckCircle2 } from "lucide-react";
 
 export default function DriverDashboard() {
   const { data: bidsData, isLoading: loadingBids } = useGetMyBids();
@@ -14,6 +14,7 @@ export default function DriverDashboard() {
 
   const pendingBids = bidsData?.bids.filter(b => b.status === 'pending') || [];
   const activeBookings = bookingsData?.bookings.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
+  const completedBookings = bookingsData?.bookings.filter(b => b.status === 'delivered') || [];
   
   return (
     <MainLayout>
@@ -58,6 +59,9 @@ export default function DriverDashboard() {
             </TabsTrigger>
             <TabsTrigger value="pending" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Pending Bids ({pendingBids.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              Completed ({completedBookings.length})
             </TabsTrigger>
           </TabsList>
 
@@ -111,6 +115,52 @@ export default function DriverDashboard() {
                   ))}
                 </div>
               )}
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-4">
+            {completedBookings.length === 0 ? (
+              <Card className="border-dashed py-12">
+                <CardContent className="flex flex-col items-center justify-center text-center">
+                  <CheckCircle2 className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
+                  <p className="text-muted-foreground">Completed hauls will appear here.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {completedBookings.map(booking => (
+                  <Card key={booking.id} className="overflow-hidden border-l-4 border-l-emerald-500">
+                    <CardContent className="p-0 flex flex-col md:flex-row">
+                      <div className="flex-1 p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Delivered</Badge>
+                        </div>
+                        <h3 className="font-bold text-lg mb-3">
+                          {booking.shipment ? formatVehicleName(booking.shipment.vehicleYear, booking.shipment.vehicleMake, booking.shipment.vehicleModel) : 'Vehicle'}
+                        </h3>
+                        {booking.shipment && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            <span>{booking.shipment.originCity}, {booking.shipment.originState}</span>
+                            <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                            <span>{booking.shipment.destinationCity}, {booking.shipment.destinationState}</span>
+                          </div>
+                        )}
+                        <div className="text-sm font-semibold text-primary mt-1">{formatCurrency(booking.agreedPrice)}</div>
+                      </div>
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border-t md:border-t-0 md:border-l border-amber-200 dark:border-amber-800 p-6 flex flex-col justify-center items-center gap-3 shrink-0 w-full md:w-56">
+                        <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-sm font-semibold">
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                          Rate your shipper
+                        </div>
+                        <Button className="w-full" size="sm" asChild>
+                          <Link href={`/bookings/${booking.id}`}>Leave a Review</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-4">

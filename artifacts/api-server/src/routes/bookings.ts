@@ -97,6 +97,24 @@ router.put("/bookings/:bookingId/status", async (req, res) => {
     });
   }
 
+  // When delivered, prompt both parties to leave a review
+  if (status === "delivered") {
+    await createNotification({
+      userId: booking.shipperId,
+      type: "booking_status",
+      title: "Rate your driver",
+      body: "Your vehicle was delivered! Share your experience by leaving a review.",
+      linkPath: `/bookings/${bookingId}`,
+    });
+    await createNotification({
+      userId: booking.driverId,
+      type: "booking_status",
+      title: "Rate your shipper",
+      body: "Job complete! Take a moment to leave a review for your shipper.",
+      linkPath: `/bookings/${bookingId}`,
+    });
+  }
+
   res.json(updated);
 });
 

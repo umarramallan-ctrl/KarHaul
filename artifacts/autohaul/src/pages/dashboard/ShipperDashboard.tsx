@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelative, getStatusColor, formatVehicleName } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle, DollarSign } from "lucide-react";
+import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle, DollarSign, Star, CheckCircle2 } from "lucide-react";
 
 export default function ShipperDashboard() {
   const { data: shipmentsData, isLoading: loadingShipments } = useGetMyShipments();
@@ -125,13 +125,59 @@ export default function ShipperDashboard() {
               )}
             </TabsContent>
 
-            <TabsContent value="history">
-              {/* History logic similar to above */}
-               <Card className="border-dashed py-12">
+            <TabsContent value="history" className="space-y-4">
+              {pastBookings.length === 0 ? (
+                <Card className="border-dashed py-12">
                   <CardContent className="flex flex-col items-center justify-center text-center">
-                    <p className="text-muted-foreground">Past shipments will appear here.</p>
+                    <CheckCircle2 className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
+                    <p className="text-muted-foreground">Completed shipments will appear here.</p>
                   </CardContent>
                 </Card>
+              ) : (
+                <div className="space-y-4">
+                  {pastBookings.map(booking => {
+                    const isDelivered = booking.status === 'delivered';
+                    return (
+                      <Card key={booking.id} className={`overflow-hidden flex flex-col md:flex-row border-l-4 ${isDelivered ? 'border-l-emerald-500' : 'border-l-slate-300 dark:border-l-slate-600'}`}>
+                        <div className="flex-1 p-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={isDelivered ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200'}>
+                              {booking.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground font-mono">{booking.id.split('-')[0].toUpperCase()}</span>
+                          </div>
+                          <h3 className="font-bold text-lg mb-2">
+                            {booking.shipment ? formatVehicleName(booking.shipment.vehicleYear, booking.shipment.vehicleMake, booking.shipment.vehicleModel) : 'Vehicle'}
+                          </h3>
+                          {booking.shipment && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                              <MapPin className="h-3.5 w-3.5 shrink-0" />
+                              <span>{booking.shipment.originCity}, {booking.shipment.originState}</span>
+                              <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                              <span>{booking.shipment.destinationCity}, {booking.shipment.destinationState}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                            <span className="font-semibold text-foreground">{formatCurrency(booking.agreedPrice)}</span>
+                            {booking.driver && <span>· Driver: {booking.driver.firstName} {booking.driver.lastName}</span>}
+                          </div>
+                        </div>
+                        {isDelivered && (
+                          <div className="bg-amber-50 dark:bg-amber-900/20 border-t md:border-t-0 md:border-l border-amber-200 dark:border-amber-800 p-6 flex flex-col justify-center items-center gap-3 shrink-0 w-full md:w-56">
+                            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-sm font-semibold">
+                              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                              Rate your driver
+                            </div>
+                            <Button className="w-full" size="sm" asChild>
+                              <Link href={`/bookings/${booking.id}`}>Leave a Review</Link>
+                            </Button>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
