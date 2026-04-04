@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Check, TrendingDown, Route, Heart, Camera, Zap, User, Building2, FileText, CreditCard, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useAuth } from "@workspace/replit-auth-web";
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8, toRad = (d: number) => (d * Math.PI) / 180;
@@ -35,6 +36,7 @@ const VEHICLE_MULT: Record<string, number> = {
 };
 
 function PriceEstimator() {
+  const { isAuthenticated, login } = useAuth();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [vehicleType, setVehicleType] = useState("sedan");
@@ -154,9 +156,15 @@ function PriceEstimator() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">{result.distanceMiles.toLocaleString()} miles · Based on real market rates for direct driver connections</p>
-          <Button size="sm" className="w-full" asChild>
-            <Link href="/post-load">Post This Load Free <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button size="sm" className="w-full" asChild>
+              <Link href="/post-load">Post This Load Free <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+            </Button>
+          ) : (
+            <Button size="sm" className="w-full" onClick={login}>
+              Sign up to Post This Load Free <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Button>
+          )}
         </motion.div>
       )}
     </div>
@@ -221,11 +229,6 @@ const NEW_FEATURES = [
   },
 ];
 
-const TESTIMONIALS = [
-  { quote: "I made more on my last run than I had in three months on other platforms combined. I paid nothing upfront.", name: "Mike T.", role: "Owner-Operator, 9 years", stars: 5 },
-  { quote: "My dealer was paying brokers $350 per car. Now I deal directly with the same quality drivers for half the price.", name: "Sarah K.", role: "Independent Auto Dealer", stars: 5 },
-  { quote: "The backhaul finder is a game changer. I fill my return trips now instead of driving empty.", name: "Carlos R.", role: "Fleet Driver, Dallas TX", stars: 5 },
-];
 
 export default function Home() {
   return (
@@ -520,32 +523,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials — placeholder until real reviews are collected */}
       <section className="py-20 bg-slate-900">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">What our community says</h2>
-            <p className="text-slate-400">From drivers who ditched expensive subscriptions and shippers who stopped paying broker fees.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Card className="bg-slate-800 border-slate-700 h-full">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-4">{Array.from({ length: t.stars }).map((_, j) => <Star key={j} className="h-4 w-4 text-amber-400 fill-amber-400" />)}</div>
-                    <p className="text-slate-200 text-sm leading-relaxed mb-5 italic">"{t.quote}"</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">{t.name.charAt(0)}</div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">{t.name}</p>
-                        <p className="text-slate-400 text-xs">{t.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+        <div className="container mx-auto px-4 md:px-6 text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">What our community says</h2>
+          <p className="text-slate-400 text-lg mb-6">Reviews coming soon.</p>
+          <p className="text-slate-500 text-sm">Be one of our first — share your experience after your first shipment.</p>
         </div>
       </section>
 
@@ -557,7 +540,7 @@ export default function Home() {
               <Zap className="h-4 w-4" /> Always free to post. Always free to browse.
             </div>
             <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">Ready to cut out the middleman?</h2>
-            <p className="text-lg text-muted-foreground mb-10">Join thousands of drivers and shippers who've already switched from broker dependency to direct connection.</p>
+            <p className="text-lg text-muted-foreground mb-10">Join drivers and shippers making the switch from broker dependency to direct connection.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="h-14 px-10 text-base" asChild>
                 <Link href="/post-load">Post a Load <ArrowRight className="ml-2" /></Link>
