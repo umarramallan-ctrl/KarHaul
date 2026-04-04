@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@clerk/clerk-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -165,7 +165,7 @@ export default function ShipmentDetail() {
   const shipmentId = params?.id || "";
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isSignedIn: isAuthenticated } = useAuth();
   
   const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } as any });
 

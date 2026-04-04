@@ -1,4 +1,4 @@
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth, RedirectToSignIn } from "@clerk/clerk-react";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -11,26 +11,20 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
-  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { data: profile, isLoading: profileLoading } = useGetMyProfile({
-    query: { enabled: isAuthenticated, retry: false } as any,
+    query: { enabled: isSignedIn, retry: false } as any,
   });
   const [location, setLocation] = useLocation();
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      login();
-    }
-  }, [authLoading, isAuthenticated, login]);
-
   // If authenticated but no profile (and not on profile page), redirect to complete profile
   useEffect(() => {
-    if (isAuthenticated && !profileLoading && !profile && location !== '/profile') {
+    if (isSignedIn && !profileLoading && !profile && location !== '/profile') {
       setLocation('/profile');
     }
-  }, [isAuthenticated, profileLoading, profile, location, setLocation]);
+  }, [isSignedIn, profileLoading, profile, location, setLocation]);
 
-  if (authLoading || (isAuthenticated && profileLoading)) {
+  if (!authLoaded || (isSignedIn && profileLoading)) {
     return (
       <MainLayout>
         <div className="flex-1 flex items-center justify-center min-h-[50vh]">
@@ -43,8 +37,8 @@ export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
     );
   }
 
-  if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
+  if (!isSignedIn) {
+    return <RedirectToSignIn />;
   }
 
   if (profile && requireRole !== 'any' && profile.role !== requireRole && profile.role !== 'both' && profile.role !== 'admin') {

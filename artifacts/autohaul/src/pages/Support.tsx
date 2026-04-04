@@ -13,7 +13,7 @@ import {
   Clock, CheckCircle2, Search, Star, MessageSquarePlus,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@clerk/clerk-react";
 
 interface FaqItem { q: string; a: string }
 
@@ -177,7 +177,7 @@ export default function Support() {
   const [feedbackForm, setFeedbackForm] = useState({ category: "app_experience", rating: 0, message: "", email: "" });
   const [feedbackDone, setFeedbackDone] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isSignedIn: isAuthenticated } = useAuth();
 
   const feedbackMutation = useMutation({
     mutationFn: postFeedback,

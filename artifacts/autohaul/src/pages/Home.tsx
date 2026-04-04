@@ -8,7 +8,7 @@ import { ArrowRight, ShieldCheck, DollarSign, Clock, MapPin, Truck, Star, X, Che
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth, useClerk } from "@clerk/clerk-react";
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8, toRad = (d: number) => (d * Math.PI) / 180;
@@ -37,7 +37,8 @@ const VEHICLE_MULT: Record<string, number> = {
 };
 
 function PriceEstimator() {
-  const { isAuthenticated, login } = useAuth();
+  const { isSignedIn: isAuthenticated } = useAuth();
+  const { openSignIn: login } = useClerk();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [vehicleType, setVehicleType] = useState("sedan");
@@ -162,7 +163,7 @@ function PriceEstimator() {
               <Link href="/post-load">Post This Load Free <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
             </Button>
           ) : (
-            <Button size="sm" className="w-full" onClick={login}>
+            <Button size="sm" className="w-full" onClick={() => login()}>
               Sign up to Post This Load Free <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           )}

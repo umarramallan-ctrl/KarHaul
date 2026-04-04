@@ -1,4 +1,4 @@
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@clerk/clerk-react";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -8,19 +8,19 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardRouter() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { data: profile, isLoading: profileLoading } = useGetMyProfile({
-    query: { enabled: isAuthenticated } as any,
+    query: { enabled: isSignedIn } as any,
   });
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (authLoaded && !isSignedIn) {
       setLocation("/");
     }
-  }, [authLoading, isAuthenticated, setLocation]);
+  }, [authLoaded, isSignedIn, setLocation]);
 
-  if (authLoading || profileLoading) {
+  if (!authLoaded || profileLoading) {
     return (
       <MainLayout>
         <div className="flex-1 flex items-center justify-center">

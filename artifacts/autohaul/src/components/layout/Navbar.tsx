@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart, Bell } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -46,7 +46,12 @@ function useNotifications(enabled: boolean) {
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const navigate = setLocation;
-  const { isAuthenticated, login, logout, user } = useAuth();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { signOut, openSignIn } = useClerk();
+  const isAuthenticated = !!isSignedIn;
+  const login = () => openSignIn();
+  const logout = () => signOut();
   const { data: profile } = useGetMyProfile({ query: { enabled: isAuthenticated } as any });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -199,9 +204,9 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9 border border-border">
-                      <AvatarImage src={profile?.profileImageUrl || user?.profileImage} alt={profile?.firstName || 'User'} />
+                      <AvatarImage src={profile?.profileImageUrl || user?.imageUrl} alt={profile?.firstName || 'User'} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {profile?.firstName?.[0] || user?.username?.[0] || 'U'}
+                        {profile?.firstName?.[0] || user?.firstName?.[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -210,7 +215,7 @@ export function Navbar() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none flex items-center gap-1">
-                        {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : user?.username}
+                        {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : user?.fullName || user?.primaryEmailAddress?.emailAddress}
                         {isVerified && <ShieldCheck className="h-3 w-3 text-primary" />}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
