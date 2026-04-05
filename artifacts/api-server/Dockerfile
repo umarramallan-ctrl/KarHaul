@@ -2,14 +2,6 @@ FROM node:18-alpine
 ARG CACHEBUST
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy workspace files from repo root (needed to resolve catalog: protocol)
-COPY pnpm-workspace.yaml ./
-COPY pnpm-lock.yaml ./
-COPY package.json ./
-
 # Copy the api-server package
 COPY artifacts/api-server/package.json ./artifacts/api-server/package.json
 COPY artifacts/api-server/dist/ ./artifacts/api-server/dist/
@@ -18,9 +10,8 @@ COPY artifacts/api-server/dist/ ./artifacts/api-server/dist/
 COPY lib/api-zod ./lib/api-zod
 COPY lib/db ./lib/db
 
-# Install production deps using pnpm
-# cache-bust: 1
-RUN pnpm install --no-frozen-lockfile --prod
+# Install production deps (no workspace packages, no scripts)
+RUN cd artifacts/api-server && npm install --omit=dev --ignore-scripts
 
 WORKDIR /app/artifacts/api-server
 
