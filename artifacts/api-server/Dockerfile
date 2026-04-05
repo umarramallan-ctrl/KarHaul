@@ -15,6 +15,7 @@ COPY artifacts/api-server/package.json ./artifacts/api-server/package.json
 COPY artifacts/api-server/dist/ ./artifacts/api-server/dist/
 
 # Install production deps using pnpm
+# cache-bust: 1
 RUN pnpm install --no-frozen-lockfile --prod
 
 WORKDIR /app/artifacts/api-server
