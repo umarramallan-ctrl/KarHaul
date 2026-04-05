@@ -1,8 +1,6 @@
 [build]
 builder = "nixpacks"
-
-[build.nixpacksConfig]
-buildCmd = "npm install -g pnpm && pnpm install --no-frozen-lockfile"
+buildCommand = "npm install -g pnpm && pnpm install --no-frozen-lockfile"
 
 [deploy]
 startCommand = "node --enable-source-maps ./dist/index.mjs"
