@@ -14,6 +14,10 @@ COPY package.json ./
 COPY artifacts/api-server/package.json ./artifacts/api-server/package.json
 COPY artifacts/api-server/dist/ ./artifacts/api-server/dist/
 
+# Copy local workspace dependencies
+COPY lib/api-zod ./lib/api-zod
+COPY lib/db ./lib/db
+
 # Install production deps using pnpm
 # cache-bust: 1
 RUN pnpm install --no-frozen-lockfile --prod
