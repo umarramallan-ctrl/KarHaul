@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const publicPath = path.resolve(__dirname, "../../autohaul/dist/public");
   app.use(express.static(publicPath));
-  app.get("*", (_req, res) => {
+  app.get("/*splat", (_req, res) => {
     res.sendFile(path.join(publicPath, "index.html"));
   });
 }
