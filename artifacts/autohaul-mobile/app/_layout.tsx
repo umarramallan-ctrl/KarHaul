@@ -8,13 +8,15 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
+import * as Notifications from "expo-notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) setBaseUrl(`https://${domain}`);
@@ -50,6 +52,20 @@ function RootLayoutNav() {
   );
 }
 
+function PushNotificationRegistrar() {
+  const { isSignedIn } = useAuth();
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const baseUrl = domain ? `https://${domain}` : "";
+    registerForPushNotificationsAsync().then(token => {
+      if (token && baseUrl) {
+        savePushTokenToServer(token, baseUrl).catch(() => {});
+      }
+    }).catch(() => {});
+  }, [isSignedIn]);
+  return null;
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
@@ -75,6 +91,7 @@ export default function RootLayout() {
         >
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
+              <PushNotificationRegistrar />
               <RootLayoutNav />
             </GestureHandlerRootView>
           </QueryClientProvider>

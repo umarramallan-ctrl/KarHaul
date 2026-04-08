@@ -17,6 +17,9 @@ import passkeyRouter from "./passkeys";
 import twoFactorRouter from "./two-factor";
 import notificationsRouter from "./notifications";
 import feedbackRouter from "./feedback";
+import stripeRouter from "./stripe";
+import backhaulRouter from "./backhaul";
+import lanePreferencesRouter from "./lane-preferences";
 
 const router: IRouter = Router();
 
@@ -38,5 +41,8 @@ router.use(passkeyRouter);
 router.use("/auth/2fa", twoFactorRouter);
 router.use(notificationsRouter);
 router.use(feedbackRouter);
+router.use(stripeRouter);
+router.use(backhaulRouter);
+router.use(lanePreferencesRouter);
 
 export default router;

@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { bidsTable, shipmentsTable, bookingsTable, usersTable } from "@workspace/db";
+import { bidsTable, shipmentsTable, bookingsTable, usersTable, lanePreferencesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { createNotification } from "../lib/notify";
 import { bidLimiter } from "../lib/rate-limit";
+import { CANCELLATION_WINDOW_MS } from "../lib/stripe";
 
 const router: IRouter = Router();
 
@@ -122,6 +123,8 @@ router.post("/bids/:bidId/accept", async (req, res) => {
   const bookingId = randomUUID();
   const PLATFORM_FEE_PERCENT = 3.0;
   const platformFeeAmount = Math.round(bid.amount * (PLATFORM_FEE_PERCENT / 100) * 100) / 100;
+  const now = new Date();
+  const cancellationDeadline = new Date(now.getTime() + CANCELLATION_WINDOW_MS);
   await db.insert(bookingsTable).values({
     id: bookingId,
     shipmentId: bid.shipmentId,
@@ -132,6 +135,8 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     platformFeePercent: PLATFORM_FEE_PERCENT,
     platformFeeAmount,
     status: "confirmed",
+    acceptedAt: now,
+    cancellationDeadline,
   });
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
 
@@ -141,6 +146,23 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     type: "bid_accepted",
     title: "Your bid was accepted!",
     body: `Your $${bid.amount} bid has been accepted. Check your bookings.`,
+    linkPath: `/bookings/${bookingId}`,
+  });
+
+  // Notify both parties the cancellation window is open (1 hour to cancel penalty-free)
+  const windowNotifBody = "You have 1 hour to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
+  await createNotification({
+    userId: shipment.shipperId,
+    type: "cancellation_window_open",
+    title: "1-hour cancellation window open",
+    body: windowNotifBody,
+    linkPath: `/bookings/${bookingId}`,
+  });
+  await createNotification({
+    userId: bid.driverId,
+    type: "cancellation_window_open",
+    title: "1-hour cancellation window open",
+    body: windowNotifBody,
     linkPath: `/bookings/${bookingId}`,
   });
 

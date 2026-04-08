@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -390,6 +390,24 @@ export default function BookingDetail() {
   const { data: booking, isLoading, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
   const updateStatusMutation = useUpdateBookingStatus();
   const [notes, setNotes] = useState("");
+  const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
+  const qc = useQueryClient();
+
+  const saveDriverMutation = useMutation({
+    mutationFn: async (driverId: string) => {
+      const token = await (window as any).Clerk?.session?.getToken();
+      const res = await fetch(`${apiBase}/users/saved-drivers/${driverId}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok && res.status !== 409) throw new Error("Failed to save driver");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["saved-drivers"] }); setSaveDriverDismissed(true); toast({ title: "Driver saved!", description: "Find them in Saved Drivers to rebook anytime." }); },
+    onError: () => { setSaveDriverDismissed(true); },
+  });
 
   const isDriver = profile?.id === (booking as any)?.driverId;
   const isShipper = profile?.id === (booking as any)?.shipperId;
@@ -666,6 +684,32 @@ export default function BookingDetail() {
             {/* Location Tracking */}
             <TrackingPanel bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />
 
+            {/* Save driver prompt after delivery */}
+            {b.status === "delivered" && isShipper && b.driverId && !saveDriverDismissed && (
+              <Card className="mb-6 border-rose-500/30 bg-rose-500/5">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                      <Heart className="h-5 w-5 text-rose-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-white text-sm mb-1">Save {b.driver?.firstName || "this driver"} for future loads?</p>
+                      <p className="text-xs text-slate-400 mb-4">Add them to your Saved Drivers network so you can rebook directly — no bidding required next time.</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" className="bg-rose-600 hover:bg-rose-500 text-white border-0" disabled={saveDriverMutation.isPending}
+                          onClick={() => saveDriverMutation.mutate(b.driverId)}>
+                          {saveDriverMutation.isPending ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</> : "Save Driver"}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-slate-400 hover:text-white" onClick={() => setSaveDriverDismissed(true)}>
+                          No thanks
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Review Panel — shown after delivery */}
             {b.status === "delivered" && (isShipper || isDriver) && (
               <ReviewPanel
@@ -721,7 +765,11 @@ export default function BookingDetail() {
                         <DollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div>
                           <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee Breakdown</p>
-                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">A 3% platform maintenance fee ({formatCurrency(platformFee)}) is charged to the shipper on top of the agreed transport price. This keeps KarHaul free for drivers and funds platform safety, insurance verification, and support. You still save significantly versus broker-arranged transport.</p>
+                          <div className="text-xs text-amber-700 dark:text-amber-400 mt-1 space-y-1">
+                            <p><strong>Shipper:</strong> 5% of the max budget held in escrow when the load was posted — released to KarHaul on delivery.</p>
+                            <p><strong>Driver:</strong> 3% of the max budget held in escrow when bid was accepted — released to KarHaul on delivery.</p>
+                            <p className="pt-1 border-t border-amber-300/30"><strong>Transport payment:</strong> KarHaul does not process payments between shipper and driver. You pay each other directly.</p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>

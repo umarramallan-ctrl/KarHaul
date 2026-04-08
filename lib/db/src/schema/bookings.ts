@@ -15,6 +15,13 @@ export const bookingsTable = pgTable("bookings", {
   pickupConfirmedAt: timestamp("pickup_confirmed_at"),
   deliveryConfirmedAt: timestamp("delivery_confirmed_at"),
   trackingNotes: text("tracking_notes"),
+  // Driver escrow: 3% of budgetMax held when bid is accepted
+  driverEscrowIntentId: text("driver_escrow_intent_id"),
+  driverEscrowAmount: real("driver_escrow_amount"),
+  driverEscrowStatus: text("driver_escrow_status").default("none"), // none | held | captured | returned
+  // Cancellation policy
+  acceptedAt: timestamp("accepted_at"),
+  cancellationDeadline: timestamp("cancellation_deadline"), // acceptedAt + 1 hour
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

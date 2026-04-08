@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { shipmentsTable, usersTable, bidsTable } from "@workspace/db";
+import { shipmentsTable, usersTable, bidsTable, lanePreferencesTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { createNotification } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -105,8 +106,37 @@ router.post("/shipments", async (req, res) => {
     status: "open",
   });
   const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, id)).limit(1);
+
+  // Notify drivers who have matching lane preferences
+  notifyMatchingDrivers(shipment!).catch(() => {});
+
   res.status(201).json(shipment);
 });
+
+async function notifyMatchingDrivers(shipment: typeof shipmentsTable.$inferSelect) {
+  if (!shipment) return;
+  // Find driver lane prefs matching origin → destination state
+  const matches = await db.select().from(lanePreferencesTable)
+    .where(
+      and(
+        eq(lanePreferencesTable.role, "driver"),
+        eq(lanePreferencesTable.originState, shipment.originState),
+        eq(lanePreferencesTable.destinationState, shipment.destinationState),
+        eq(lanePreferencesTable.isActive, true),
+      )
+    );
+
+  const vehicleLabel = `${shipment.vehicleYear} ${shipment.vehicleMake} ${shipment.vehicleModel}`;
+  for (const pref of matches) {
+    await createNotification({
+      userId: pref.userId,
+      type: "load_match",
+      title: "New load on your lane",
+      body: `${vehicleLabel} — ${shipment.originCity}, ${shipment.originState} → ${shipment.destinationCity}, ${shipment.destinationState}${shipment.budgetMax ? ` · up to $${shipment.budgetMax}` : ""}`,
+      linkPath: `/shipments/${shipment.id}`,
+    });
+  }
+}
 
 router.get("/shipments/:shipmentId", async (req, res) => {
   const { shipmentId } = req.params;

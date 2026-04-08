@@ -57,7 +57,11 @@
       "Bash(do grep:*)",
       "Bash(find /home/runner/workspace/node_modules/@simplewebauthn -name *.d.ts)",
       "Bash(PORT=3000 pnpm --filter @workspace/mockup-sandbox run build)",
-      "Bash(PORT=3000 BASE_PATH=/ pnpm --filter @workspace/mockup-sandbox run build)"
+      "Bash(PORT=3000 BASE_PATH=/ pnpm --filter @workspace/mockup-sandbox run build)",
+      "Bash(npx expo:*)",
+      "Bash(find /home/runner/workspace/artifacts/api-server/src/routes -type f -name \"*.ts\" -exec basename {} \\\\;)",
+      "Bash(BASE_PATH=/ pnpm --filter @workspace/autohaul run build)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_UTGPHm9cQk4L@ep-floral-pond-anh16o3b.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require\" pnpm run push)"
     ]
   }
 }

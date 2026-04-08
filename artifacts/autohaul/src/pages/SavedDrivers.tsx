@@ -127,6 +127,11 @@ export default function SavedDrivers() {
                         </div>
 
                         <div className="flex gap-2 pt-4 border-t border-slate-800/60">
+                          <Button size="sm" className="flex-1 gap-1.5 bg-amber-500 hover:bg-amber-400 border-0 text-slate-900 text-xs font-bold" asChild>
+                            <Link href={`/post-load?inviteDriver=${saved.driverId}&driverName=${encodeURIComponent(name)}`}>
+                              <ArrowRight className="h-3.5 w-3.5" /> Invite to Bid
+                            </Link>
+                          </Button>
                           <Button size="sm" className="flex-1 gap-1.5 bg-blue-600 hover:bg-blue-500 border-0 text-white text-xs" asChild>
                             <Link href={`/messages?driverId=${saved.driverId}`}>
                               <MessageCircle className="h-3.5 w-3.5" /> Message

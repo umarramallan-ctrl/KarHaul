@@ -84,9 +84,10 @@ interface AutocompleteInputProps {
 function AutocompleteInput({ value, onChange, suggestions, placeholder, className }: AutocompleteInputProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const safeValue = value ?? "";
 
-  const filtered = value.trim().length > 0
-    ? suggestions.filter(s => s.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
+  const filtered = safeValue.trim().length > 0
+    ? suggestions.filter(s => s.toLowerCase().includes(safeValue.toLowerCase())).slice(0, 8)
     : [];
 
   useEffect(() => {
@@ -102,7 +103,7 @@ function AutocompleteInput({ value, onChange, suggestions, placeholder, classNam
   return (
     <div ref={containerRef} className="relative">
       <Input
-        value={value}
+        value={safeValue}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => filtered.length > 0 && setOpen(true)}
         placeholder={placeholder}
@@ -173,6 +174,9 @@ export default function CreateShipment() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const createMutation = useCreateShipment();
+  // Check for invited driver from Saved Drivers page
+  const inviteDriverId = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("inviteDriver");
+  const inviteDriverName = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("driverName");
   const [step, setStep] = useState(1);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<z.infer<typeof formSchema> | null>(null);
@@ -193,7 +197,7 @@ export default function CreateShipment() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
+    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
   });
 
   const watchedMake = form.watch("vehicleMake");
@@ -305,6 +309,14 @@ export default function CreateShipment() {
                         </div>
                         <h2 className="font-bold text-white">Vehicle Information</h2>
                       </div>
+                      {inviteDriverId && (
+                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-center gap-3">
+                          <span className="text-amber-400 text-lg">⭐</span>
+                          <p className="text-sm text-amber-200">
+                            <strong>{inviteDriverName || "Your saved driver"}</strong> will be notified when this load is posted and invited to bid directly.
+                          </p>
+                        </div>
+                      )}
                       <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="vehicleYear" render={({ field }) => (
                           <FormItem>
@@ -605,6 +617,18 @@ export default function CreateShipment() {
                         </FormItem>
                       )} />
 
+                      {/* Platform fee breakdown */}
+                      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
+                        <p className="text-xs font-bold text-blue-300 uppercase tracking-widest">How KarHaul Fees Work</p>
+                        <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
+                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">You (shipper):</span><span>5% of your max budget is held in escrow when you post. Released to KarHaul after delivery.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Driver:</span><span>3% of your max budget is held in escrow when they accept. Released to KarHaul after delivery.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">Cancellation:</span><span>Both parties have a 1-hour window to cancel penalty-free. After that, the cancelling party forfeits their escrow fee.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">No-show:</span><span>If the driver no-shows, they forfeit their escrow and yours is returned. If you no-show, yours is forfeited and theirs is returned.</span></div>
+                          <div className="flex items-start gap-2 pt-1 border-t border-blue-500/20"><span className="text-slate-400 font-bold shrink-0">Payments:</span><span>KarHaul does NOT process transport payments. You pay the driver directly — cash, Zelle, Venmo, etc. The escrow above is the platform fee only.</span></div>
+                        </div>
+                      </div>
+
                       {/* Terms */}
                       <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
                         <FormField control={form.control} name="agreeToTerms" render={({ field }) => (
@@ -640,11 +664,11 @@ export default function CreateShipment() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Post Load to Board"
-        description={`Posting this load makes it visible to all verified drivers. A 5% platform fee based on your max budget will be held in escrow until delivery.`}
+        description={`Your load will be visible to all verified drivers. A 5% platform fee (based on your max budget) is held in escrow now and released to KarHaul when delivery is confirmed. You pay the driver directly — KarHaul does not process transport payments.`}
         fees={pendingBudgetMax > 0 ? [
-          { label: "Platform fee (5% of max budget)", amount: shipperFee },
+          { label: "Your platform fee (5% of max budget)", amount: shipperFee },
         ] : []}
-        commitmentText="By posting, you commit to this shipment. If you cancel after a driver's bid is accepted and the 1-hour window passes, your escrow fee is forfeited."
+        commitmentText="Once a driver's bid is accepted, you have 1 hour to cancel penalty-free. After that, cancelling forfeits your escrow fee. If the driver no-shows, your escrow is returned."
         confirmLabel="Post Load"
         onConfirm={confirmPost}
         isLoading={createMutation.isPending}

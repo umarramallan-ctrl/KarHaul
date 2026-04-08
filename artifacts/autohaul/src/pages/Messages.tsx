@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelative } from "@/lib/format";
-import { MessageSquare, Send, Shield, Phone, AlertCircle, Loader2, Info, Zap } from "lucide-react";
+import { MessageSquare, Send, Shield, Phone, MessageCircle, AlertCircle, Loader2, Info, Zap } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -125,10 +125,27 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
             </div>
           </div>
         </div>
-        <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" onClick={handleCall} disabled={calling}>
-          {calling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
-          {calling ? "Connecting..." : "Call"}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {conv.otherUserPhone ? (
+            <>
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" asChild>
+                <a href={`tel:${conv.otherUserPhone}`}>
+                  <Phone className="h-3.5 w-3.5" /> Call
+                </a>
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-blue-700 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700" asChild>
+                <a href={`sms:${conv.otherUserPhone}`}>
+                  <MessageCircle className="h-3.5 w-3.5" /> Text
+                </a>
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" onClick={handleCall} disabled={calling}>
+              {calling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
+              {calling ? "Connecting..." : "Call"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Privacy Notice */}

@@ -19,6 +19,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiBase } from "@/lib/api";
+import { Star } from "lucide-react";
 
 const LOCATION_INFO: Record<string, {
   label: string;
@@ -186,6 +189,24 @@ export default function ShipmentDetail() {
   const [pendingBidValues, setPendingBidValues] = useState<z.infer<typeof bidSchema> | null>(null);
   const [acceptConfirmOpen, setAcceptConfirmOpen] = useState(false);
   const [pendingAcceptBidId, setPendingAcceptBidId] = useState<string | null>(null);
+  const [saveDriverOpen, setSaveDriverOpen] = useState(false);
+  const [justAcceptedBookingId, setJustAcceptedBookingId] = useState<string | null>(null);
+  const [justAcceptedDriver, setJustAcceptedDriver] = useState<{ id: string; name: string } | null>(null);
+
+  const qc = useQueryClient();
+  const saveDriverMutation = useMutation({
+    mutationFn: async (driverId: string) => {
+      const token = await (window as any).Clerk?.session?.getToken();
+      const res = await fetch(`${apiBase}/users/saved-drivers/${driverId}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok && res.status !== 409) throw new Error("Failed to save driver");
+      return res.json();
+    },
+  });
 
   const form = useForm<z.infer<typeof bidSchema>>({
     resolver: zodResolver(bidSchema),
@@ -248,11 +269,17 @@ export default function ShipmentDetail() {
 
   function confirmAcceptBid() {
     if (!pendingAcceptBidId) return;
+    const bid = bidsData?.bids?.find((b: any) => b.id === pendingAcceptBidId);
     acceptBidMutation.mutate({ bidId: pendingAcceptBidId }, {
       onSuccess: (booking: any) => {
         toast({ title: "Bid Accepted!", description: "Booking created. 1-hour cancellation window is now open." });
         setAcceptConfirmOpen(false);
-        setLocation(`/bookings/${booking.id}`);
+        setJustAcceptedBookingId(booking.id);
+        setJustAcceptedDriver({
+          id: bid?.driverId || "",
+          name: [bid?.driver?.firstName, bid?.driver?.lastName].filter(Boolean).join(" ") || "this driver",
+        });
+        setSaveDriverOpen(true);
       },
       onError: (err: any) => {
         toast({ title: "Failed to accept bid", description: err.message, variant: "destructive" });
@@ -264,6 +291,21 @@ export default function ShipmentDetail() {
   const driverFee = parseFloat((budgetMax * 0.03).toFixed(2));
   const shipperFee = parseFloat((budgetMax * 0.05).toFixed(2));
   const pendingBidAmount = pendingBidValues?.amount ?? 0;
+
+  const acceptedBid = bidsData?.bids?.find((b: any) => b.status === 'accepted');
+
+  const { data: driverReviewsData } = useQuery({
+    queryKey: ["driver-reviews", acceptedBid?.driverId],
+    queryFn: async () => {
+      const token = await (window as any).Clerk?.session?.getToken();
+      const res = await fetch(`${apiBase}/reviews/user/${acceptedBid?.driverId}`, {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return res.json();
+    },
+    enabled: !!acceptedBid?.driverId,
+  });
 
   if (isLoading || !shipment) {
     return (
@@ -688,11 +730,13 @@ export default function ShipmentDetail() {
                             )}
                           />
 
-                          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex gap-3 mt-6">
-                            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-800 dark:text-amber-300">
-                              By submitting this bid, you agree to KarHaul's Terms of Service. You act as an independent carrier and hold full liability for the transport. KarHaul takes 0% commission.
-                            </p>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-3 mt-6">
+                            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                            <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+                              <p><strong>Your fee:</strong> If accepted, a <strong>3% platform fee</strong> based on the max budget is held in escrow and released to KarHaul on delivery.</p>
+                              <p><strong>Payment:</strong> You are paid directly by the shipper — KarHaul does not process transport payments.</p>
+                              <p><strong>Cancellation:</strong> You have 1 hour after acceptance to cancel penalty-free. After that, cancelling forfeits your escrow.</p>
+                            </div>
                           </div>
 
                           <DialogFooter className="mt-6">
@@ -721,35 +765,103 @@ export default function ShipmentDetail() {
               </CardFooter>
             </Card>
 
-            {/* Shipper Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" /> About the Shipper
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-lg font-bold text-primary">
-                    {shipment.shipper?.firstName?.[0] || 'U'}
-                  </div>
-                  <div>
-                    <div className="font-semibold">{shipment.shipper?.firstName} {shipment.shipper?.lastName}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2">
-                      <span>⭐ {shipment.shipper?.averageRating?.toFixed(1) || 'New'} ({shipment.shipper?.totalReviews || 0} reviews)</span>
-                      {(shipment.shipper?.completedJobs ?? 0) > 0 && (
-                        <span>· {shipment.shipper?.completedJobs} hauls completed</span>
+            {/* Driver Profile (when owner has an accepted driver) OR Shipper Info (for drivers viewing) */}
+            {isOwner && acceptedBid ? (
+              <Card className="border-emerald-200 dark:border-emerald-800">
+                <CardHeader className="pb-3 bg-emerald-50 dark:bg-emerald-900/20">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-emerald-600" /> Accepted Driver
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                      {acceptedBid.driver?.firstName?.[0] || "D"}
+                    </div>
+                    <div>
+                      <div className="font-bold text-lg">{acceptedBid.driver?.firstName} {acceptedBid.driver?.lastName}</div>
+                      {acceptedBid.driver?.isVerified && (
+                        <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                          <ShieldCheck className="h-3 w-3" /> Verified carrier
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
-                {isAuthenticated && !isOwner && (
-                  <Button variant="outline" className="w-full text-xs h-8">
-                    Message Shipper
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="space-y-1.5 text-sm bg-muted/30 p-3 rounded-lg border">
+                    {(acceptedBid.driver?.averageRating ?? 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Rating:</span>
+                        <span className="font-medium flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          {acceptedBid.driver?.averageRating?.toFixed(1)} ({acceptedBid.driver?.totalReviews} reviews)
+                        </span>
+                      </div>
+                    )}
+                    {(acceptedBid.driver?.completedJobs ?? 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Hauls completed:</span>
+                        <span className="font-medium">{acceptedBid.driver?.completedJobs}</span>
+                      </div>
+                    )}
+                    {acceptedBid.driver?.truckType && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Equipment:</span>
+                        <span className="font-medium">{acceptedBid.driver.truckType}</span>
+                      </div>
+                    )}
+                    {acceptedBid.driver?.dotNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">DOT #:</span>
+                        <span className="font-medium font-mono">{acceptedBid.driver.dotNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Driver reviews */}
+                  {driverReviewsData?.reviews?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Recent Reviews</p>
+                      {driverReviewsData.reviews.slice(0, 3).map((r: any) => r.comment && (
+                        <div key={r.id} className="bg-muted/30 rounded-lg p-2.5 border text-xs">
+                          <div className="flex items-center gap-1 mb-1">
+                            {[1,2,3,4,5].map(s => <Star key={s} className={`h-3 w-3 ${s <= r.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}
+                          </div>
+                          <p className="text-muted-foreground italic">"{r.comment}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : !isOwner ? (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" /> About the Shipper
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-lg font-bold text-primary">
+                      {shipment.shipper?.firstName?.[0] || 'U'}
+                    </div>
+                    <div>
+                      <div className="font-semibold">{shipment.shipper?.firstName} {shipment.shipper?.lastName}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>⭐ {shipment.shipper?.averageRating?.toFixed(1) || 'New'} ({shipment.shipper?.totalReviews || 0} reviews)</span>
+                        {(shipment.shipper?.completedJobs ?? 0) > 0 && (
+                          <span>· {shipment.shipper?.completedJobs} hauls completed</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isAuthenticated && !isOwner && (
+                    <Button variant="outline" className="w-full text-xs h-8">
+                      Message Shipper
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
           </div>
         </div>
       </div>
@@ -759,11 +871,11 @@ export default function ShipmentDetail() {
         open={bidConfirmOpen}
         onOpenChange={setBidConfirmOpen}
         title="Confirm Bid Submission"
-        description={`You're submitting a $${pendingBidValues?.amount?.toFixed(2) ?? "0.00"} bid. If accepted, a 3% platform fee will be held in escrow from your account.`}
+        description={`You're submitting a $${pendingBidValues?.amount?.toFixed(2) ?? "0.00"} bid. If accepted, a 3% platform fee (held in escrow) is charged to you. You are paid directly by the shipper — KarHaul does not process transport payments.`}
         fees={budgetMax > 0 ? [
-          { label: "Platform fee (3% of max budget)", amount: driverFee },
+          { label: "Your platform fee (3% of max budget)", amount: driverFee },
         ] : []}
-        commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. Cancelling after the 1-hour window forfeits your escrow."
+        commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. You have 1 hour after acceptance to cancel penalty-free. Cancelling after that forfeits your escrow."
         confirmLabel="Submit Bid"
         onConfirm={confirmPlaceBid}
         isLoading={placeBidMutation.isPending}
@@ -774,16 +886,43 @@ export default function ShipmentDetail() {
         open={acceptConfirmOpen}
         onOpenChange={setAcceptConfirmOpen}
         title="Accept Bid & Create Booking"
-        description={`Accepting this bid creates a binding booking. A 5% platform fee will be held in escrow from your account, and the driver's 3% fee will be held on their end.`}
+        description={`Accepting creates a binding booking. A 5% platform fee is held in escrow from you now; the driver's 3% is held when they confirm. Both fees go to KarHaul on delivery. You pay the driver directly — KarHaul does not process transport payments.`}
         fees={budgetMax > 0 ? [
           { label: "Your platform fee (5% of max budget)", amount: shipperFee },
           { label: "Driver platform fee (3% of max budget)", amount: driverFee },
         ] : []}
-        commitmentText="By accepting, you commit to this shipment. Cancelling after the 1-hour window forfeits your platform fee escrow."
+        commitmentText="You have 1 hour to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
         confirmLabel="Accept Bid"
         onConfirm={confirmAcceptBid}
         isLoading={acceptBidMutation.isPending}
       />
+
+      {/* Save driver prompt after acceptance */}
+      <Dialog open={saveDriverOpen} onOpenChange={open => { if (!open) { setSaveDriverOpen(false); if (justAcceptedBookingId) setLocation(`/bookings/${justAcceptedBookingId}`); } }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white">Save {justAcceptedDriver?.name} to your network?</DialogTitle>
+            <DialogDescription className="text-slate-400 text-sm">
+              Save this driver so you can rebook them directly on future loads — no bidding required.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 mt-4">
+            <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 flex-1" onClick={() => { setSaveDriverOpen(false); if (justAcceptedBookingId) setLocation(`/bookings/${justAcceptedBookingId}`); }}>
+              Skip
+            </Button>
+            <Button className="bg-rose-600 hover:bg-rose-500 text-white border-0 flex-1" disabled={saveDriverMutation.isPending}
+              onClick={() => {
+                if (!justAcceptedDriver?.id) return;
+                saveDriverMutation.mutate(justAcceptedDriver.id, {
+                  onSettled: () => { setSaveDriverOpen(false); if (justAcceptedBookingId) setLocation(`/bookings/${justAcceptedBookingId}`); },
+                  onSuccess: () => toast({ title: `${justAcceptedDriver.name} saved!`, description: "Find them in Saved Drivers to rebook anytime." }),
+                });
+              }}>
+              {saveDriverMutation.isPending ? "Saving…" : "Save Driver"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

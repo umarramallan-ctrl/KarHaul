@@ -20,6 +20,7 @@ export const usersTable = pgTable("users", {
   truckCapacity: real("truck_capacity"),
   isVerified: boolean("is_verified").notNull().default(false),
   isSuspended: boolean("is_suspended").notNull().default(false),
+  isPremium: boolean("is_premium").notNull().default(false),
   averageRating: real("average_rating").notNull().default(0),
   totalReviews: integer("total_reviews").notNull().default(0),
   completedJobs: integer("completed_jobs").notNull().default(0),
@@ -29,6 +30,12 @@ export const usersTable = pgTable("users", {
   totpEnabled: boolean("totp_enabled").notNull().default(false),
   smsOtpEnabled: boolean("sms_otp_enabled").notNull().default(false),
   twoFaMethod: text("two_fa_method").notNull().default("none"),
+  // Stripe Connect fields
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeAccountId: text("stripe_account_id"),       // Express Connect account (drivers)
+  stripeAccountStatus: text("stripe_account_status"), // pending | active | restricted
+  // Push notification token (Expo push token for mobile)
+  pushToken: text("push_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

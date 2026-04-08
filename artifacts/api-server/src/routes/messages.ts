@@ -43,6 +43,7 @@ router.get("/conversations", async (req, res) => {
       otherUserId: otherId,
       otherUserName: other ? `${other.firstName || ""} ${other.lastName || ""}`.trim() || "User" : "Unknown",
       otherUserAvatar: other?.profileImageUrl || null,
+      otherUserPhone: other?.phone || null,
       shipmentId: c.shipmentId,
       lastMessage: lastMsg?.content || null,
       lastMessageAt: lastMsg?.createdAt?.toISOString() || c.lastMessageAt?.toISOString(),

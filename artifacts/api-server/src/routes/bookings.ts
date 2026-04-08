@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { bookingsTable, shipmentsTable, usersTable } from "@workspace/db";
 import { eq, or, desc } from "drizzle-orm";
 import { createNotification } from "../lib/notify";
+import { releaseEscrow } from "./stripe";
+import { CANCELLATION_WINDOW_MS } from "../lib/stripe";
 
 const router: IRouter = Router();
 
@@ -75,6 +77,30 @@ router.put("/bookings/:bookingId/status", async (req, res) => {
     if (shipper) {
       await db.update(usersTable).set({ completedJobs: (shipper.completedJobs || 0) + 1 }).where(eq(usersTable.id, booking.shipperId));
     }
+    // Release both escrow amounts to the platform on delivery
+    const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, booking.shipmentId)).limit(1);
+    await releaseEscrow(shipment, booking, "capture", "capture");
+    await createNotification({
+      userId: booking.shipperId,
+      type: "escrow_released",
+      title: "Escrow released",
+      body: "Delivery confirmed — your platform fee has been collected.",
+      linkPath: `/bookings/${booking.id}`,
+    });
+    await createNotification({
+      userId: booking.driverId,
+      type: "escrow_released",
+      title: "Escrow released",
+      body: "Delivery confirmed — your platform fee has been collected.",
+      linkPath: `/bookings/${booking.id}`,
+    });
+    await createNotification({
+      userId: booking.shipperId,
+      type: "delivery_confirmation_request",
+      title: "Delivery confirmed",
+      body: "Your vehicle has been delivered. Please confirm and leave a review.",
+      linkPath: `/bookings/${booking.id}`,
+    });
   }
   await db.update(bookingsTable).set(updateData).where(eq(bookingsTable.id, bookingId));
   const [updated] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);

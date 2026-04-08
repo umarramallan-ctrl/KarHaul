@@ -1,4 +1,4 @@
-import { pgTable, text, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -31,6 +31,12 @@ export const shipmentsTable = pgTable("shipments", {
   status: text("status").notNull().default("open"),
   bidCount: integer("bid_count").notNull().default(0),
   assignedDriverId: text("assigned_driver_id"),
+  // Shipper escrow: 5% of budgetMax held when load is posted
+  shipperEscrowIntentId: text("shipper_escrow_intent_id"),
+  shipperEscrowAmount: real("shipper_escrow_amount"),
+  shipperEscrowStatus: text("shipper_escrow_status").default("none"), // none | held | captured | returned
+  // Premium priority placement
+  isPriority: boolean("is_priority").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

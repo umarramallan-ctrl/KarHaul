@@ -32,6 +32,7 @@
     "pino-http": "^10",
     "pino-pretty": "^13",
     "speakeasy": "^2.0.0",
+    "stripe": "^17.7.0",
     "thread-stream": "3.1.0",
     "twilio": "^5.13.0"
   }
