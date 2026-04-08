@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, useClerk } from "@clerk/clerk-react";
+import { apiBase } from "@/lib/api";
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8, toRad = (d: number) => (d * Math.PI) / 180;
@@ -235,7 +236,7 @@ const NEW_FEATURES = [
 function TestimonialsSection() {
   const { data } = useQuery<{ reviews: any[] }>({
     queryKey: ["/api/reviews/featured"],
-    queryFn: () => fetch("/api/reviews/featured").then(r => r.json()),
+    queryFn: () => fetch(`${apiBase}/reviews/featured`).then(r => r.json()),
     staleTime: 5 * 60 * 1000,
   });
   const reviews = data?.reviews ?? [];

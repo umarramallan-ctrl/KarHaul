@@ -13,6 +13,7 @@ import {
   Clock, CheckCircle2, Search, Star, MessageSquarePlus,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { apiBase } from "@/lib/api";
 import { useAuth } from "@clerk/clerk-react";
 
 interface FaqItem { q: string; a: string }
@@ -152,7 +153,7 @@ function FeedbackStars({ value, onChange }: { value: number; onChange: (v: numbe
 }
 
 async function postFeedback(data: Record<string, any>) {
-  const res = await fetch("/api/feedback", {
+  const res = await fetch(`${apiBase}/feedback`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

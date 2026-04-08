@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { apiBase } from "@/lib/api";
 
 type AppNotification = {
   id: string;
@@ -34,7 +35,7 @@ function useNotifications(enabled: boolean) {
   return useQuery<{ notifications: AppNotification[]; unreadCount: number }>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const res = await fetch("/api/notifications", { credentials: "include" });
+      const res = await fetch(`${apiBase}/notifications`, { credentials: "include" });
       if (!res.ok) return { notifications: [], unreadCount: 0 };
       return res.json();
     },
@@ -62,14 +63,14 @@ export function Navbar() {
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/notifications/${id}/read`, { method: "PATCH", credentials: "include" });
+      await fetch(`${apiBase}/notifications/${id}/read`, { method: "PATCH", credentials: "include" });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await fetch("/api/notifications/read-all", { method: "PATCH", credentials: "include" });
+      await fetch(`${apiBase}/notifications/read-all`, { method: "PATCH", credentials: "include" });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
@@ -89,8 +90,8 @@ export function Navbar() {
       <Link href="/shipments" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/shipments' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
         Browse Loads
       </Link>
-      <Link href="/driver-routes" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/driver-routes' ? 'text-primary' : 'text-muted-foreground'} flex items-center gap-1`} onClick={closeMenu}>
-        <Route className="h-3.5 w-3.5" />Backhaul Finder
+      <Link href="/backhaul" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/backhaul' ? 'text-primary' : 'text-muted-foreground'} flex items-center gap-1`} onClick={closeMenu}>
+        <Route className="h-3.5 w-3.5" />Backhaul Board
       </Link>
       
       {isAuthenticated && role === 'shipper' && (

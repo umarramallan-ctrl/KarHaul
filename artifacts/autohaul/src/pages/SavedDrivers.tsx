@@ -6,15 +6,14 @@ import { Heart, Star, Shield, Truck, MessageCircle, Trash2, Loader2, Users, Arro
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiBase } from "@/lib/api";
 
 async function fetchSavedDrivers() {
-  const res = await fetch(`${BASE}/api/saved-drivers`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/saved-drivers`, { credentials: "include" });
   return res.json();
 }
 async function removeDriver(driverId: string) {
-  const res = await fetch(`${BASE}/api/saved-drivers/${driverId}`, { method: "DELETE", credentials: "include" });
+  const res = await fetch(`${apiBase}/saved-drivers/${driverId}`, { method: "DELETE", credentials: "include" });
   return res.json();
 }
 

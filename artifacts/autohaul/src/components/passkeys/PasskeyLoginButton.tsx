@@ -3,8 +3,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
 import { KeyRound, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiBase } from "@/lib/api";
 
 interface PasskeyLoginButtonProps {
   onSuccess?: () => void;
@@ -19,7 +18,7 @@ export function PasskeyLoginButton({ onSuccess, variant = "outline", className }
   const handlePasskeyLogin = async () => {
     setLoading(true);
     try {
-      const optRes = await fetch(`${BASE}/api/auth/passkey/login/options`, {
+      const optRes = await fetch(`${apiBase}/auth/passkey/login/options`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -35,7 +34,7 @@ export function PasskeyLoginButton({ onSuccess, variant = "outline", className }
         throw e;
       }
 
-      const verRes = await fetch(`${BASE}/api/auth/passkey/login/verify`, {
+      const verRes = await fetch(`${apiBase}/auth/passkey/login/verify`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential, challengeKey }),

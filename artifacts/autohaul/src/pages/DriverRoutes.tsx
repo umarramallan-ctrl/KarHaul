@@ -9,22 +9,21 @@ import { Truck, Calendar, Star, Shield, Plus, MessageCircle, Loader2, Route, Use
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiBase } from "@/lib/api";
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
 async function fetchDriverRoutes(params: Record<string, string>) {
   const q = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v && v !== "all")));
-  const res = await fetch(`${BASE}/api/driver-routes?${q}`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/driver-routes?${q}`, { credentials: "include" });
   return res.json();
 }
 async function postDriverRoute(data: Record<string, unknown>) {
-  const res = await fetch(`${BASE}/api/driver-routes`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  const res = await fetch(`${apiBase}/driver-routes`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
   if (!res.ok) throw new Error("Failed to post route");
   return res.json();
 }
 async function getCurrentUser() {
-  const res = await fetch(`${BASE}/api/auth/user`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/auth/user`, { credentials: "include" });
   return res.json();
 }
 

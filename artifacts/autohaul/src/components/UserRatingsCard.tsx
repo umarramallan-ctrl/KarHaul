@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Star, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiBase } from "@/lib/api";
 
 const DRIVER_CRITERIA: { key: string; label: string }[] = [
   { key: "timelyPickup",    label: "Pickup on Time" },
@@ -50,7 +51,7 @@ export function UserRatingsCard({ userId, role }: { userId: string; role?: strin
     criteriaAverages: Record<string, number>;
   }>({
     queryKey: ["/api/reviews/user", userId],
-    queryFn: () => fetch(`/api/reviews/user/${userId}`).then(r => r.json()),
+    queryFn: () => fetch(`${apiBase}/reviews/user/${userId}`).then(r => r.json()),
     enabled: !!userId,
     staleTime: 60_000,
   });

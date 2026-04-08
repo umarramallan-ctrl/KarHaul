@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Truck, Star, Briefcase, User } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { apiBase } from "@/lib/api";
 
 function roleBadge(role?: string) {
   if (role === "driver") return { label: "Carrier / Driver", color: "bg-amber-500/15 text-amber-300 border-amber-500/25" };
@@ -19,7 +20,7 @@ export default function UserProfile() {
 
   const { data: user, isLoading } = useQuery<any>({
     queryKey: ["/api/users", userId],
-    queryFn: () => fetch(`/api/users/${userId}`).then(r => r.json()),
+    queryFn: () => fetch(`${apiBase}/users/${userId}`).then(r => r.json()),
     enabled: !!userId,
   });
 

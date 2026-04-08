@@ -12,6 +12,7 @@ import { useState, useRef, useEffect } from "react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiBase } from "@/lib/api";
 
 const DRIVER_REPLIES = [
   "I'm interested in this load — when is the pickup window?",
@@ -35,15 +36,13 @@ const SHIPPER_REPLIES = [
   "I'm comparing a few bids — can you adjust your price at all?",
 ];
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-
 async function fetchMessages(conversationId: string) {
-  const res = await fetch(`${BASE}/api/messages/${conversationId}`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/messages/${conversationId}`, { credentials: "include" });
   return res.json();
 }
 
 async function sendMessage(data: { recipientId: string; conversationId?: string; content: string; shipmentId?: string }) {
-  const res = await fetch(`${BASE}/api/messages`, {
+  const res = await fetch(`${apiBase}/messages`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -201,7 +200,7 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
 }
 
 export default function Messages() {
-  const { data: authData } = useQuery({ queryKey: ["auth-user-msg"], queryFn: () => fetch(`${BASE}/api/auth/user`, { credentials: "include" }).then(r => r.json()) });
+  const { data: authData } = useQuery({ queryKey: ["auth-user-msg"], queryFn: () => fetch(`${apiBase}/auth/user`, { credentials: "include" }).then(r => r.json()) });
   const { data, isLoading } = useListConversations();
   const [selectedConv, setSelectedConv] = useState<any>(null);
   const currentUserId = authData?.profile?.id;

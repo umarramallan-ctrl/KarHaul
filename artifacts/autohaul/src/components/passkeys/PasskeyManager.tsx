@@ -7,16 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { KeyRound, Plus, Trash2, Loader2, ShieldCheck, Smartphone, Monitor, Cloud } from "lucide-react";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiBase } from "@/lib/api";
 
 async function fetchPasskeys() {
-  const res = await fetch(`${BASE}/api/auth/passkey/list`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/auth/passkey/list`, { credentials: "include" });
   return res.json();
 }
 
 async function deletePasskey(id: string) {
-  const res = await fetch(`${BASE}/api/auth/passkey/${id}`, { method: "DELETE", credentials: "include" });
+  const res = await fetch(`${apiBase}/auth/passkey/${id}`, { method: "DELETE", credentials: "include" });
   if (!res.ok) throw new Error("Failed to remove passkey");
   return res.json();
 }
@@ -39,7 +38,7 @@ export function PasskeyManager() {
   const handleRegister = async () => {
     setRegistering(true);
     try {
-      const optRes = await fetch(`${BASE}/api/auth/passkey/register/options`, { credentials: "include" });
+      const optRes = await fetch(`${apiBase}/auth/passkey/register/options`, { credentials: "include" });
       if (!optRes.ok) { const e = await optRes.json(); throw new Error(e.error || "Failed to start registration"); }
       const { options, challengeKey } = await optRes.json();
 
@@ -51,7 +50,7 @@ export function PasskeyManager() {
         throw e;
       }
 
-      const verRes = await fetch(`${BASE}/api/auth/passkey/register/verify`, {
+      const verRes = await fetch(`${apiBase}/auth/passkey/register/verify`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential, challengeKey, name: passkeyName.trim() || "Passkey" }),

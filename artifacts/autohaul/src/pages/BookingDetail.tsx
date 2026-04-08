@@ -7,14 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star } from "lucide-react";
-import { useState } from "react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { apiBase } from "@/lib/api";
 
 const MILESTONE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   departed_origin: { label: "Departed Origin", icon: "🚛", color: "text-blue-600" },
@@ -26,12 +25,12 @@ const MILESTONE_LABELS: Record<string, { label: string; icon: string; color: str
 };
 
 async function fetchTracking(bookingId: string) {
-  const res = await fetch(`${BASE}/api/bookings/${bookingId}/tracking`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, { credentials: "include" });
   return res.json();
 }
 
 async function postCheckpoint(bookingId: string, data: Record<string, string>) {
-  const res = await fetch(`${BASE}/api/bookings/${bookingId}/tracking`, {
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -217,13 +216,13 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
 }
 
 async function fetchBookingReviews(bookingId: string) {
-  const res = await fetch(`${BASE}/api/reviews/booking/${bookingId}`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/reviews/booking/${bookingId}`, { credentials: "include" });
   if (!res.ok) return { reviews: [], total: 0 };
   return res.json();
 }
 
 async function submitReview(data: Record<string, any>) {
-  const res = await fetch(`${BASE}/api/reviews`, {
+  const res = await fetch(`${apiBase}/reviews`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -395,6 +394,43 @@ export default function BookingDetail() {
   const isDriver = profile?.id === (booking as any)?.driverId;
   const isShipper = profile?.id === (booking as any)?.shipperId;
   const b = booking as any;
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    if (!b.cancellationDeadline) return;
+    const deadline = new Date(b.cancellationDeadline).getTime();
+    const update = () => {
+      const diff = deadline - Date.now();
+      if (diff <= 0) { setTimeLeft("Expired"); return; }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${mins}m ${secs}s`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [b.cancellationDeadline]);
+
+  const withinWindow = b.cancellationDeadline
+    ? new Date() <= new Date(b.cancellationDeadline)
+    : false;
+
+  async function handleCancel() {
+    const res = await fetch(`${apiBase}/bookings/${bookingId}/cancel`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      toast({ title: "Cancel failed", description: e.error, variant: "destructive" });
+    } else {
+      toast({ title: "Booking cancelled", description: withinWindow ? "Escrow returned to both parties." : "Escrow forfeited per cancellation policy." });
+      setCancelConfirm(false);
+      refetch();
+    }
+  }
 
   const handleUpdateStatus = (newStatus: "picked_up" | "in_transit" | "delivered") => {
     updateStatusMutation.mutate({ bookingId, data: { status: newStatus, trackingNotes: notes } }, {
@@ -490,6 +526,94 @@ export default function BookingDetail() {
                 </div>
               )}
             </Card>
+
+            {/* Escrow & Cancellation Policy */}
+            {["confirmed", "picked_up", "in_transit"].includes(b.status) && (
+              <Card className="mb-6 border-slate-700/40 bg-slate-900/30">
+                <CardContent className="p-5">
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-blue-400" />
+                        <span className="text-sm font-bold text-white">Escrow Status</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
+                          <div className="text-xs text-slate-500 mb-1">Shipper escrow (5%)</div>
+                          <div className="font-bold text-white">
+                            {b.shipment?.shipperEscrowAmount ? `$${b.shipment.shipperEscrowAmount.toFixed(2)}` : "—"}
+                          </div>
+                          <div className={`text-xs mt-1 ${
+                            b.shipment?.shipperEscrowStatus === "held" ? "text-amber-400" :
+                            b.shipment?.shipperEscrowStatus === "captured" ? "text-green-400" :
+                            b.shipment?.shipperEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
+                          }`}>
+                            {b.shipment?.shipperEscrowStatus ?? "none"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
+                          <div className="text-xs text-slate-500 mb-1">Driver escrow (3%)</div>
+                          <div className="font-bold text-white">
+                            {b.driverEscrowAmount ? `$${b.driverEscrowAmount.toFixed(2)}` : "—"}
+                          </div>
+                          <div className={`text-xs mt-1 ${
+                            b.driverEscrowStatus === "held" ? "text-amber-400" :
+                            b.driverEscrowStatus === "captured" ? "text-green-400" :
+                            b.driverEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
+                          }`}>
+                            {b.driverEscrowStatus ?? "none"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {b.cancellationDeadline && b.status === "confirmed" && (
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-amber-400" />
+                          <span className="text-sm font-bold text-white">Cancellation Window</span>
+                        </div>
+                        <div className={`rounded-lg border p-3 text-sm ${withinWindow ? "bg-emerald-500/10 border-emerald-500/30" : "bg-red-500/10 border-red-500/30"}`}>
+                          {withinWindow ? (
+                            <>
+                              <div className="text-emerald-400 font-bold text-lg">{timeLeft}</div>
+                              <div className="text-xs text-slate-400 mt-1">Cancel now for a full escrow refund.</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-red-400 font-bold">Window closed</div>
+                              <div className="text-xs text-slate-400 mt-1">Cancelling now forfeits your escrow.</div>
+                            </>
+                          )}
+                        </div>
+                        {!cancelConfirm ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-red-500/40 text-red-400 hover:bg-red-500/10 w-full"
+                            onClick={() => setCancelConfirm(true)}
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                            Cancel Booking
+                          </Button>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-xs text-red-400">
+                              {withinWindow
+                                ? "Are you sure? Escrow will be returned to both parties."
+                                : "Warning: cancelling now will forfeit your escrow fee."}
+                            </p>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="destructive" className="flex-1" onClick={handleCancel}>Confirm Cancel</Button>
+                              <Button size="sm" variant="outline" className="flex-1 border-slate-700" onClick={() => setCancelConfirm(false)}>Go Back</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Location Tracking */}
             <TrackingPanel bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />
