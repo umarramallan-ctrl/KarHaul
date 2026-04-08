@@ -33,19 +33,28 @@ const backhaulSchema = z.object({
   notes: z.string().optional(),
 });
 
+async function clerkHeaders(): Promise<HeadersInit> {
+  const token = await (window as any).Clerk?.session?.getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function fetchBackhaul(originState?: string, destinationState?: string) {
   const params = new URLSearchParams();
   if (originState) params.set("originState", originState);
   if (destinationState) params.set("destinationState", destinationState);
-  const res = await fetch(`${apiBase}/backhaul?${params}`, { credentials: "include" });
+  const res = await fetch(`${apiBase}/backhaul?${params}`, {
+    credentials: "include",
+    headers: await clerkHeaders(),
+  });
   return res.json();
 }
 
 async function postBackhaul(data: Record<string, any>) {
+  const authHeaders = await clerkHeaders();
   const res = await fetch(`${apiBase}/backhaul`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
@@ -58,13 +67,13 @@ export default function BackhaulBoard() {
   const { data: profile } = useGetMyProfile();
   const isDriver = profile?.role === "driver" || profile?.role === "both";
 
-  const [filterOrigin, setFilterOrigin] = useState("");
-  const [filterDest, setFilterDest] = useState("");
+  const [filterOrigin, setFilterOrigin] = useState("all");
+  const [filterDest, setFilterDest] = useState("all");
   const [postOpen, setPostOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["backhaul", filterOrigin, filterDest],
-    queryFn: () => fetchBackhaul(filterOrigin || undefined, filterDest || undefined),
+    queryFn: () => fetchBackhaul(filterOrigin !== "all" ? filterOrigin : undefined, filterDest !== "all" ? filterDest : undefined),
   });
 
   const form = useForm<z.infer<typeof backhaulSchema>>({
@@ -231,7 +240,7 @@ export default function BackhaulBoard() {
                   <SelectValue placeholder="Origin state…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All origins</SelectItem>
+                  <SelectItem value="all">All origins</SelectItem>
                   {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -240,12 +249,12 @@ export default function BackhaulBoard() {
                   <SelectValue placeholder="Destination state…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All destinations</SelectItem>
+                  <SelectItem value="all">All destinations</SelectItem>
                   {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {(filterOrigin || filterDest) && (
-                <Button variant="ghost" className="text-slate-400" onClick={() => { setFilterOrigin(""); setFilterDest(""); }}>Clear filters</Button>
+              {(filterOrigin !== "all" || filterDest !== "all") && (
+                <Button variant="ghost" className="text-slate-400" onClick={() => { setFilterOrigin("all"); setFilterDest("all"); }}>Clear filters</Button>
               )}
             </div>
 

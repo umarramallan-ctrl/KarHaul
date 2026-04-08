@@ -12,9 +12,9 @@ export default function DriverDashboard() {
   const { data: bidsData, isLoading: loadingBids } = useGetMyBids();
   const { data: bookingsData, isLoading: loadingBookings } = useListBookings();
 
-  const pendingBids = bidsData?.bids.filter(b => b.status === 'pending') || [];
-  const activeBookings = bookingsData?.bookings.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
-  const completedBookings = bookingsData?.bookings.filter(b => b.status === 'delivered') || [];
+  const pendingBids = bidsData?.bids?.filter(b => b.status === 'pending') || [];
+  const activeBookings = bookingsData?.bookings?.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
+  const completedBookings = bookingsData?.bookings?.filter(b => b.status === 'delivered') || [];
   
   return (
     <MainLayout>

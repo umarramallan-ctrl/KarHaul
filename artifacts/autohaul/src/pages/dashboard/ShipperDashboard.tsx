@@ -6,15 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelative, getStatusColor, formatVehicleName } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle, DollarSign, Star, CheckCircle2 } from "lucide-react";
+import { Package, Truck, Calendar, MapPin, ArrowRight, PlusCircle, DollarSign, Star, CheckCircle2, User } from "lucide-react";
 
 export default function ShipperDashboard() {
   const { data: shipmentsData, isLoading: loadingShipments } = useGetMyShipments();
   const { data: bookingsData, isLoading: loadingBookings } = useListBookings();
 
-  const openShipments = shipmentsData?.shipments.filter(s => s.status === 'open') || [];
-  const activeBookings = bookingsData?.bookings.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
-  const pastBookings = bookingsData?.bookings.filter(b => ['delivered', 'cancelled'].includes(b.status)) || [];
+  const openShipments = shipmentsData?.shipments?.filter(s => s.status === 'open') || [];
+  const activeBookings = bookingsData?.bookings?.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
+  const pastBookings = bookingsData?.bookings?.filter(b => ['delivered', 'cancelled'].includes(b.status)) || [];
 
   return (
     <MainLayout>
@@ -186,5 +186,3 @@ export default function ShipperDashboard() {
   );
 }
 
-// Dummy User icon for above since it wasn't imported from lucide-react directly in the file
-import { User } from "lucide-react";

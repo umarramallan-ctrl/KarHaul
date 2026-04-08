@@ -12,17 +12,17 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useGetMyProfile({
-    query: { enabled: isSignedIn, retry: false } as any,
+  const { data: profile, isLoading: profileLoading, isFetched: profileFetched } = useGetMyProfile({
+    query: { enabled: isSignedIn === true, retry: false } as any,
   });
   const [location, setLocation] = useLocation();
 
-  // If authenticated but no profile (and not on profile page), redirect to complete profile
+  // Only redirect to profile once the query has completed and confirmed no profile exists
   useEffect(() => {
-    if (isSignedIn && !profileLoading && !profile && location !== '/profile') {
+    if (isSignedIn && profileFetched && !profile && location !== '/profile') {
       setLocation('/profile');
     }
-  }, [isSignedIn, profileLoading, profile, location, setLocation]);
+  }, [isSignedIn, profileFetched, profile, location, setLocation]);
 
   if (!authLoaded || (isSignedIn && profileLoading)) {
     return (
@@ -50,7 +50,7 @@ export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
             <p className="text-muted-foreground mb-6">
               This page requires {requireRole} privileges. Your current role is {profile.role}.
             </p>
-            <button 
+            <button
               onClick={() => setLocation('/')}
               className="text-primary font-medium hover:underline"
             >
@@ -60,12 +60,6 @@ export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
         </div>
       </MainLayout>
     );
-  }
-
-  // If requires a specific role and user hasn't accepted terms
-  if (profile && !profile.termsAccepted && location !== '/profile') {
-     setLocation('/profile');
-     return null;
   }
 
   return <>{children}</>;

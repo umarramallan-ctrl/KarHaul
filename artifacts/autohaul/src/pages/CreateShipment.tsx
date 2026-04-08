@@ -13,12 +13,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { motion } from "framer-motion";
 
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
-type ShipmentVehicleCondition = "running" | "non_running";
+type ShipmentVehicleCondition = "running" | "non_running" | "starts_does_not_drive";
+
+const VEHICLE_TYPES: { value: ShipmentVehicleType; label: string }[] = [
+  { value: "sedan", label: "Sedan" },
+  { value: "suv", label: "SUV" },
+  { value: "truck", label: "Truck" },
+  { value: "van", label: "Van" },
+  { value: "motorcycle", label: "Motorcycle" },
+  { value: "rv", label: "RV" },
+  { value: "exotic", label: "Exotic" },
+  { value: "other", label: "Other" },
+];
 type ShipmentTransportType = "open" | "enclosed";
 
 const LOCATION_TYPES = [
@@ -37,7 +49,7 @@ const formSchema = z.object({
   vehicleMake: z.string().min(2, "Make is required"),
   vehicleModel: z.string().min(1, "Model is required"),
   vehicleType: z.enum(["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"]),
-  vehicleCondition: z.enum(["running", "non_running"]),
+  vehicleCondition: z.enum(["running", "non_running", "starts_does_not_drive"]),
   vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)").optional().or(z.literal("")),
   transportType: z.enum(["open", "enclosed"]),
   serviceType: z.enum(["door_to_door", "door_to_port"]).optional(),
@@ -58,6 +70,65 @@ const formSchema = z.object({
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, { message: "You must agree to the liability waiver" }),
 });
+
+// --- NHTSA Vehicle Make/Model Autocomplete ---
+
+interface AutocompleteInputProps {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: string[];
+  placeholder: string;
+  className?: string;
+}
+
+function AutocompleteInput({ value, onChange, suggestions, placeholder, className }: AutocompleteInputProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filtered = value.trim().length > 0
+    ? suggestions.filter(s => s.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
+    : [];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Input
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => filtered.length > 0 && setOpen(true)}
+        placeholder={placeholder}
+        className={className}
+        autoComplete="off"
+      />
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 shadow-xl divide-y divide-slate-800/50">
+          {filtered.map(s => (
+            <li key={s}>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm text-white hover:bg-slate-800 transition-colors"
+                onMouseDown={e => { e.preventDefault(); onChange(s); setOpen(false); }}
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// -----------------------------------------------
 
 function LocationTypeSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const selected = LOCATION_TYPES.find(lt => lt.value === value);
@@ -106,9 +177,38 @@ export default function CreateShipment() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<z.infer<typeof formSchema> | null>(null);
 
+  // Fetch car makes from NHTSA (no form dependency)
+  const { data: nhtsaMakes = [] } = useQuery({
+    queryKey: ["nhtsa-makes"],
+    queryFn: async () => {
+      const res = await fetch("https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json");
+      const data = await res.json();
+      return (data.Results as Array<{ MakeId: number; MakeName: string }>)
+        .map(m => m.MakeName)
+        .sort();
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
+  });
+
+  const watchedMake = form.watch("vehicleMake");
+
+  // Fetch models for the selected make from NHTSA
+  const { data: nhtsaModels = [] } = useQuery({
+    queryKey: ["nhtsa-models", watchedMake],
+    queryFn: async () => {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(watchedMake)}?format=json`);
+      const data = await res.json();
+      return [...new Set((data.Results as Array<{ Model_Name: string }>).map(m => m.Model_Name))].sort() as string[];
+    },
+    enabled: watchedMake.trim().length >= 2,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -206,19 +306,43 @@ export default function CreateShipment() {
                         <h2 className="font-bold text-white">Vehicle Information</h2>
                       </div>
                       <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { name: "vehicleYear" as const, label: "Year", type: "number", placeholder: "2023" },
-                          { name: "vehicleMake" as const, label: "Make", type: "text", placeholder: "Ford, Toyota…" },
-                          { name: "vehicleModel" as const, label: "Model", type: "text", placeholder: "F-150, Camry…" },
-                        ].map(({ name, label, type, placeholder }) => (
-                          <FormField key={name} control={form.control} name={name} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</FormLabel>
-                              <FormControl><Input type={type} placeholder={placeholder} {...field} className={inputCls} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        ))}
+                        <FormField control={form.control} name="vehicleYear" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Year</FormLabel>
+                            <FormControl><Input type="number" placeholder="2023" {...field} className={inputCls} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="vehicleMake" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Make</FormLabel>
+                            <FormControl>
+                              <AutocompleteInput
+                                value={field.value}
+                                onChange={v => { field.onChange(v); form.setValue("vehicleModel", ""); }}
+                                suggestions={nhtsaMakes}
+                                placeholder="Ford, Toyota…"
+                                className={inputCls}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="vehicleModel" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Model</FormLabel>
+                            <FormControl>
+                              <AutocompleteInput
+                                value={field.value}
+                                onChange={field.onChange}
+                                suggestions={nhtsaModels}
+                                placeholder="F-150, Camry…"
+                                className={inputCls}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="vehicleType" render={({ field }) => (
@@ -227,8 +351,8 @@ export default function CreateShipment() {
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl><SelectTrigger className={inputCls}><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>
-                                {["sedan","suv","truck","van","motorcycle","rv","exotic","other"].map(t => (
-                                  <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                                {VEHICLE_TYPES.map(({ value, label }) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -242,6 +366,7 @@ export default function CreateShipment() {
                               <FormControl><SelectTrigger className={inputCls}><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>
                                 <SelectItem value="running">Runs & Drives</SelectItem>
+                                <SelectItem value="starts_does_not_drive">Starts But Does Not Drive</SelectItem>
                                 <SelectItem value="non_running">Inoperable (INOP)</SelectItem>
                               </SelectContent>
                             </Select>
