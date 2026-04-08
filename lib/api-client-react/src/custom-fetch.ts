@@ -60,10 +60,10 @@ function isUrl(input: RequestInfo | URL): input is URL {
 function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
   if (!_baseUrl) return input;
   const url = resolveUrl(input);
-  // Only prepend to relative paths (starting with /)
-  if (!url.startsWith("/")) return input;
+  // Leave already-absolute URLs (any scheme, e.g. https://) untouched
+  if (url.includes("://")) return input;
 
-  const absolute = `${_baseUrl}${url}`;
+  const absolute = `${_baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
   if (typeof input === "string") return absolute;
   if (isUrl(input)) return new URL(absolute);
   return new Request(absolute, input as Request);
