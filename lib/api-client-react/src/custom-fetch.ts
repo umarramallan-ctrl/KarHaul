@@ -346,10 +346,16 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  // Attach bearer token when an auth getter is configured and no
-  // Authorization header has been explicitly provided.
-  if (_authTokenGetter && !headers.has("authorization")) {
-    const token = await _authTokenGetter();
+  // Attach bearer token when no Authorization header has been explicitly provided.
+  // Uses the registered auth getter (mobile/token-auth path) or falls back to
+  // the Clerk global (web path).
+  if (!headers.has("authorization")) {
+    let token: string | null = null;
+    if (_authTokenGetter) {
+      token = await _authTokenGetter();
+    } else {
+      token = (await (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string | null> } } }).Clerk?.session?.getToken()) ?? null;
+    }
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
     }
