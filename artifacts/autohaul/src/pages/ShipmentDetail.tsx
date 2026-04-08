@@ -5,12 +5,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { formatCurrency, formatDateTime, getStatusColor, formatVehicleName, formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/clerk-react";
@@ -179,8 +180,12 @@ export default function ShipmentDetail() {
 
   const placeBidMutation = usePlaceBid();
   const acceptBidMutation = useAcceptBid();
-  
+
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
+  const [bidConfirmOpen, setBidConfirmOpen] = useState(false);
+  const [pendingBidValues, setPendingBidValues] = useState<z.infer<typeof bidSchema> | null>(null);
+  const [acceptConfirmOpen, setAcceptConfirmOpen] = useState(false);
+  const [pendingAcceptBidId, setPendingAcceptBidId] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof bidSchema>>({
     resolver: zodResolver(bidSchema),
@@ -212,14 +217,21 @@ export default function ShipmentDetail() {
     watch: "bg-red-50 border-red-200 text-red-900 dark:bg-red-950/30 dark:border-red-800 dark:text-red-200",
   } as const;
 
+  // Step 1: validate form → show confirmation modal
   function onSubmitBid(values: z.infer<typeof bidSchema>) {
-    placeBidMutation.mutate({
-      shipmentId,
-      data: values
-    }, {
+    setPendingBidValues(values);
+    setIsBidDialogOpen(false);
+    setBidConfirmOpen(true);
+  }
+
+  // Step 2: confirmed → actually place the bid
+  function confirmPlaceBid() {
+    if (!pendingBidValues) return;
+    placeBidMutation.mutate({ shipmentId, data: pendingBidValues }, {
       onSuccess: () => {
         toast({ title: "Bid Placed Successfully", description: "The shipper will review your bid." });
-        setIsBidDialogOpen(false);
+        setBidConfirmOpen(false);
+        setPendingBidValues(null);
         refetchBids();
         refetchShipment();
       },
@@ -230,11 +242,16 @@ export default function ShipmentDetail() {
   }
 
   function handleAcceptBid(bidId: string) {
-    if (!confirm("Are you sure you want to accept this bid? This will create a binding booking.")) return;
-    
-    acceptBidMutation.mutate({ bidId }, {
-      onSuccess: (booking) => {
-        toast({ title: "Bid Accepted!", description: "Booking created successfully." });
+    setPendingAcceptBidId(bidId);
+    setAcceptConfirmOpen(true);
+  }
+
+  function confirmAcceptBid() {
+    if (!pendingAcceptBidId) return;
+    acceptBidMutation.mutate({ bidId: pendingAcceptBidId }, {
+      onSuccess: (booking: any) => {
+        toast({ title: "Bid Accepted!", description: "Booking created. 1-hour cancellation window is now open." });
+        setAcceptConfirmOpen(false);
         setLocation(`/bookings/${booking.id}`);
       },
       onError: (err: any) => {
@@ -242,6 +259,11 @@ export default function ShipmentDetail() {
       }
     });
   }
+
+  const budgetMax = shipment?.budgetMax ?? 0;
+  const driverFee = parseFloat((budgetMax * 0.03).toFixed(2));
+  const shipperFee = parseFloat((budgetMax * 0.05).toFixed(2));
+  const pendingBidAmount = pendingBidValues?.amount ?? 0;
 
   if (isLoading || !shipment) {
     return (
@@ -258,6 +280,10 @@ export default function ShipmentDetail() {
       {/* Header Banner */}
       <div className="bg-slate-900 text-white pt-12 pb-24">
         <div className="container mx-auto px-4 md:px-6">
+          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+            Back
+          </button>
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <Badge className={getStatusColor(shipment.status)}>{shipment.status.replace('_', ' ').toUpperCase()}</Badge>
             <Badge variant="outline" className="text-white border-white/30 capitalize bg-white/5">{shipment.transportType} Transport</Badge>
@@ -727,6 +753,37 @@ export default function ShipmentDetail() {
           </div>
         </div>
       </div>
+
+      {/* Bid submission confirmation modal */}
+      <EscrowConfirmModal
+        open={bidConfirmOpen}
+        onOpenChange={setBidConfirmOpen}
+        title="Confirm Bid Submission"
+        description={`You're submitting a $${pendingBidValues?.amount?.toFixed(2) ?? "0.00"} bid. If accepted, a 3% platform fee will be held in escrow from your account.`}
+        fees={budgetMax > 0 ? [
+          { label: "Platform fee (3% of max budget)", amount: driverFee },
+        ] : []}
+        commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. Cancelling after the 1-hour window forfeits your escrow."
+        confirmLabel="Submit Bid"
+        onConfirm={confirmPlaceBid}
+        isLoading={placeBidMutation.isPending}
+      />
+
+      {/* Accept bid confirmation modal */}
+      <EscrowConfirmModal
+        open={acceptConfirmOpen}
+        onOpenChange={setAcceptConfirmOpen}
+        title="Accept Bid & Create Booking"
+        description={`Accepting this bid creates a binding booking. A 5% platform fee will be held in escrow from your account, and the driver's 3% fee will be held on their end.`}
+        fees={budgetMax > 0 ? [
+          { label: "Your platform fee (5% of max budget)", amount: shipperFee },
+          { label: "Driver platform fee (3% of max budget)", amount: driverFee },
+        ] : []}
+        commitmentText="By accepting, you commit to this shipment. Cancelling after the 1-hour window forfeits your platform fee escrow."
+        confirmLabel="Accept Bid"
+        onConfirm={confirmAcceptBid}
+        isLoading={acceptBidMutation.isPending}
+      />
     </MainLayout>
   );
 }

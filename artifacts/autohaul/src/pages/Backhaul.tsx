@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, ArrowRight, Plus, DollarSign, Calendar, Package } from "lucide-react";
+import { Truck, MapPin, ArrowRight, ArrowLeft, Plus, DollarSign, Calendar, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiBase } from "@/lib/api";
 
@@ -90,6 +90,10 @@ export default function BackhaulBoard() {
       <MainLayout>
         <div className="bg-slate-950 border-b border-slate-800/60 py-12">
           <div className="container mx-auto px-4 md:px-8">
+            <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              Back
+            </button>
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px w-8 bg-amber-500" />
               <span className="text-amber-400 font-mono text-xs font-bold tracking-[0.2em] uppercase">Backhaul Board</span>

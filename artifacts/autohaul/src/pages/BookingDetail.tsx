@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -457,6 +457,54 @@ export default function BookingDetail() {
       <MainLayout>
         <div className="bg-slate-50 dark:bg-slate-900/20 py-8 min-h-screen border-t">
           <div className="container max-w-5xl mx-auto px-4">
+
+            <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 -ml-1 group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              Back
+            </button>
+
+            {/* Confirmation banner for newly created booking */}
+            {b.status === "confirmed" && isShipper && (
+              <div className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                  <h2 className="font-bold text-emerald-300 text-base">Booking Confirmed — Next Steps</h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <div className="rounded-xl bg-slate-900/50 border border-slate-700/60 p-4 space-y-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Banknote className="h-4 w-4 text-blue-400" />
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Payment Instructions</span>
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Pay the agreed price of <span className="font-bold text-white">{formatCurrency(b.agreedPrice)}</span> directly to the carrier at pickup or via agreed method.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-2">KarHaul does not process transport payments — this is between you and the carrier.</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/50 border border-slate-700/60 p-4 space-y-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-4 w-4 text-violet-400" />
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Escrow & Platform Fee</span>
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      A 5% platform fee ({b.shipment?.shipperEscrowAmount ? `$${Number(b.shipment.shipperEscrowAmount).toFixed(2)}` : "—"}) is held in escrow and released upon delivery confirmation.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-2">Cancellations within 1 hour of booking incur no penalty. After that, the escrow fee is forfeited.</p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-xl bg-slate-900/50 border border-slate-700/60 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Truck className="h-4 w-4 text-amber-400" />
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Shipment Details</span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div><span className="text-slate-500 text-xs">Vehicle</span><p className="text-white font-medium">{b.shipment?.vehicleYear} {b.shipment?.vehicleMake} {b.shipment?.vehicleModel}</p></div>
+                    <div><span className="text-slate-500 text-xs">Pickup</span><p className="text-white font-medium">{b.shipment?.originCity}, {b.shipment?.originState}</p></div>
+                    <div><span className="text-slate-500 text-xs">Delivery</span><p className="text-white font-medium">{b.shipment?.destinationCity}, {b.shipment?.destinationState}</p></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>

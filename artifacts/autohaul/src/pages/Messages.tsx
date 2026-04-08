@@ -211,8 +211,12 @@ export default function Messages() {
   return (
     <AuthGuard>
       <MainLayout>
-        <div className="container max-w-6xl mx-auto px-4 py-6 h-[calc(100vh-4.5rem)]">
-          <div className="h-full flex rounded-2xl border overflow-hidden shadow-sm">
+        <div className="container max-w-6xl mx-auto px-4 py-6 h-[calc(100vh-4.5rem)] flex flex-col">
+          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3 -ml-1 group shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
+          <div className="flex-1 flex rounded-2xl border overflow-hidden shadow-sm min-h-0">
             {/* Sidebar */}
             <div className="w-80 shrink-0 border-r flex flex-col bg-background">
               <div className="p-4 border-b">

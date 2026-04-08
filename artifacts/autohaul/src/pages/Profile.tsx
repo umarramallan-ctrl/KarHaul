@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
-import { ShieldCheck, Truck, User, Lock, Key } from "lucide-react";
+import { ShieldCheck, Truck, User, Lock, Key, Map, CreditCard, ArrowLeft } from "lucide-react";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
 import { TwoFASettings } from "@/components/security/TwoFASettings";
 import { UserRatingsCard } from "@/components/UserRatingsCard";
+import { LanePreferences } from "@/components/LanePreferences";
+import { StripeConnectSetup } from "@/components/StripeConnectSetup";
 import { motion } from "framer-motion";
 
 type UpdateProfileBodyRole = "shipper" | "driver" | "both";
@@ -24,10 +26,10 @@ const profileSchema = z.object({
   lastName: z.string().min(2, "Last name is required"),
   phone: z.string().min(10, "Valid phone required"),
   role: z.enum(["shipper", "driver", "both", "admin"]).optional(),
-  dotNumber: z.string().optional(),
-  mcNumber: z.string().optional(),
+  dotNumber: z.string().regex(/^\d*$/, "DOT number must be numbers only").optional(),
+  mcNumber: z.string().regex(/^\d*$/, "MC number must be numbers only").optional(),
   insuranceProvider: z.string().optional(),
-  insurancePolicyNumber: z.string().optional(),
+  insurancePolicyNumber: z.string().regex(/^[A-Z0-9-]*$/i, "Policy number must be alphanumeric").optional(),
   truckType: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, { message: "You must accept the terms of service." }),
 });
@@ -89,6 +91,10 @@ export default function Profile() {
       <MainLayout>
         <div className="bg-slate-950 border-b border-slate-800/60 py-14">
           <div className="container mx-auto px-4 md:px-8">
+            <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              Back
+            </button>
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px w-8 bg-violet-500" />
               <span className="text-violet-400 font-mono text-xs font-bold tracking-[0.2em] uppercase">Account</span>
@@ -168,20 +174,46 @@ export default function Profile() {
                     <Section title="Carrier Credentials" icon={<Truck className="h-4 w-4" />}>
                       <div className="space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          {[
-                            { name: "dotNumber" as const, label: "US DOT Number" },
-                            { name: "mcNumber" as const, label: "MC Number" },
-                            { name: "insuranceProvider" as const, label: "Insurance Provider" },
-                            { name: "insurancePolicyNumber" as const, label: "Policy Number" },
-                          ].map(({ name, label }) => (
-                            <FormField key={name} control={form.control} name={name} render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</FormLabel>
-                                <FormControl><Input {...field} className="bg-slate-800/60 border-slate-700 text-white h-11 focus:border-blue-500" /></FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                          ))}
+                          <FormField control={form.control} name="dotNumber" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">US DOT Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="bg-slate-800/60 border-slate-700 text-white h-11 focus:border-blue-500 font-mono"
+                                  inputMode="numeric" placeholder="e.g. 1234567"
+                                  onChange={e => field.onChange(e.target.value.replace(/\D/g, ""))} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="mcNumber" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">MC Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="bg-slate-800/60 border-slate-700 text-white h-11 focus:border-blue-500 font-mono"
+                                  inputMode="numeric" placeholder="e.g. 987654"
+                                  onChange={e => field.onChange(e.target.value.replace(/\D/g, ""))} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="insuranceProvider" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Insurance Provider</FormLabel>
+                              <FormControl><Input {...field} className="bg-slate-800/60 border-slate-700 text-white h-11 focus:border-blue-500" placeholder="e.g. Progressive" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="insurancePolicyNumber" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Policy Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="bg-slate-800/60 border-slate-700 text-white h-11 focus:border-blue-500 font-mono uppercase"
+                                  placeholder="e.g. POL-12345"
+                                  onChange={e => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
                         </div>
                         <FormField control={form.control} name="truckType" render={({ field }) => (
                           <FormItem>
@@ -231,6 +263,25 @@ export default function Profile() {
                 </Button>
               </form>
             </Form>
+
+            {/* Payments & Escrow — driver only */}
+            {(profile?.role === "driver" || profile?.role === "both") && (
+              <Section title="Payment Setup" icon={<CreditCard className="h-4 w-4" />}>
+                <StripeConnectSetup />
+              </Section>
+            )}
+
+            {/* Lane Preferences */}
+            {(profile?.role === "driver" || profile?.role === "both") && (
+              <Section title="Preferred Lanes (Driver Alerts)" icon={<Map className="h-4 w-4" />}>
+                <LanePreferences role="driver" isPremium={(profile as any)?.isPremium} />
+              </Section>
+            )}
+            {(profile?.role === "shipper" || profile?.role === "both") && (
+              <Section title="Return Lane Preferences (Backhaul Alerts)" icon={<Map className="h-4 w-4" />}>
+                <LanePreferences role="shipper" isPremium={(profile as any)?.isPremium} />
+              </Section>
+            )}
 
             {/* Security sections */}
             <Section title="Two-Factor Authentication" icon={<Lock className="h-4 w-4" />}>

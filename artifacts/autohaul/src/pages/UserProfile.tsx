@@ -4,7 +4,7 @@ import { UserRatingsCard } from "@/components/UserRatingsCard";
 import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Truck, Star, Briefcase, User } from "lucide-react";
+import { ShieldCheck, Truck, Star, Briefcase, User, ArrowLeft } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { apiBase } from "@/lib/api";
 
@@ -39,6 +39,10 @@ export default function UserProfile() {
             {/* Header */}
             <div className="bg-slate-950 border-b border-slate-800/60 py-14">
               <div className="container mx-auto px-4 md:px-8">
+                <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+                  <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+                  Back
+                </button>
                 <div className="flex items-start gap-6">
                   {/* Avatar */}
                   <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">

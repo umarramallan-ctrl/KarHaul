@@ -31,11 +31,17 @@ type AppNotification = {
   createdAt: string;
 };
 
+async function clerkAuthHeaders(): Promise<HeadersInit> {
+  const token = await (window as any).Clerk?.session?.getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function useNotifications(enabled: boolean) {
   return useQuery<{ notifications: AppNotification[]; unreadCount: number }>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const res = await fetch(`${apiBase}/notifications`, { credentials: "include" });
+      const headers = await clerkAuthHeaders();
+      const res = await fetch(`${apiBase}/notifications`, { credentials: "include", headers });
       if (!res.ok) return { notifications: [], unreadCount: 0 };
       return res.json();
     },
@@ -63,14 +69,16 @@ export function Navbar() {
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`${apiBase}/notifications/${id}/read`, { method: "PATCH", credentials: "include" });
+      const headers = await clerkAuthHeaders();
+      await fetch(`${apiBase}/notifications/${id}/read`, { method: "PATCH", credentials: "include", headers });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await fetch(`${apiBase}/notifications/read-all`, { method: "PATCH", credentials: "include" });
+      const headers = await clerkAuthHeaders();
+      await fetch(`${apiBase}/notifications/read-all`, { method: "PATCH", credentials: "include", headers });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });

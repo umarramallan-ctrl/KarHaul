@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, Check } from "lucide-react";
+import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { useState } from "react";
+import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { motion } from "framer-motion";
 
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
@@ -37,13 +38,15 @@ const formSchema = z.object({
   vehicleModel: z.string().min(1, "Model is required"),
   vehicleType: z.enum(["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"]),
   vehicleCondition: z.enum(["running", "non_running"]),
-  vin: z.string().optional(),
+  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)").optional().or(z.literal("")),
   transportType: z.enum(["open", "enclosed"]),
   serviceType: z.enum(["door_to_door", "door_to_port"]).optional(),
+  originStreet: z.string().min(3, "Street address is required"),
   originCity: z.string().min(2, "City is required"),
   originState: z.string().length(2, "Use 2-letter state code"),
   originZip: z.string().min(5, "ZIP required"),
   pickupLocationType: z.string().optional(),
+  destinationStreet: z.string().min(3, "Street address is required"),
   destinationCity: z.string().min(2, "City is required"),
   destinationState: z.string().length(2, "Use 2-letter state code"),
   destinationZip: z.string().min(5, "ZIP required"),
@@ -100,6 +103,8 @@ export default function CreateShipment() {
   const { toast } = useToast();
   const createMutation = useCreateShipment();
   const [step, setStep] = useState(1);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<z.infer<typeof formSchema> | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -107,20 +112,33 @@ export default function CreateShipment() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { agreeToTerms, ...apiData } = values;
+    setPendingValues(values);
+    setConfirmOpen(true);
+  }
+
+  function confirmPost() {
+    if (!pendingValues) return;
+    const { agreeToTerms, ...apiData } = pendingValues;
     createMutation.mutate({ data: apiData as any }, {
       onSuccess: (data) => {
         toast({ title: "Load Posted!", description: "Drivers can now bid on your shipment." });
+        setConfirmOpen(false);
         setLocation(`/shipments/${data.id}`);
       },
-      onError: (err: any) => toast({ title: "Failed to post load", description: err.message, variant: "destructive" }),
+      onError: (err: any) => {
+        setConfirmOpen(false);
+        toast({ title: "Failed to post load", description: err.message, variant: "destructive" });
+      },
     });
   }
+
+  const pendingBudgetMax = pendingValues?.budgetMax ?? 0;
+  const shipperFee = parseFloat((pendingBudgetMax * 0.05).toFixed(2));
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
     if (step === 1) fieldsToValidate = ["vehicleYear", "vehicleMake", "vehicleModel", "vehicleType", "vehicleCondition"];
-    if (step === 2) fieldsToValidate = ["originCity", "originState", "originZip", "destinationCity", "destinationState", "destinationZip"];
+    if (step === 2) fieldsToValidate = ["originStreet", "originCity", "originState", "originZip", "destinationStreet", "destinationCity", "destinationState", "destinationZip"];
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) setStep(step + 1);
   };
@@ -132,6 +150,10 @@ export default function CreateShipment() {
       <MainLayout>
         <div className="bg-slate-950 border-b border-slate-800/60 py-14">
           <div className="container mx-auto px-4 md:px-8">
+            <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              Back
+            </button>
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px w-8 bg-blue-500" />
               <span className="text-blue-400 font-mono text-xs font-bold tracking-[0.2em] uppercase">Post a Load</span>
@@ -231,7 +253,15 @@ export default function CreateShipment() {
                       <FormField control={form.control} name="vin" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VIN (Optional but recommended)</FormLabel>
-                          <FormControl><Input placeholder="17-character VIN" {...field} className={inputCls} /></FormControl>
+                          <FormControl>
+                            <Input
+                              placeholder="17-character VIN"
+                              {...field}
+                              className={`${inputCls} uppercase tracking-widest font-mono`}
+                              maxLength={17}
+                              onChange={e => field.onChange(e.target.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, ""))}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -254,6 +284,15 @@ export default function CreateShipment() {
                       <div className="rounded-xl border border-slate-800/60 bg-slate-800/20 p-5 relative">
                         <div className="absolute -left-3 top-5 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-600/30">A</div>
                         <h3 className="font-semibold text-white text-sm mb-4">Pickup Location</h3>
+                        <div className="mb-3">
+                          <FormField control={form.control} name="originStreet" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Street Address</FormLabel>
+                              <FormControl><Input placeholder="123 Main St" {...field} className={inputCls} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
                         <div className="grid grid-cols-12 gap-3 mb-4">
                           <FormField control={form.control} name="originCity" render={({ field }) => (
                             <FormItem className="col-span-12 md:col-span-6">
@@ -296,6 +335,15 @@ export default function CreateShipment() {
                       <div className="rounded-xl border border-slate-800/60 bg-slate-800/20 p-5 relative">
                         <div className="absolute -left-3 top-5 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-slate-900 font-bold text-xs shadow-lg shadow-amber-500/30">B</div>
                         <h3 className="font-semibold text-white text-sm mb-4">Delivery Location</h3>
+                        <div className="mb-3">
+                          <FormField control={form.control} name="destinationStreet" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Street Address</FormLabel>
+                              <FormControl><Input placeholder="456 Oak Ave" {...field} className={inputCls} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
                         <div className="grid grid-cols-12 gap-3 mb-4">
                           <FormField control={form.control} name="destinationCity" render={({ field }) => (
                             <FormItem className="col-span-12 md:col-span-6">
@@ -463,6 +511,19 @@ export default function CreateShipment() {
             </div>
           </div>
         </div>
+      <EscrowConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Post Load to Board"
+        description={`Posting this load makes it visible to all verified drivers. A 5% platform fee based on your max budget will be held in escrow until delivery.`}
+        fees={pendingBudgetMax > 0 ? [
+          { label: "Platform fee (5% of max budget)", amount: shipperFee },
+        ] : []}
+        commitmentText="By posting, you commit to this shipment. If you cancel after a driver's bid is accepted and the 1-hour window passes, your escrow fee is forfeited."
+        confirmLabel="Post Load"
+        onConfirm={confirmPost}
+        isLoading={createMutation.isPending}
+      />
       </MainLayout>
     </AuthGuard>
   );

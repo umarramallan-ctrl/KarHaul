@@ -72,6 +72,10 @@ export default function Shipments() {
       {/* Header */}
       <div className="bg-slate-950 border-b border-slate-800/60 py-14">
         <div className="container mx-auto px-4 md:px-8">
+          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
           <div className="flex items-center gap-3 mb-4">
             <div className="h-px w-8 bg-blue-500" />
             <span className="text-blue-400 font-mono text-xs font-bold tracking-[0.2em] uppercase">Load Board</span>

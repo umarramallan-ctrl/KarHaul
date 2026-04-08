@@ -22,6 +22,7 @@ import SavedDrivers from "./pages/SavedDrivers";
 import VerifyTwoFactor from "./pages/VerifyTwoFactor";
 import Support from "./pages/Support";
 import Privacy from "./pages/Privacy";
+import BackhaulBoard from "./pages/Backhaul";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/support" component={Support} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/users/:userId" component={UserProfile} />
+      <Route path="/backhaul" component={BackhaulBoard} />
       <Route component={NotFound} />
     </Switch>
   );

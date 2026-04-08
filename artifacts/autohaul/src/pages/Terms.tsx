@@ -17,6 +17,10 @@ export default function Terms() {
     <MainLayout>
       <div className="bg-gradient-to-b from-slate-50 to-transparent dark:from-slate-900/50 py-10 border-b">
         <div className="container max-w-5xl mx-auto px-4">
+          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 -ml-1 group">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
           <h1 className="text-3xl font-bold tracking-tight mb-1">Legal Documents</h1>
           <p className="text-muted-foreground text-sm">Effective: {EFFECTIVE_DATE}</p>
         </div>

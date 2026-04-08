@@ -6,6 +6,12 @@ export default function Privacy() {
   return (
     <MainLayout>
       <div className="container max-w-4xl mx-auto px-4 py-12 prose dark:prose-invert prose-headings:font-display">
+        <div className="not-prose mb-6">
+          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors -ml-1 group">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
+        </div>
         <h1>Privacy Policy</h1>
         <p className="lead text-muted-foreground">Effective Date: {EFFECTIVE_DATE} &nbsp;|&nbsp; Last Updated: {EFFECTIVE_DATE}</p>
 
