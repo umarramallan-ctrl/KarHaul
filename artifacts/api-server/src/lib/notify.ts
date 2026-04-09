@@ -14,6 +14,9 @@ export type NotificationType =
   | "escrow_forfeited"
   | "cancellation_window_open"
   | "cancellation_window_closing"
+  | "cancellation_window_30"
+  | "cancellation_window_15"
+  | "photo_uploaded"
   | "delivery_confirmation_request"
   | "load_match"        // driver lane match alert
   | "backhaul_match";  // shipper return lane match alert

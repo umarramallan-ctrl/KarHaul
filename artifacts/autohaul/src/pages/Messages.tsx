@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelative } from "@/lib/format";
 import { MessageSquare, Send, Shield, Phone, MessageCircle, AlertCircle, Loader2, Info, Zap } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyProfile } from "@workspace/api-client-react";
@@ -223,8 +224,18 @@ export default function Messages() {
   const { data: profile } = useGetMyProfile();
   const currentUserId = profile?.id;
   const userRole = profile?.role as string | undefined;
+  const [location] = useLocation();
 
   const conversations = data?.conversations || [];
+
+  // Auto-open conversation with a specific user (from ?to= query param)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const toUserId = params.get("to");
+    if (!toUserId || conversations.length === 0 || selectedConv) return;
+    const conv = conversations.find((c: any) => c.otherUserId === toUserId);
+    if (conv) setSelectedConv(conv);
+  }, [conversations, location]);
 
   return (
     <AuthGuard>

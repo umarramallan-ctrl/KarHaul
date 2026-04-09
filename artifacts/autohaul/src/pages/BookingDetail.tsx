@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon } from "lucide-react";
 import { useState, useEffect, Component, type ReactNode } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,176 @@ const MILESTONE_LABELS: Record<string, { label: string; icon: string; color: str
 async function fetchTracking(bookingId: string) {
   const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, { credentials: "include" });
   return res.json();
+}
+
+async function fetchPhotos(bookingId: string) {
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/photos`, { credentials: "include" });
+  return res.json();
+}
+
+async function addPhoto(bookingId: string, data: { photoUrl: string; phase: string; caption?: string }) {
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/photos`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Upload failed"); }
+  return res.json();
+}
+
+function downloadBOL(b: any) {
+  const shipment = b.shipment || {};
+  const bookingNum = (b.id || "").split("-")[0].toUpperCase();
+  const date = new Date(b.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const originAddr = [shipment.originStreet, shipment.originCity, `${shipment.originState} ${shipment.originZip}`].filter(Boolean).join(", ");
+  const destAddr = [shipment.destinationStreet, shipment.destinationCity, `${shipment.destinationState} ${shipment.destinationZip}`].filter(Boolean).join(", ");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Bill of Lading — Booking #${bookingNum}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:24px;color:#0f172a}
+  h1{font-size:24px;font-weight:bold;border-bottom:3px solid #1A56DB;padding-bottom:10px;margin-bottom:6px}
+  .meta{color:#64748b;font-size:13px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .section{border:1px solid #e2e8f0;border-radius:8px;padding:14px}
+  .section h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:0 0 8px}
+  .value{font-size:14px;font-weight:600;color:#0f172a}
+  .sub{font-size:12px;color:#64748b;margin-top:2px}
+  .price{font-size:28px;font-weight:bold;color:#1A56DB}
+  .footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center}
+  @media print{button{display:none!important}}
+</style>
+</head><body>
+<h1>📋 Bill of Lading</h1>
+<div class="meta">Booking #${bookingNum} &nbsp;·&nbsp; Issued ${date} &nbsp;·&nbsp; KarHaul Platform</div>
+<div class="grid">
+  <div class="section"><h3>Shipper</h3><div class="value">${b.shipper?.firstName || ""} ${b.shipper?.lastName || ""}</div><div class="sub">${b.shipper?.email || ""}</div></div>
+  <div class="section"><h3>Carrier / Driver</h3><div class="value">${b.driver?.firstName || ""} ${b.driver?.lastName || ""}</div><div class="sub">${b.driver?.dotNumber ? "DOT #" + b.driver.dotNumber : ""}</div></div>
+</div>
+<div class="section" style="margin-bottom:16px"><h3>Vehicle</h3>
+  <div class="value">${shipment.vehicleYear || ""} ${shipment.vehicleMake || ""} ${shipment.vehicleModel || ""}</div>
+  <div class="sub">VIN: ${shipment.vin || "Not provided"} &nbsp;·&nbsp; Condition: ${(shipment.vehicleCondition || "").replace("_", " ")} &nbsp;·&nbsp; Type: ${shipment.vehicleType || ""}</div>
+</div>
+<div class="grid">
+  <div class="section"><h3>Pickup Address</h3><div class="value">${originAddr || "See booking details"}</div></div>
+  <div class="section"><h3>Delivery Address</h3><div class="value">${destAddr || "See booking details"}</div></div>
+</div>
+<div class="grid">
+  <div class="section"><h3>Agreed Transport Price</h3><div class="price">$${Number(b.agreedPrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div class="sub">Paid directly shipper → driver</div></div>
+  <div class="section"><h3>Booking Date</h3><div class="value">${date}</div><div class="sub">Status: ${(b.status || "").replace("_", " ").toUpperCase()}</div></div>
+</div>
+<div class="footer">This document is auto-generated by KarHaul. It serves as a record of the transport agreement between the shipper and carrier. KarHaul does not process transport payments and assumes no liability for this shipment.</div>
+<button onclick="window.print()" style="margin-top:24px;padding:10px 24px;background:#1A56DB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Print / Save as PDF</button>
+</body></html>`;
+
+  const win = window.open("", "_blank");
+  if (win) { win.document.write(html); win.document.close(); }
+}
+
+function PhotosSection({ bookingId, isDriver, bookingStatus }: { bookingId: string; isDriver: boolean; bookingStatus: string }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [uploadPhase, setUploadPhase] = useState<"pickup" | "delivery">("pickup");
+  const [caption, setCaption] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
+
+  const { data } = useQuery({
+    queryKey: ["photos", bookingId],
+    queryFn: () => fetchPhotos(bookingId),
+    refetchInterval: 30_000,
+  });
+
+  const photos = (data?.photos || []) as Array<{ id: string; phase: string; photoUrl: string; caption?: string; createdAt: string }>;
+  const pickupPhotos = photos.filter(p => p.phase === "pickup");
+  const deliveryPhotos = photos.filter(p => p.phase === "delivery");
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        await addPhoto(bookingId, { photoUrl: reader.result as string, phase: uploadPhase, caption: caption || undefined });
+        qc.invalidateQueries({ queryKey: ["photos", bookingId] });
+        setCaption("");
+        toast({ title: "Photo uploaded", description: "Both parties can view it in the booking." });
+      } catch (err: any) {
+        toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      } finally {
+        setUploading(false);
+        e.target.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const canUpload = isDriver && !["delivered", "cancelled"].includes(bookingStatus);
+
+  function PhotoGrid({ items, label }: { items: typeof photos; label: string }) {
+    if (items.length === 0) return null;
+    return (
+      <div className="mb-4">
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">{label} ({items.length})</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {items.map(p => (
+            <a key={p.id} href={p.photoUrl} target="_blank" rel="noopener noreferrer" className="group relative aspect-video rounded-lg overflow-hidden border bg-muted hover:border-primary transition-colors">
+              <img src={p.photoUrl} alt={p.caption || label} className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" />
+              {p.caption && (
+                <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate">{p.caption}</div>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="mb-8">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Camera className="h-4 w-4 text-primary" /> Condition Photos
+          </CardTitle>
+          <span className="text-xs text-muted-foreground">{photos.length} photo{photos.length !== 1 ? "s" : ""}</span>
+        </div>
+        {!isDriver && <p className="text-xs text-muted-foreground mt-1">The driver uploads pre-loading and post-delivery photos here for condition documentation.</p>}
+      </CardHeader>
+      <CardContent>
+        <PhotoGrid items={pickupPhotos} label="Pre-loading (Pickup)" />
+        <PhotoGrid items={deliveryPhotos} label="Post-delivery" />
+
+        {photos.length === 0 && !canUpload && (
+          <div className="flex flex-col items-center py-8 text-muted-foreground gap-2">
+            <ImageIcon className="h-10 w-10 opacity-20" />
+            <p className="text-sm">No photos uploaded yet.</p>
+          </div>
+        )}
+
+        {canUpload && (
+          <div className="mt-4 p-4 bg-muted/40 rounded-xl border space-y-3">
+            <h4 className="text-sm font-semibold">Upload Condition Photo</h4>
+            <div className="flex gap-2">
+              {(["pickup", "delivery"] as const).map(ph => (
+                <button key={ph} type="button"
+                  onClick={() => setUploadPhase(ph)}
+                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors capitalize ${uploadPhase === ph ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                  {ph === "pickup" ? "Pre-loading" : "Post-delivery"}
+                </button>
+              ))}
+            </div>
+            <Input placeholder="Caption (optional)" value={caption} onChange={e => setCaption(e.target.value)} className="h-9" />
+            <label className={`flex items-center justify-center gap-2 w-full h-10 rounded-lg border-2 border-dashed cursor-pointer text-sm font-medium transition-colors ${uploading ? "opacity-50 cursor-not-allowed" : "hover:border-primary hover:text-primary border-border text-muted-foreground"}`}>
+              {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</> : <><Camera className="h-4 w-4" /> Choose Photo</>}
+              <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={handleFile} />
+            </label>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 async function postCheckpoint(bookingId: string, data: Record<string, string>) {
@@ -438,6 +608,7 @@ export default function BookingDetail() {
   const b = booking as any;
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [alertedWindows] = useState(() => new Set<string>());
 
   useEffect(() => {
     if (!b?.cancellationDeadline) return;
@@ -448,6 +619,15 @@ export default function BookingDetail() {
       const mins = Math.floor(diff / 60000);
       const secs = Math.floor((diff % 60000) / 1000);
       setTimeLeft(`${mins}m ${secs}s`);
+      // In-app toast alerts at 30 and 15 minutes
+      if (mins === 30 && secs <= 30 && !alertedWindows.has("30")) {
+        alertedWindows.add("30");
+        toast({ title: "⏰ 30 minutes left to cancel free", description: "Cancel now for a full escrow refund before the penalty window opens." });
+      }
+      if (mins === 15 && secs <= 30 && !alertedWindows.has("15")) {
+        alertedWindows.add("15");
+        toast({ title: "⚠️ 15 minutes left to cancel", description: "Cancelling after the window forfeits your escrow. Act now if needed.", variant: "destructive" });
+      }
     };
     update();
     const interval = setInterval(update, 1000);
@@ -570,14 +750,18 @@ export default function BookingDetail() {
                 </div>
                 <p className="text-muted-foreground">Created {formatDateTime(b.createdAt)}</p>
               </div>
-              <div className="bg-background px-5 py-3 rounded-xl border shadow-sm space-y-1 text-right">
+              <div className="flex flex-col items-end gap-2">
+                <Button variant="outline" size="sm" className="gap-2 text-sm" onClick={() => downloadBOL(b)}>
+                  <FileText className="h-4 w-4" /> View / Download BOL
+                </Button>
+                <div className="bg-background px-5 py-3 rounded-xl border shadow-sm space-y-1 text-right">
                 <div className="flex items-center justify-between gap-8">
                   <span className="text-xs text-muted-foreground">Transport price</span>
                   <span className="font-semibold">{formatCurrency(b.agreedPrice)}</span>
                 </div>
                 {platformFee > 0 && (
                   <div className="flex items-center justify-between gap-8">
-                    <span className="text-xs text-muted-foreground">Platform fee (3%)</span>
+                    <span className="text-xs text-muted-foreground">Platform fee ({isDriver ? "3% of bid" : "5% of budget"})</span>
                     <span className="text-sm text-amber-600">+{formatCurrency(platformFee)}</span>
                   </div>
                 )}
@@ -590,6 +774,7 @@ export default function BookingDetail() {
                 {platformFee === 0 && (
                   <p className="text-2xl font-display font-bold">{formatCurrency(b.agreedPrice)}</p>
                 )}
+                </div>
               </div>
             </div>
 
@@ -722,6 +907,9 @@ export default function BookingDetail() {
             {/* Location Tracking */}
             <TrackingPanel bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />
 
+            {/* Condition Photos */}
+            <PhotosSection bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />
+
             {/* Save driver prompt after delivery */}
             {b.status === "delivered" && isShipper && b.driverId && !saveDriverDismissed && (
               <Card className="mb-6 border-rose-500/30 bg-rose-500/5">
@@ -804,8 +992,8 @@ export default function BookingDetail() {
                         <div>
                           <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee Breakdown</p>
                           <div className="text-xs text-amber-700 dark:text-amber-400 mt-1 space-y-1">
-                            <p><strong>Shipper:</strong> 5% of the max budget held in escrow when the load was posted — released to KarHaul on delivery.</p>
-                            <p><strong>Driver:</strong> 3% of the max budget held in escrow when bid was accepted — released to KarHaul on delivery.</p>
+                            {(isShipper || (!isShipper && !isDriver)) && <p><strong>Shipper fee:</strong> 5% of the budget held in escrow when the load was posted — released to KarHaul on delivery.</p>}
+                            {isDriver && <p><strong>Your fee:</strong> 3% of your accepted bid held in escrow when you accepted — released to KarHaul on delivery.</p>}
                             <p className="pt-1 border-t border-amber-300/30"><strong>Transport payment:</strong> KarHaul does not process payments between shipper and driver. You pay each other directly.</p>
                           </div>
                         </div>
@@ -842,9 +1030,15 @@ export default function BookingDetail() {
                         )}
                       </div>
                       <Button className="w-full gap-2" asChild>
-                        <Link href="/messages"><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
+                        <Link href={`/messages?to=${b.driverId}`}><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
                       </Button>
-                      <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
+                      {b.driver?.phone ? (
+                        <Button className="w-full gap-2" variant="outline" asChild>
+                          <a href={`tel:${b.driver.phone}`}><Phone className="h-4 w-4" /> Call Carrier</a>
+                        </Button>
+                      ) : (
+                        <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -865,9 +1059,15 @@ export default function BookingDetail() {
                         </div>
                       </div>
                       <Button className="w-full gap-2" variant="outline" asChild>
-                        <Link href="/messages"><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
+                        <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
                       </Button>
-                      <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
+                      {b.shipper?.phone ? (
+                        <Button className="w-full gap-2" variant="outline" asChild>
+                          <a href={`tel:${b.shipper.phone}`}><Phone className="h-4 w-4" /> Call Shipper</a>
+                        </Button>
+                      ) : (
+                        <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
+                      )}
                     </CardContent>
                   </Card>
                 )}

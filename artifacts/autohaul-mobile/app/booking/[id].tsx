@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert, ActivityIndicator, TextInput, Linking } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Alert, ActivityIndicator, TextInput, Linking, Image } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -31,6 +31,11 @@ async function fetchTracking(bookingId: string) {
   return res.json();
 }
 
+async function fetchPhotos(bookingId: string) {
+  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/photos`);
+  return res.json();
+}
+
 async function postCheckpoint(bookingId: string, data: Record<string, string>) {
   const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/tracking`, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -57,6 +62,12 @@ export default function BookingDetailScreen() {
     queryFn: () => fetchTracking(id!),
     enabled: !!id,
     refetchInterval: 60000,
+  });
+  const { data: photosData } = useQuery({
+    queryKey: ["photos-mobile", id],
+    queryFn: () => fetchPhotos(id!),
+    enabled: !!id,
+    refetchInterval: 30000,
   });
 
   const statusMutation = useMutation({
@@ -89,6 +100,9 @@ export default function BookingDetailScreen() {
   const driver = (booking as any).driver;
   const shipper = (booking as any).shipper;
   const checkpoints = trackingData?.checkpoints || [];
+  const photos = (photosData?.photos || []) as Array<{ id: string; phase: string; photoUrl: string; caption?: string }>;
+  const pickupPhotos = photos.filter(p => p.phase === "pickup");
+  const deliveryPhotos = photos.filter(p => p.phase === "delivery");
   const platformFee = (booking as any).platformFeeAmount ?? 0;
   const agreedPrice = (booking as any).agreedPrice ?? 0;
 
@@ -129,11 +143,11 @@ export default function BookingDetailScreen() {
         <View style={[styles.priceCard, { backgroundColor: C.primary }]}>
           <Text style={styles.priceLabel}>Transport Price</Text>
           <Text style={styles.priceAmount}>${agreedPrice.toLocaleString()}</Text>
-          {platformFee > 0 && isShipper && (
+          {platformFee > 0 && (
             <>
               <View style={styles.feeDivider} />
-              <Text style={styles.feeText}>+ ${platformFee.toFixed(2)} platform fee (3%)</Text>
-              <Text style={styles.feeTotal}>Total: ${(agreedPrice + platformFee).toFixed(2)}</Text>
+              <Text style={styles.feeText}>+ ${platformFee.toFixed(2)} platform fee ({isDriver ? "3% of your accepted bid" : "5% of budget"})</Text>
+              {isShipper && <Text style={styles.feeTotal}>Total: ${(agreedPrice + platformFee).toFixed(2)}</Text>}
             </>
           )}
           <Text style={styles.priceNote}>Payment arranged directly between shipper and driver</Text>
@@ -248,13 +262,51 @@ export default function BookingDetailScreen() {
           )}
         </View>
 
-        {/* Vehicle */}
+        {/* Vehicle & BOL */}
         {shipment && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: C.text }]}>Vehicle</Text>
             <View style={[styles.card, { backgroundColor: "#fff" }]}>
               <Text style={[styles.vehicleName, { color: C.text }]}>{shipment.vehicleYear} {shipment.vehicleMake} {shipment.vehicleModel}</Text>
               <Text style={[styles.route, { color: C.textSecondary }]}>{shipment.originCity}, {shipment.originState} → {shipment.destinationCity}, {shipment.destinationState}</Text>
+              {shipment.vin && <Text style={[styles.route, { color: C.textMuted, marginTop: 4 }]}>VIN: {shipment.vin}</Text>}
+              <View style={[styles.bolRow]}>
+                <Feather name="file-text" size={13} color={C.primary} />
+                <Text style={[styles.bolLink, { color: C.primary }]}>Bill of Lading auto-generated on booking confirmation</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Condition Photos */}
+        {photos.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>Condition Photos ({photos.length})</Text>
+            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+              {pickupPhotos.length > 0 && (
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Pre-loading ({pickupPhotos.length})</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      {pickupPhotos.map((p) => (
+                        <Image key={p.id} source={{ uri: p.photoUrl }} style={styles.photoThumb} />
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+              )}
+              {deliveryPhotos.length > 0 && (
+                <View>
+                  <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Post-delivery ({deliveryPhotos.length})</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      {deliveryPhotos.map((p) => (
+                        <Image key={p.id} source={{ uri: p.photoUrl }} style={styles.photoThumb} />
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -353,6 +405,9 @@ const styles = StyleSheet.create({
   submitBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#fff" },
   vehicleName: { fontFamily: "Inter_600SemiBold", fontSize: 16, marginBottom: 4 },
   route: { fontFamily: "Inter_400Regular", fontSize: 14 },
+  bolRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  bolLink: { fontFamily: "Inter_400Regular", fontSize: 12, flex: 1 },
+  photoThumb: { width: 90, height: 90, borderRadius: 10, backgroundColor: "#F1F5F9" },
   partyRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderTopWidth: 1 },
   partyAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   partyAvatarText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
