@@ -8,6 +8,53 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme, ThemeMode } from "@/lib/ThemeContext";
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const C = Colors.light;
+  const options: { value: ThemeMode; icon: string; label: string }[] = [
+    { value: "light", icon: "sun", label: "Light" },
+    { value: "dark", icon: "moon", label: "Dark" },
+    { value: "system", icon: "smartphone", label: "System" },
+  ];
+  return (
+    <View style={styles.menuItem}>
+      <View style={[styles.menuIcon, { backgroundColor: "#EFF6FF" }]}>
+        <Feather name="sun" size={18} color={C.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.menuLabel, { color: C.text }]}>Appearance</Text>
+        <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
+          {options.map((opt) => (
+            <Pressable
+              key={opt.value}
+              onPress={() => setTheme(opt.value)}
+              style={[
+                styles.themeBtn,
+                theme === opt.value && { backgroundColor: C.primary, borderColor: C.primary },
+              ]}
+            >
+              <Feather
+                name={opt.icon as any}
+                size={12}
+                color={theme === opt.value ? "#fff" : C.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.themeBtnText,
+                  { color: theme === opt.value ? "#fff" : C.textSecondary },
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function MenuItem({ icon, label, subtitle, onPress, danger }: { icon: string; label: string; subtitle?: string; onPress: () => void; danger?: boolean }) {
   const C = Colors.light;
@@ -149,6 +196,11 @@ export default function AccountScreen() {
       </View>
 
       <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>DISPLAY</Text>
+        <ThemeToggle />
+      </View>
+
+      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
         <MenuItem icon="log-out" label="Sign Out" onPress={handleLogout} danger />
       </View>
     </ScrollView>
@@ -185,4 +237,6 @@ const styles = StyleSheet.create({
   menuIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   menuLabel: { fontFamily: "Inter_500Medium", fontSize: 15 },
   menuSub: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 1 },
+  themeBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: "#E2E8F0" },
+  themeBtnText: { fontFamily: "Inter_500Medium", fontSize: 11 },
 });

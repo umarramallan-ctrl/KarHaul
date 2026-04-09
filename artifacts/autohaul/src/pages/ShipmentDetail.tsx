@@ -221,7 +221,9 @@ export default function ShipmentDetail() {
   const isOwner = profile?.id === shipment?.shipperId;
   const isDriver = profile?.role === 'driver' || profile?.role === 'both';
   const canBid = isAuthenticated && isDriver && !isOwner && shipment?.status === 'open';
-  const hasMyBid = bidsData?.bids.some(b => b.driverId === profile?.id);
+  const myBid = bidsData?.bids?.find(b => b.driverId === profile?.id);
+  const hasMyBid = !!myBid;
+  const myBidAccepted = myBid?.status === 'accepted';
 
   const { data: originWeather } = useWeatherAlert(shipment?.originCity, shipment?.originState);
   const { data: destWeather } = useWeatherAlert(shipment?.destinationCity, shipment?.destinationState);
@@ -639,9 +641,9 @@ export default function ShipmentDetail() {
           <div className="space-y-6">
             <Card className="shadow-lg border-primary/20 shadow-primary/5">
               <CardHeader className="bg-primary/5 pb-4">
-                <CardTitle>Target Budget</CardTitle>
+                <CardTitle>Maximum Budget</CardTitle>
                 <div className="text-3xl font-display font-bold mt-2">
-                  {shipment.budgetMax ? `${formatCurrency(shipment.budgetMin || 0)} - ${formatCurrency(shipment.budgetMax)}` : 'Open for Bids'}
+                  {shipment.budgetMax ? formatCurrency(shipment.budgetMax) : 'Open for Bids'}
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
@@ -733,7 +735,7 @@ export default function ShipmentDetail() {
                           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-3 mt-6">
                             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                             <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-                              <p><strong>Your fee:</strong> If accepted, a <strong>3% platform fee</strong> based on the max budget is held in escrow and released to KarHaul on delivery.</p>
+                              <p><strong>Your fee:</strong> If accepted, a <strong>3% platform fee</strong> on your accepted bid is held in escrow and released to KarHaul on delivery.</p>
                               <p><strong>Payment:</strong> You are paid directly by the shipper — KarHaul does not process transport payments.</p>
                               <p><strong>Cancellation:</strong> You have 1 hour after acceptance to cancel penalty-free. After that, cancelling forfeits your escrow.</p>
                             </div>
@@ -753,6 +755,8 @@ export default function ShipmentDetail() {
                   <Button className="w-full" variant="outline" asChild>
                     <Link href="/profile">Login to Bid</Link>
                   </Button>
+                ) : myBidAccepted ? (
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-600 text-white cursor-not-allowed" disabled>Bid Accepted</Button>
                 ) : hasMyBid ? (
                   <Button className="w-full" variant="secondary" disabled>You've Placed a Bid</Button>
                 ) : isOwner ? (

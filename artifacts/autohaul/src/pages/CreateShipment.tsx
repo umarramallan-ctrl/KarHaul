@@ -591,19 +591,14 @@ export default function CreateShipment() {
                       </div>
 
                       {/* Budget */}
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/60">
-                        {[
-                          { name: "budgetMin" as const, label: "Min Budget ($)", placeholder: "500" },
-                          { name: "budgetMax" as const, label: "Max Budget ($)", placeholder: "800" },
-                        ].map(({ name, label, placeholder }) => (
-                          <FormField key={name} control={form.control} name={name} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</FormLabel>
-                              <FormControl><Input type="number" placeholder={placeholder} {...field} className={inputCls} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        ))}
+                      <div className="pt-2 border-t border-slate-800/60">
+                        <FormField control={form.control} name="budgetMax" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Maximum Budget ($)</FormLabel>
+                            <FormControl><Input type="number" placeholder="800" {...field} className={inputCls} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
 
                       <FormField control={form.control} name="notes" render={({ field }) => (
@@ -621,8 +616,7 @@ export default function CreateShipment() {
                       <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
                         <p className="text-xs font-bold text-blue-300 uppercase tracking-widest">How KarHaul Fees Work</p>
                         <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
-                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">You (shipper):</span><span>5% of your max budget is held in escrow when you post. Released to KarHaul after delivery.</span></div>
-                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Driver:</span><span>3% of your max budget is held in escrow when they accept. Released to KarHaul after delivery.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Your fee:</span><span>5% of your budget is held in escrow when you post. Released to KarHaul after delivery.</span></div>
                           <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">Cancellation:</span><span>Both parties have a 1-hour window to cancel penalty-free. After that, the cancelling party forfeits their escrow fee.</span></div>
                           <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">No-show:</span><span>If the driver no-shows, they forfeit their escrow and yours is returned. If you no-show, yours is forfeited and theirs is returned.</span></div>
                           <div className="flex items-start gap-2 pt-1 border-t border-blue-500/20"><span className="text-slate-400 font-bold shrink-0">Payments:</span><span>KarHaul does NOT process transport payments. You pay the driver directly — cash, Zelle, Venmo, etc. The escrow above is the platform fee only.</span></div>
@@ -664,7 +658,7 @@ export default function CreateShipment() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Post Load to Board"
-        description={`Your load will be visible to all verified drivers. A 5% platform fee (based on your max budget) is held in escrow now and released to KarHaul when delivery is confirmed. You pay the driver directly — KarHaul does not process transport payments.`}
+        description={`Your load will be visible to all verified drivers. A 5% platform fee (based on your budget) is held in escrow now and released to KarHaul when delivery is confirmed. You pay the driver directly — KarHaul does not process transport payments.`}
         fees={pendingBudgetMax > 0 ? [
           { label: "Your platform fee (5% of max budget)", amount: shipperFee },
         ] : []}

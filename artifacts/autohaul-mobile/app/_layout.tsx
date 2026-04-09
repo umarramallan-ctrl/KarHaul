@@ -6,7 +6,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -15,9 +15,13 @@ import { setBaseUrl } from "@workspace/api-client-react";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
+import * as WebBrowser from "expo-web-browser";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
 import { API_URL } from "@/lib/api";
+import { ThemeProvider } from "@/lib/ThemeContext";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const apiUrl = API_URL;
 setBaseUrl(apiUrl);
@@ -39,10 +43,23 @@ const tokenCache = {
 };
 
 function RootLayoutNav() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const inAuthGroup = segments[0] === "auth";
+    if (isSignedIn && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [isSignedIn, isLoaded, segments]);
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="auth" />
+      <Stack.Screen name="auth-callback" />
       <Stack.Screen name="shipment/[id]" options={{ presentation: "card" }} />
       <Stack.Screen name="create-shipment" options={{ presentation: "modal" }} />
       <Stack.Screen name="booking/[id]" options={{ presentation: "card" }} />
@@ -90,10 +107,12 @@ export default function RootLayout() {
           tokenCache={tokenCache}
         >
           <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <PushNotificationRegistrar />
-              <RootLayoutNav />
-            </GestureHandlerRootView>
+            <ThemeProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <PushNotificationRegistrar />
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </ThemeProvider>
           </QueryClientProvider>
         </ClerkProvider>
       </ErrorBoundary>

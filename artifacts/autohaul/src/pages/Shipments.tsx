@@ -41,7 +41,6 @@ export default function Shipments() {
   const [destinationStateFilter, setDestinationStateFilter] = useState("all");
   const [conditionFilter, setConditionFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -52,7 +51,6 @@ export default function Shipments() {
   if (destinationStateFilter !== "all") activeFilters.destinationState = destinationStateFilter;
   if (conditionFilter !== "all") activeFilters.vehicleCondition = conditionFilter;
   if (searchQuery.trim()) activeFilters.search = searchQuery.trim();
-  if (minBudget) activeFilters.minBudget = minBudget;
   if (maxBudget) activeFilters.maxBudget = maxBudget;
 
   const { data, isLoading } = useListShipments(activeFilters as any, {
@@ -62,7 +60,7 @@ export default function Shipments() {
   function clearAll() {
     setStatusFilter("open"); setTransportTypeFilter("all"); setOriginStateFilter("all");
     setDestinationStateFilter("all"); setConditionFilter("all"); setSearchQuery("");
-    setMinBudget(""); setMaxBudget("");
+    setMaxBudget("");
   }
 
   const hasActiveFilters = Object.keys(activeFilters).some(k => k !== "status");
@@ -154,19 +152,14 @@ export default function Shipments() {
                     </SelectContent>
                   </Select>
                 </div>
-                {[
-                  { label: "Min Budget", value: minBudget, setter: setMinBudget, placeholder: "0" },
-                  { label: "Max Budget", value: maxBudget, setter: setMaxBudget, placeholder: "any" },
-                ].map(({ label, value, setter, placeholder }) => (
-                  <div key={label} className="w-full md:w-32">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">{label}</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
-                      <Input type="number" placeholder={placeholder} value={value} onChange={e => setter(e.target.value)}
-                        className="pl-7 bg-slate-800/60 border-slate-700 text-white h-11" />
-                    </div>
+                <div className="w-full md:w-40">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Max Budget</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                    <Input type="number" placeholder="any" value={maxBudget} onChange={e => setMaxBudget(e.target.value)}
+                      className="pl-7 bg-slate-800/60 border-slate-700 text-white h-11" />
                   </div>
-                ))}
+                </div>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={clearAll}>
                     <X className="mr-1.5 h-3.5 w-3.5" /> Clear all
@@ -222,9 +215,9 @@ export default function Shipments() {
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-lg font-bold text-white">
-                              {shipment.budgetMax ? `${formatCurrency(shipment.budgetMin || 0)}–${formatCurrency(shipment.budgetMax)}` : "Open Bid"}
+                              {shipment.budgetMax ? formatCurrency(shipment.budgetMax) : "Open Bid"}
                             </div>
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wide">Target Budget</div>
+                            <div className="text-[10px] text-slate-500 uppercase tracking-wide">Max Budget</div>
                           </div>
                         </div>
                         <h3 className="font-bold text-white text-base">

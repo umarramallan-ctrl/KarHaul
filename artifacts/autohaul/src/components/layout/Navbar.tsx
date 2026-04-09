@@ -244,6 +244,12 @@ export function Navbar() {
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/messages" className="cursor-pointer flex items-center">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <span>Messages</span>
+                    </Link>
+                  </DropdownMenuItem>
                   {role === "shipper" && (
                     <DropdownMenuItem asChild>
                       <Link href="/saved-drivers" className="cursor-pointer flex items-center">
