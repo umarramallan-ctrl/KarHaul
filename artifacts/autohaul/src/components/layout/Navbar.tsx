@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart, Bell } from "lucide-react";
+import { Menu, X, User as UserIcon, MessageSquare, Briefcase, PlusCircle, ShieldCheck, Route, Heart, Bell, FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CarCarrierIcon } from "@/components/icons/CarCarrierIcon";
 import { PasskeyLoginButton } from "@/components/passkeys/PasskeyLoginButton";
@@ -263,6 +263,14 @@ export function Navbar() {
                       <Link href="/driver-routes" className="cursor-pointer flex items-center">
                         <Route className="mr-2 h-4 w-4 text-primary" />
                         <span>My Routes</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {(role === "driver" || role === "shipper") && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="cursor-pointer flex items-center">
+                        <FileText className="mr-2 h-4 w-4 text-slate-500" />
+                        <span>Bill of Lading</span>
                       </Link>
                     </DropdownMenuItem>
                   )}

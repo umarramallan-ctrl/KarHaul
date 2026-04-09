@@ -70,7 +70,7 @@ function downloadBOL(b: any) {
 <h1>📋 Bill of Lading</h1>
 <div class="meta">Booking #${bookingNum} &nbsp;·&nbsp; Issued ${date} &nbsp;·&nbsp; KarHaul Platform</div>
 <div class="grid">
-  <div class="section"><h3>Shipper</h3><div class="value">${b.shipper?.firstName || ""} ${b.shipper?.lastName || ""}</div><div class="sub">${b.shipper?.email || ""}</div></div>
+  <div class="section"><h3>Shipper</h3><div class="value">${b.shipper?.firstName || ""} ${b.shipper?.lastName || ""}</div><div class="sub">${b.shipper?.email || ""}${b.shipper?.phone ? " · " + b.shipper.phone : ""}</div><div class="sub">${originAddr || ""}</div></div>
   <div class="section"><h3>Carrier / Driver</h3><div class="value">${b.driver?.firstName || ""} ${b.driver?.lastName || ""}</div><div class="sub">${b.driver?.dotNumber ? "DOT #" + b.driver.dotNumber : ""}</div></div>
 </div>
 <div class="section" style="margin-bottom:16px"><h3>Vehicle</h3>

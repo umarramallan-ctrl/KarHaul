@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft, Phone, MessageSquare } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/clerk-react";
@@ -859,9 +859,24 @@ export default function ShipmentDetail() {
                     </div>
                   </div>
                   {isAuthenticated && !isOwner && (
-                    <Button variant="outline" className="w-full text-xs h-8">
-                      Message Shipper
-                    </Button>
+                    <div className="space-y-2 mt-2">
+                      <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
+                        <Link href={`/messages?to=${shipment.shipperId}`}>
+                          <MessageSquare className="h-3.5 w-3.5" /> Message Shipper
+                        </Link>
+                      </Button>
+                      {(shipment as any).shipper?.phone ? (
+                        <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
+                          <a href={`tel:${(shipment as any).shipper.phone}`}>
+                            <Phone className="h-3.5 w-3.5" /> Call Shipper
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button variant="outline" className="w-full text-xs h-8 gap-1.5" onClick={() => toast({ title: "In-App Call", description: `Connecting you with ${(shipment as any).shipper?.firstName || "the shipper"}. Both parties will be notified.` })}>
+                          <Phone className="h-3.5 w-3.5" /> Call Shipper
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>

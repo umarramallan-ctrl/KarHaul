@@ -6,8 +6,10 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getBooking, updateBookingStatus, getMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
+import * as ImagePicker from "expo-image-picker";
 
 const STATUS_STEPS = ["confirmed", "picked_up", "in_transit", "delivered"];
 const STATUS_LABELS: Record<string, string> = {
@@ -36,6 +38,16 @@ async function fetchPhotos(bookingId: string) {
   return res.json();
 }
 
+async function addPhoto(bookingId: string, data: { photoUrl: string; phase: string; caption?: string }, token: string | null) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/photos`, {
+    method: "POST", headers, body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Upload failed"); }
+  return res.json();
+}
+
 async function postCheckpoint(bookingId: string, data: Record<string, string>) {
   const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/tracking`, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -54,6 +66,9 @@ export default function BookingDetailScreen() {
   const [showCheckpointForm, setShowCheckpointForm] = useState(false);
   const [cpForm, setCpForm] = useState({ city: "", state: "", milestone: "en_route", notes: "" });
   const [calling, setCalling] = useState<string | null>(null);
+  const [uploadPhase, setUploadPhase] = useState<"pickup" | "delivery">("pickup");
+  const [uploading, setUploading] = useState(false);
+  const { getToken } = useClerkAuth();
 
   const { data: booking, isLoading } = useQuery({ queryKey: ["booking", id], queryFn: () => getBooking(id!) });
   const { data: myProfile } = useQuery({ queryKey: ["my-profile"], queryFn: getMyProfile, enabled: isAuthenticated });
@@ -116,6 +131,25 @@ export default function BookingDetailScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "Confirm", onPress: () => statusMutation.mutate(nextSt) },
     ]);
+  };
+
+  const handlePhotoUpload = async (phase: "pickup" | "delivery") => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permission needed", "Allow photo library access to upload condition photos."); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, base64: true, quality: 0.7 });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const base64Uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      await addPhoto(id!, { photoUrl: base64Uri, phase }, token);
+      qc.invalidateQueries({ queryKey: ["photos-mobile", id] });
+      Alert.alert("Photo uploaded", "Both parties can view it in the booking.");
+    } catch (e: any) {
+      Alert.alert("Upload failed", e.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleInAppCall = (name: string) => {
@@ -307,6 +341,36 @@ export default function BookingDetailScreen() {
                   </ScrollView>
                 </View>
               )}
+            </View>
+          </View>
+        )}
+
+        {/* Driver photo upload */}
+        {isDriver && !["delivered", "cancelled"].includes((booking as any).status) && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>Upload Condition Photos</Text>
+            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+              <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Phase</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+                {(["pickup", "delivery"] as const).map(ph => (
+                  <Pressable key={ph} onPress={() => setUploadPhase(ph)}
+                    style={[styles.milestoneChip, { flex: 1, alignItems: "center", borderColor: uploadPhase === ph ? C.primary : C.border, backgroundColor: uploadPhase === ph ? "#EFF6FF" : "#fff" }]}>
+                    <Text style={{ fontSize: 13, color: uploadPhase === ph ? C.primary : C.textSecondary, fontFamily: "Inter_500Medium" }}>
+                      {ph === "pickup" ? "Pre-loading" : "Post-delivery"}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Pressable
+                style={[styles.submitBtn, { backgroundColor: uploading ? "#94A3B8" : C.primary }]}
+                onPress={() => handlePhotoUpload(uploadPhase)}
+                disabled={uploading}
+              >
+                {uploading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.submitBtnText}>📷 Choose &amp; Upload Photo</Text>
+                }
+              </Pressable>
             </View>
           </View>
         )}
