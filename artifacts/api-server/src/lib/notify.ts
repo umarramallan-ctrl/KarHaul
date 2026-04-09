@@ -21,7 +21,9 @@ export type NotificationType =
   | "load_match"        // driver lane match alert
   | "backhaul_match"   // shipper return lane match alert
   | "call_initiated"   // in-app call notification
-  | "driver_invite";   // exclusive first-look invite
+  | "driver_invite"    // exclusive first-look invite
+  | "report_submitted" // admin: new report needs review
+  | "user_suspended";  // admin: account auto-suspended
 
 export async function createNotification(params: {
   userId: string;

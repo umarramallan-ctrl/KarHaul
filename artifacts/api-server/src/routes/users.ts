@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { usersTable, reviewsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, ne } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 const router: IRouter = Router();
@@ -45,6 +45,16 @@ router.put("/users/profile", async (req, res) => {
     updateData.termsAcceptedAt = new Date();
   }
   updateData.updatedAt = new Date();
+
+  // Check for duplicate phone
+  if (body.phone) {
+    const existing = await db.select({ id: usersTable.id }).from(usersTable)
+      .where(and(eq(usersTable.phone, body.phone), ne(usersTable.authId, userId))).limit(1);
+    if (existing.length > 0) {
+      res.status(409).json({ error: "An account with this phone number already exists" });
+      return;
+    }
+  }
 
   let user = await db.select().from(usersTable).where(eq(usersTable.authId, userId)).limit(1);
   if (user.length === 0) {

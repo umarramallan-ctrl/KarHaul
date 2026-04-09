@@ -8,7 +8,7 @@ export const usersTable = pgTable("users", {
   email: text("email"),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  phone: text("phone"),
+  phone: text("phone").unique(),
   role: text("role").notNull().default("shipper"),
   profileImageUrl: text("profile_image_url"),
   bio: text("bio"),

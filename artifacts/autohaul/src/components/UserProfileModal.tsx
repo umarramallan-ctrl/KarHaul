@@ -3,10 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Truck, ShieldCheck, MessageSquare } from "lucide-react";
+import { Star, Truck, ShieldCheck, MessageSquare, Flag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiBase } from "@/lib/api";
 import { Link } from "wouter";
+import { ReportModal } from "@/components/ReportModal";
 
 async function fetchPublicProfile(userId: string) {
   const res = await fetch(`${apiBase}/users/${userId}`, { credentials: "include" });
@@ -100,6 +101,15 @@ export function UserProfileModal({ userId, children }: UserProfileModalProps) {
                   <MessageSquare className="h-4 w-4" /> Send Message
                 </Link>
               </Button>
+              <ReportModal
+                reportedUserId={userId}
+                reportedUserName={`${user.firstName || ""} ${user.lastName || ""}`.trim() || "this user"}
+                trigger={
+                  <div className="flex items-center justify-center gap-2 w-full text-sm text-muted-foreground hover:text-destructive transition-colors py-1 cursor-pointer">
+                    <Flag className="h-3.5 w-3.5" /> Report this user
+                  </div>
+                }
+              />
             </div>
           )}
         </DialogContent>

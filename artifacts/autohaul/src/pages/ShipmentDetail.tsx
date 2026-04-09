@@ -11,9 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft, Phone, MessageSquare } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft, Phone, MessageSquare, Flag } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
 import { UserProfileModal } from "@/components/UserProfileModal";
+import { ReportModal } from "@/components/ReportModal";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/clerk-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -879,6 +880,15 @@ export default function ShipmentDetail() {
                           <Phone className="h-3.5 w-3.5" /> Call Shipper
                         </Button>
                       )}
+                      <ReportModal
+                        reportedUserId={shipment.shipperId}
+                        reportedUserName={`${(shipment as any).shipper?.firstName || ""} ${(shipment as any).shipper?.lastName || ""}`.trim() || "this shipper"}
+                        trigger={
+                          <div className="flex items-center justify-center gap-1.5 w-full text-xs text-muted-foreground hover:text-destructive transition-colors py-1 cursor-pointer">
+                            <Flag className="h-3 w-3" /> Report Shipper
+                          </div>
+                        }
+                      />
                     </div>
                   )}
                 </CardContent>

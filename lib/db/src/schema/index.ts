@@ -15,3 +15,4 @@ export * from "./notifications";
 export * from "./feedback";
 export * from "./backhaul-routes";
 export * from "./lane-preferences";
+export * from "./reports";

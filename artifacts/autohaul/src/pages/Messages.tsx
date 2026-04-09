@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelative } from "@/lib/format";
-import { MessageSquare, Send, Shield, Phone, MessageCircle, AlertCircle, Loader2, Info, Zap } from "lucide-react";
+import { MessageSquare, Send, Shield, Phone, MessageCircle, AlertCircle, Loader2, Info, Zap, Flag } from "lucide-react";
+import { ReportModal } from "@/components/ReportModal";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 
@@ -154,6 +155,15 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
               {calling ? "Connecting..." : "Call"}
             </Button>
           )}
+          <ReportModal
+            reportedUserId={conv.otherUserId}
+            reportedUserName={conv.otherUserName || "this user"}
+            trigger={
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" title="Report user" asChild>
+                <span><Flag className="h-3.5 w-3.5" /></span>
+              </Button>
+            }
+          />
         </div>
       </div>
 
