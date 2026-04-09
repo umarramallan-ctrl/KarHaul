@@ -145,7 +145,7 @@ router.post("/messages", messageLimiter, async (req, res) => {
   }
   const { recipientId, shipmentId, content } = req.body;
 
-  const filter = checkMessageContent(content || "");
+  const filter = await checkMessageContent(content || "");
   if (filter.blocked) {
     res.status(400).json({ error: filter.reason, code: "CONTENT_BLOCKED" });
     return;

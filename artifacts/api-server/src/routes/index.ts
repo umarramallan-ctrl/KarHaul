@@ -20,6 +20,7 @@ import feedbackRouter from "./feedback";
 import stripeRouter from "./stripe";
 import backhaulRouter from "./backhaul";
 import lanePreferencesRouter from "./lane-preferences";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(feedbackRouter);
 router.use(stripeRouter);
 router.use(backhaulRouter);
 router.use(lanePreferencesRouter);
+router.use(aiRouter);
 
 export default router;

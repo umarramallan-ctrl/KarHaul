@@ -28,6 +28,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "message", selected: "message.fill" }} />
         <Label>Messages</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="support">
+        <Icon sf={{ default: "questionmark.circle", selected: "questionmark.circle.fill" }} />
+        <Label>Support</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="account">
         <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
         <Label>Account</Label>
@@ -113,6 +117,18 @@ function ClassicTabLayout() {
               <SymbolView name="message" tintColor={color} size={24} />
             ) : (
               <Feather name="message-circle" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="support"
+        options={{
+          title: "Support",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="questionmark.circle" tintColor={color} size={24} />
+            ) : (
+              <Feather name="help-circle" size={22} color={color} />
             ),
         }}
       />

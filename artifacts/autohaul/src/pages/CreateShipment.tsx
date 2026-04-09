@@ -211,6 +211,38 @@ export default function CreateShipment() {
     },
   });
 
+  // AI budget suggestion — fires when step 3 is reached
+  const watchedOriginState = form.watch("originState");
+  const watchedDestState = form.watch("destinationState");
+  const watchedMakeForBudget = form.watch("vehicleMake");
+  const watchedYear = form.watch("vehicleYear");
+  const watchedTransport = form.watch("transportType");
+
+  const { data: budgetSuggestion, isFetching: budgetFetching } = useQuery({
+    queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
+    queryFn: async () => {
+      const res = await fetch(`${apiBase}/ai/budget-suggest`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleYear: form.getValues("vehicleYear"),
+          vehicleMake: form.getValues("vehicleMake"),
+          vehicleModel: form.getValues("vehicleModel"),
+          vehicleType: form.getValues("vehicleType"),
+          vehicleCondition: form.getValues("vehicleCondition"),
+          transportType: form.getValues("transportType"),
+          originCity: form.getValues("originCity"),
+          originState: watchedOriginState,
+          destinationCity: form.getValues("destinationCity"),
+          destinationState: watchedDestState,
+        }),
+      });
+      return res.json();
+    },
+    enabled: step === 3 && !!watchedMakeForBudget && !!watchedOriginState && !!watchedDestState,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Fetch car makes from NHTSA (no form dependency)
   const { data: nhtsaMakes = [] } = useQuery({
     queryKey: ["nhtsa-makes"],
@@ -636,6 +668,25 @@ export default function CreateShipment() {
                             <FormMessage />
                           </FormItem>
                         )} />
+                        {budgetFetching && (
+                          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                            <div className="h-3 w-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            Getting AI price suggestion…
+                          </div>
+                        )}
+                        {!budgetFetching && budgetSuggestion?.min && budgetSuggestion?.max && (
+                          <div className="mt-2 rounded-xl border border-blue-500/30 bg-blue-500/8 px-4 py-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">AI Estimate</span>
+                            </div>
+                            <p className="text-white font-semibold">${budgetSuggestion.min.toLocaleString()} – ${budgetSuggestion.max.toLocaleString()}</p>
+                            {budgetSuggestion.note && <p className="text-slate-400 text-xs mt-1">{budgetSuggestion.note}</p>}
+                            <button type="button" className="mt-2 text-xs text-blue-400 hover:underline"
+                              onClick={() => form.setValue("budgetMax", budgetSuggestion.max)}>
+                              Use ${budgetSuggestion.max.toLocaleString()} as budget
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <FormField control={form.control} name="notes" render={({ field }) => (
