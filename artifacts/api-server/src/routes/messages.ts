@@ -14,6 +14,63 @@ async function getDbUser(authId: string) {
   return users[0] || null;
 }
 
+// Create or find conversation without sending a message (used for deep-link ?to= flow)
+router.post("/conversations", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
+  const { recipientId, shipmentId } = req.body;
+  if (!recipientId) { res.status(400).json({ error: "recipientId required" }); return; }
+
+  let conv = await db.select().from(conversationsTable)
+    .where(or(
+      and(eq(conversationsTable.user1Id, dbUser.id), eq(conversationsTable.user2Id, recipientId)),
+      and(eq(conversationsTable.user1Id, recipientId), eq(conversationsTable.user2Id, dbUser.id))
+    )).limit(1);
+
+  let conversationId: string;
+  if (conv.length === 0) {
+    conversationId = randomUUID();
+    await db.insert(conversationsTable).values({
+      id: conversationId, user1Id: dbUser.id, user2Id: recipientId,
+      shipmentId: shipmentId || null, lastMessageAt: new Date(),
+    });
+  } else {
+    conversationId = conv[0].id;
+  }
+
+  const [other] = await db.select().from(usersTable).where(eq(usersTable.id, recipientId)).limit(1);
+  res.status(201).json({
+    id: conversationId,
+    otherUserId: recipientId,
+    otherUserName: other ? `${other.firstName || ""} ${other.lastName || ""}`.trim() || "User" : "Unknown",
+    otherUserAvatar: other?.profileImageUrl || null,
+    otherUserPhone: other?.phone || null,
+    shipmentId: shipmentId || null,
+    lastMessage: null,
+    lastMessageAt: new Date().toISOString(),
+    unreadCount: 0,
+  });
+});
+
+// Notify recipient that someone is initiating an in-app call
+router.post("/messages/call-notify", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
+  const { recipientId } = req.body;
+  if (!recipientId) { res.status(400).json({ error: "recipientId required" }); return; }
+  const callerName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "Someone";
+  await createNotification({
+    userId: recipientId,
+    type: "call_initiated",
+    title: `📞 ${callerName} is calling you`,
+    body: "Open the app to connect via in-app call.",
+    linkPath: "/messages",
+  });
+  res.json({ success: true });
+});
+
 router.get("/conversations", async (req, res) => {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });

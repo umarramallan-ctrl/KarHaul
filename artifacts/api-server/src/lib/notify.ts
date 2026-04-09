@@ -19,7 +19,9 @@ export type NotificationType =
   | "photo_uploaded"
   | "delivery_confirmation_request"
   | "load_match"        // driver lane match alert
-  | "backhaul_match";  // shipper return lane match alert
+  | "backhaul_match"   // shipper return lane match alert
+  | "call_initiated"   // in-app call notification
+  | "driver_invite";   // exclusive first-look invite
 
 export async function createNotification(params: {
   userId: string;

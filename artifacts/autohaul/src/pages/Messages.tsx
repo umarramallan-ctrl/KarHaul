@@ -104,8 +104,15 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
     sendMutation.mutate({ recipientId: conv.otherUserId, content: text.trim(), conversationId: conv.id });
   };
 
-  const handleCall = () => {
+  const handleCall = async () => {
     setCalling(true);
+    try {
+      await fetch(`${apiBase}/messages/call-notify`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: conv.otherUserId }),
+      });
+    } catch {}
     setTimeout(() => { setCalling(false); toast({ title: "Call initiated", description: `Connecting you with ${conv.otherUserName}. Both parties notified.` }); }, 1500);
   };
 
@@ -219,7 +226,7 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
 }
 
 export default function Messages() {
-  const { data, isLoading } = useListConversations();
+  const { data, isLoading, refetch: refetchConversations } = useListConversations();
   const [selectedConv, setSelectedConv] = useState<any>(null);
   const { data: profile } = useGetMyProfile();
   const currentUserId = profile?.id;
@@ -228,14 +235,23 @@ export default function Messages() {
 
   const conversations = data?.conversations || [];
 
-  // Auto-open conversation with a specific user (from ?to= query param)
+  // Auto-open or create conversation from ?to= query param
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const toUserId = params.get("to");
-    if (!toUserId || conversations.length === 0 || selectedConv) return;
-    const conv = conversations.find((c: any) => c.otherUserId === toUserId);
-    if (conv) setSelectedConv(conv);
-  }, [conversations, location]);
+    if (!toUserId || selectedConv) return;
+    const existing = conversations.find((c: any) => c.otherUserId === toUserId);
+    if (existing) { setSelectedConv(existing); return; }
+    // No existing conversation — create one then open it
+    if (isLoading) return; // wait for conversations to load first
+    fetch(`${apiBase}/conversations`, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipientId: toUserId }),
+    }).then(r => r.json()).then(conv => {
+      if (conv?.id) { setSelectedConv(conv); refetchConversations(); }
+    }).catch(() => {});
+  }, [conversations, location, isLoading]);
 
   return (
     <AuthGuard>
