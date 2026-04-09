@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@clerk/clerk-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Truck, Calendar, Star, Shield, Plus, MessageCircle, Loader2, Route, Users, Info, ArrowRight, MapPin, DollarSign } from "lucide-react";
@@ -22,11 +23,6 @@ async function postDriverRoute(data: Record<string, unknown>) {
   if (!res.ok) throw new Error("Failed to post route");
   return res.json();
 }
-async function getCurrentUser() {
-  const res = await fetch(`${apiBase}/auth/user`, { credentials: "include" });
-  return res.json();
-}
-
 function PostRouteDialog({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
   const [form, setForm] = useState({ originCity: "", originState: "", destinationCity: "", destinationState: "", departureDateFrom: "", departureDateTo: "", truckCapacity: "1", availableSpots: "1", transportType: "open", pricePerVehicle: "", notes: "" });
@@ -122,8 +118,8 @@ export default function DriverRoutes() {
   const [originState, setOriginState] = useState("all");
   const [destinationState, setDestinationState] = useState("all");
   const [transportType, setTransportType] = useState("all");
-  const { data: authData } = useQuery({ queryKey: ["auth-user"], queryFn: getCurrentUser });
-  const isAuthenticated = authData?.isAuthenticated;
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
+  const isAuthenticated = authLoaded && isSignedIn;
   const { data, isLoading } = useQuery({
     queryKey: ["driver-routes", originState, destinationState, transportType],
     queryFn: () => fetchDriverRoutes({ originState, destinationState, transportType }),

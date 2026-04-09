@@ -492,7 +492,7 @@ export default function Home() {
                     <p className="text-xs font-bold uppercase tracking-wide text-foreground">What you'll need to sign up:</p>
                     {[
                       { icon: FileText, text: "Government-issued photo ID (driver's license or passport)" },
-                      { icon: CreditCard, text: "Payment method to pay the 3% platform fee (charged only on acceptance)" },
+                      { icon: CreditCard, text: "Payment method to pay the 5% platform fee (charged only on acceptance)" },
                       { icon: FileText, text: "Vehicle title or registration to confirm ownership" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -522,7 +522,7 @@ export default function Home() {
                     <p className="text-xs font-bold uppercase tracking-wide text-foreground">What you'll need to sign up:</p>
                     {[
                       { icon: FileText, text: "Dealer license or business registration" },
-                      { icon: CreditCard, text: "Business payment method for the 3% platform fee" },
+                      { icon: CreditCard, text: "Business payment method for the 5% platform fee" },
                       { icon: FileText, text: "Lot address and contact information" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -531,7 +531,7 @@ export default function Home() {
                       </div>
                     ))}
                     <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 mt-2">
-                      <p className="text-xs text-emerald-800 dark:text-emerald-300"><strong>Dealers pay $0 in broker markup.</strong> The 3% platform fee replaces $150–$500 per-car broker fees — you keep the difference.</p>
+                      <p className="text-xs text-emerald-800 dark:text-emerald-300"><strong>Dealers pay $0 in broker markup.</strong> The 5% platform fee replaces $150–$500 per-car broker fees — you keep the difference.</p>
                     </div>
                   </div>
                 </CardContent>

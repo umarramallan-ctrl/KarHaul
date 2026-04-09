@@ -9,8 +9,8 @@ import { Loader2 } from "lucide-react";
 
 export default function DashboardRouter() {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useGetMyProfile({
-    query: { enabled: isSignedIn } as any,
+  const { data: profile, isLoading: profileLoading, isFetched: profileFetched, isError: profileError } = useGetMyProfile({
+    query: { enabled: isSignedIn === true } as any,
   });
   const [, setLocation] = useLocation();
 
@@ -20,7 +20,14 @@ export default function DashboardRouter() {
     }
   }, [authLoaded, isSignedIn, setLocation]);
 
-  if (!authLoaded || profileLoading) {
+  // Only redirect to /profile once auth + profile query are fully settled and no profile ID found
+  useEffect(() => {
+    if (isSignedIn && profileFetched && !profileError && !profile?.id) {
+      setLocation("/profile");
+    }
+  }, [isSignedIn, profileFetched, profileError, profile, setLocation]);
+
+  if (!authLoaded || (isSignedIn && profileLoading)) {
     return (
       <MainLayout>
         <div className="flex-1 flex items-center justify-center">
@@ -30,14 +37,10 @@ export default function DashboardRouter() {
     );
   }
 
-  if (!profile) {
-    setLocation("/profile");
-    return null;
-  }
-
+  if (!profile) return null;
   if (profile.role === 'shipper') return <ShipperDashboard />;
   if (profile.role === 'driver') return <DriverDashboard />;
-  
+
   // Both or Admin can see a unified view, or just default to shipper view with driver tabs
-  return <ShipperDashboard />; 
+  return <ShipperDashboard />;
 }

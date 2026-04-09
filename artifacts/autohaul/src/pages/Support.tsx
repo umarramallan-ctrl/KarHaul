@@ -29,12 +29,12 @@ const FAQS: Record<string, FaqItem[]> = {
       a: "Review each carrier's profile carefully: check their DOT/MC numbers (you can verify independently at the FMCSA website), look at their verified badge status, read reviews from previous shippers, and confirm they have adequate cargo insurance. Never hand over your vehicle without verifying current insurance documentation directly with the carrier.",
     },
     {
-      q: "What does the 3% platform fee cover?",
-      a: "KarHaul charges a single 3% service fee to shippers on the agreed transport price. This fee covers platform maintenance, identity verification of carriers, secure messaging, milestone tracking, and in-app communication tools. There are no hidden fees, subscriptions, or broker markups. Drivers pay nothing to use the platform.",
+      q: "What does the platform fee cover?",
+      a: "KarHaul charges a 5% platform fee to shippers and a 3% platform fee to drivers, both based on the shipper's max budget. These fees are held in escrow and released to KarHaul upon delivery confirmation. The fee covers platform maintenance, identity verification of carriers, secure messaging, milestone tracking, and in-app communication tools. There are no hidden fees, subscriptions, or broker markups.",
     },
     {
       q: "How and when do I pay the carrier?",
-      a: "Payment is arranged directly between you and the carrier — KarHaul does not process or hold transport payments. Most carriers accept cash on delivery, Zelle, wire transfer, or certified check. Always agree on payment terms in writing (via in-app messages) before pickup. The 3% platform fee is noted on your booking confirmation.",
+      a: "Payment is arranged directly between you and the carrier — KarHaul does not process or hold transport payments. Most carriers accept cash on delivery, Zelle, wire transfer, or certified check. Always agree on payment terms in writing (via in-app messages) before pickup. The platform fee is noted on your booking confirmation.",
     },
     {
       q: "What is a Bill of Lading (BOL) and why do I need it?",
@@ -56,7 +56,7 @@ const FAQS: Record<string, FaqItem[]> = {
   "Carriers & Drivers": [
     {
       q: "Is it free for drivers to use KarHaul?",
-      a: "Yes — completely free. KarHaul charges zero fees to carriers or drivers. You can browse loads, submit bids, communicate with shippers, and manage bookings at no cost. The platform's 3% fee is charged to the shipper only.",
+      a: "Browsing loads and submitting bids is free. KarHaul charges a 3% platform fee to drivers (based on the shipper's max budget), held in escrow and released to KarHaul upon delivery. You can browse loads, communicate with shippers, and manage bookings at no additional cost.",
     },
     {
       q: "What documents do I need to register as a carrier?",

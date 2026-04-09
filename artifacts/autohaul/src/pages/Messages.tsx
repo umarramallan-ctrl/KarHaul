@@ -11,6 +11,7 @@ import { MessageSquare, Send, Shield, Phone, MessageCircle, AlertCircle, Loader2
 import { useState, useRef, useEffect } from "react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGetMyProfile } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiBase } from "@/lib/api";
 
@@ -217,11 +218,11 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
 }
 
 export default function Messages() {
-  const { data: authData } = useQuery({ queryKey: ["auth-user-msg"], queryFn: () => fetch(`${apiBase}/auth/user`, { credentials: "include" }).then(r => r.json()) });
   const { data, isLoading } = useListConversations();
   const [selectedConv, setSelectedConv] = useState<any>(null);
-  const currentUserId = authData?.profile?.id;
-  const userRole = authData?.profile?.role as string | undefined;
+  const { data: profile } = useGetMyProfile();
+  const currentUserId = profile?.id;
+  const userRole = profile?.role as string | undefined;
 
   const conversations = data?.conversations || [];
 

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component, type ReactNode } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -381,13 +381,37 @@ function ReviewPanel({ bookingId, isShipper, isDriver, revieweeId, revieweeName 
   );
 }
 
+class BookingErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <MainLayout>
+          <div className="container py-20 flex flex-col items-center gap-4 text-center">
+            <AlertTriangle className="h-10 w-10 text-amber-500" />
+            <h2 className="text-xl font-bold">Something went wrong loading this booking.</h2>
+            <Button variant="outline" onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}>
+              Reload page
+            </Button>
+          </div>
+        </MainLayout>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function BookingDetail() {
   const [, params] = useRoute("/bookings/:id");
   const bookingId = params?.id || "";
   const { toast } = useToast();
 
   const { data: profile } = useGetMyProfile();
-  const { data: booking, isLoading, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
+  const { data: booking, isLoading, isError, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
   const updateStatusMutation = useUpdateBookingStatus();
   const [notes, setNotes] = useState("");
   const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
@@ -416,7 +440,7 @@ export default function BookingDetail() {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
-    if (!b.cancellationDeadline) return;
+    if (!b?.cancellationDeadline) return;
     const deadline = new Date(b.cancellationDeadline).getTime();
     const update = () => {
       const diff = deadline - Date.now();
@@ -428,9 +452,9 @@ export default function BookingDetail() {
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [b.cancellationDeadline]);
+  }, [b?.cancellationDeadline]);
 
-  const withinWindow = b.cancellationDeadline
+  const withinWindow = b?.cancellationDeadline
     ? new Date() <= new Date(b.cancellationDeadline)
     : false;
 
@@ -461,16 +485,30 @@ export default function BookingDetail() {
     });
   };
 
-  if (isLoading || !booking) {
+  if (isLoading) {
     return <MainLayout><div className="container py-20 flex justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></MainLayout>;
+  }
+
+  if (isError || !booking) {
+    return (
+      <MainLayout>
+        <div className="container py-20 flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="h-10 w-10 text-amber-500" />
+          <h2 className="text-xl font-bold">Booking not found</h2>
+          <p className="text-muted-foreground">This booking may not exist or you may not have access to it.</p>
+          <Button variant="outline" onClick={() => window.history.back()}>Go Back</Button>
+        </div>
+      </MainLayout>
+    );
   }
 
   const steps = ["confirmed", "picked_up", "in_transit", "delivered"];
   const currentStepIndex = steps.indexOf(b.status);
-  const platformFee = b.platformFeeAmount ?? 0;
-  const totalShipperCost = b.agreedPrice + platformFee;
+  const platformFee = Number(b.platformFeeAmount ?? 0);
+  const totalShipperCost = Number(b.agreedPrice ?? 0) + platformFee;
 
   return (
+    <BookingErrorBoundary>
     <AuthGuard>
       <MainLayout>
         <div className="bg-slate-50 dark:bg-slate-900/20 py-8 min-h-screen border-t">
@@ -853,5 +891,6 @@ export default function BookingDetail() {
         </div>
       </MainLayout>
     </AuthGuard>
+    </BookingErrorBoundary>
   );
 }

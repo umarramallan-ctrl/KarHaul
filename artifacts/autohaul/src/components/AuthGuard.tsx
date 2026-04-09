@@ -12,17 +12,18 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireRole = 'any' }: AuthGuardProps) {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
-  const { data: profile, isLoading: profileLoading, isFetched: profileFetched } = useGetMyProfile({
+  const { data: profile, isLoading: profileLoading, isFetched: profileFetched, isError: profileError } = useGetMyProfile({
     query: { enabled: isSignedIn === true, retry: false } as any,
   });
   const [location, setLocation] = useLocation();
 
-  // Only redirect to profile once the query has completed and confirmed no profile exists
+  // Only redirect to /profile if auth is done, query completed without error,
+  // and the profile genuinely has no ID (truly missing, not just loading or errored).
   useEffect(() => {
-    if (isSignedIn && profileFetched && !profile && location !== '/profile') {
+    if (isSignedIn && profileFetched && !profileError && !profile?.id && location !== '/profile') {
       setLocation('/profile');
     }
-  }, [isSignedIn, profileFetched, profile, location, setLocation]);
+  }, [isSignedIn, profileFetched, profileError, profile, location, setLocation]);
 
   if (!authLoaded || (isSignedIn && profileLoading)) {
     return (

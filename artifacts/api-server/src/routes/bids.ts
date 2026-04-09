@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { bidsTable, shipmentsTable, bookingsTable, usersTable, lanePreferencesTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { bidsTable, shipmentsTable, bookingsTable, usersTable, lanePreferencesTable, conversationsTable } from "@workspace/db";
+import { eq, and, desc, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { createNotification } from "../lib/notify";
 import { bidLimiter } from "../lib/rate-limit";
@@ -139,6 +139,22 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     cancellationDeadline,
   });
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
+
+  // Create a conversation between shipper and driver if one doesn't exist
+  const [existingConv] = await db.select().from(conversationsTable)
+    .where(or(
+      and(eq(conversationsTable.user1Id, shipment.shipperId), eq(conversationsTable.user2Id, bid.driverId)),
+      and(eq(conversationsTable.user1Id, bid.driverId), eq(conversationsTable.user2Id, shipment.shipperId))
+    )).limit(1);
+  if (!existingConv) {
+    await db.insert(conversationsTable).values({
+      id: randomUUID(),
+      user1Id: shipment.shipperId,
+      user2Id: bid.driverId,
+      shipmentId: bid.shipmentId,
+      lastMessageAt: now,
+    });
+  }
 
   // Notify accepted driver
   await createNotification({

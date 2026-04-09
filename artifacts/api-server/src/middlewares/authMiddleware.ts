@@ -51,8 +51,10 @@ export async function authMiddleware(
     })
     .returning();
 
+  // Use the Clerk userId as req.user.id so that getDbUser(req.user.id)
+  // can look up by authId (Clerk ID) and consistently find the correct DB row.
   req.user = {
-    id: user.id,
+    id: userId,
     firstName: user.firstName ?? undefined,
     lastName: user.lastName ?? undefined,
     profileImage: user.profileImageUrl ?? undefined,
