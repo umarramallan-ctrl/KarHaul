@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "EVOHAUL",
+    "name": "KarHaul",
     "slug": "karhaul",
     "version": "1.0.0",
+    "owner": "karhaul",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "karhaul",
@@ -31,7 +32,7 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://kar-haul-autohaul.vercel.app"
         }
       ],
       "expo-font",
@@ -40,6 +41,9 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "apiUrl": "https://karhaul-production.up.railway.app"
     }
   }
 }

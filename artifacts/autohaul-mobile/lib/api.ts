@@ -1,6 +1,10 @@
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
+import Constants from "expo-constants";
+
+const apiUrl: string | undefined =
+  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
+  (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : undefined);
 
 export function getApiBaseUrl(): string {
-  if (domain) return `https://${domain}/api`;
+  if (apiUrl) return `${apiUrl}/api`;
   return "/api";
 }

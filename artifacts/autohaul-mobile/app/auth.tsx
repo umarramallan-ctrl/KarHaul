@@ -8,27 +8,29 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import Constants from "expo-constants";
+
+const apiUrl: string =
+  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ?? "";
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { setToken } = useAuth();
   const [loading, setLoading] = useState(false);
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
 
   const handleLogin = async () => {
-    if (!domain) {
-      Alert.alert("Not available", "Authentication requires a configured domain. Please use the web app to sign in.");
+    if (!apiUrl) {
+      Alert.alert("Not available", "Authentication requires a configured API URL.");
       return;
     }
     setLoading(true);
     try {
-      const replId = process.env.EXPO_PUBLIC_REPL_ID;
-      const authUrl = `https://${domain}/api/login`;
-      const redirectUri = `autohaul-mobile://auth-callback`;
+      const authUrl = `${apiUrl}/api/login`;
+      const redirectUri = `karhaul://auth-callback`;
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri, {
         showInRecents: true,
       });

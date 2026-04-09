@@ -17,9 +17,13 @@ import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
+import Constants from "expo-constants";
 
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
-if (domain) setBaseUrl(`https://${domain}`);
+// Prefer the Railway API URL baked into app.json extra, fall back to the dev-time domain.
+const apiUrl: string =
+  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
+  (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "");
+if (apiUrl) setBaseUrl(apiUrl);
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,11 +59,10 @@ function RootLayoutNav() {
 function PushNotificationRegistrar() {
   const { isSignedIn } = useAuth();
   useEffect(() => {
-    if (!isSignedIn) return;
-    const baseUrl = domain ? `https://${domain}` : "";
+    if (!isSignedIn || !apiUrl) return;
     registerForPushNotificationsAsync().then(token => {
-      if (token && baseUrl) {
-        savePushTokenToServer(token, baseUrl).catch(() => {});
+      if (token) {
+        savePushTokenToServer(token, apiUrl).catch(() => {});
       }
     }).catch(() => {});
   }, [isSignedIn]);
