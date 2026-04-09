@@ -17,13 +17,10 @@ import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
-import Constants from "expo-constants";
+import { API_URL } from "@/lib/api";
 
-// Prefer the Railway API URL baked into app.json extra, fall back to the dev-time domain.
-const apiUrl: string =
-  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
-  (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "");
-if (apiUrl) setBaseUrl(apiUrl);
+const apiUrl = API_URL;
+setBaseUrl(apiUrl);
 
 SplashScreen.preventAutoHideAsync();
 
