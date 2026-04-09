@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon } from "lucide-react";
 import { useState, useEffect, Component, type ReactNode } from "react";
+import { UserProfileModal } from "@/components/UserProfileModal";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1013,15 +1014,17 @@ export default function BookingDetail() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4 space-y-4">
+                      <UserProfileModal userId={b.driverId}>
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
                           <User className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                          <div className="font-bold text-lg">{b.driver?.firstName} {b.driver?.lastName}</div>
+                          <div className="font-bold text-lg hover:text-primary transition-colors">{b.driver?.firstName} {b.driver?.lastName}</div>
                           {b.driver?.dotNumber && <div className="text-xs text-muted-foreground">DOT #{b.driver.dotNumber}</div>}
                         </div>
                       </div>
+                      </UserProfileModal>
                       <div className="space-y-1.5 text-sm bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border">
                         <div className="flex justify-between"><span className="text-muted-foreground">Equipment:</span><span className="font-medium">{b.driver?.truckType || "Auto Carrier"}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Hauls completed:</span><span className="font-medium">{b.driver?.completedJobs ?? 0}</span></div>
@@ -1049,15 +1052,17 @@ export default function BookingDetail() {
                       <CardTitle className="text-base">Shipper Contact</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4 space-y-3">
+                      <UserProfileModal userId={b.shipperId}>
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center">
                           <User className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
-                          <div className="font-bold text-lg">{b.shipper?.firstName} {b.shipper?.lastName}</div>
+                          <div className="font-bold text-lg hover:text-primary transition-colors">{b.shipper?.firstName} {b.shipper?.lastName}</div>
                           <div className="text-xs text-muted-foreground">{b.shipper?.completedJobs ?? 0} hauls completed</div>
                         </div>
                       </div>
+                      </UserProfileModal>
                       <Button className="w-full gap-2" variant="outline" asChild>
                         <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
                       </Button>

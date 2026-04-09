@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Calendar, Clock, DollarSign, Truck, Info, AlertTriangle, ShieldCheck, CheckCircle2, User, UserCheck, Home, Building2, Anchor, Shield, Warehouse, PlaneTakeoff, HelpCircle, ChevronDown, ChevronUp, CloudRain, CloudSnow, Zap, Wind, CloudDrizzle, ArrowRight, ArrowLeft, Phone, MessageSquare } from "lucide-react";
 import { useWeatherAlert } from "@/lib/weather";
+import { UserProfileModal } from "@/components/UserProfileModal";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/clerk-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -844,12 +845,13 @@ export default function ShipmentDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <UserProfileModal userId={shipment.shipperId}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-lg font-bold text-primary">
                       {shipment.shipper?.firstName?.[0] || 'U'}
                     </div>
                     <div>
-                      <div className="font-semibold">{shipment.shipper?.firstName} {shipment.shipper?.lastName}</div>
+                      <div className="font-semibold hover:text-primary transition-colors">{shipment.shipper?.firstName} {shipment.shipper?.lastName}</div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
                         <span>⭐ {shipment.shipper?.averageRating?.toFixed(1) || 'New'} ({shipment.shipper?.totalReviews || 0} reviews)</span>
                         {(shipment.shipper?.completedJobs ?? 0) > 0 && (
@@ -858,6 +860,7 @@ export default function ShipmentDetail() {
                       </div>
                     </div>
                   </div>
+                  </UserProfileModal>
                   {isAuthenticated && !isOwner && (
                     <div className="space-y-2 mt-2">
                       <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>

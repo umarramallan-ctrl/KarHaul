@@ -12,10 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check, Star } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
+import { apiBase } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
 
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
@@ -180,6 +183,33 @@ export default function CreateShipment() {
   const [step, setStep] = useState(1);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<z.infer<typeof formSchema> | null>(null);
+  const [postedShipmentId, setPostedShipmentId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [selectedDriverIds, setSelectedDriverIds] = useState<string[]>([]);
+
+  const { data: savedDriversData } = useQuery({
+    queryKey: ["saved-drivers"],
+    queryFn: async () => {
+      const res = await fetch(`${apiBase}/users/saved-drivers`, { credentials: "include" });
+      return res.json();
+    },
+  });
+  const savedDrivers = (savedDriversData?.savedDrivers || []) as Array<{ driver: { id: string; firstName: string; lastName: string; averageRating?: number; completedJobs?: number } }>;
+
+  const inviteMutation = useMutation({
+    mutationFn: async ({ shipmentId, driverIds }: { shipmentId: string; driverIds: string[] }) => {
+      const res = await fetch(`${apiBase}/shipments/${shipmentId}/invite-drivers`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverIds }),
+      });
+      return res.json();
+    },
+    onSettled: (_, __, { shipmentId }) => {
+      setInviteOpen(false);
+      setLocation(`/shipments/${shipmentId}`);
+    },
+  });
 
   // Fetch car makes from NHTSA (no form dependency)
   const { data: nhtsaMakes = [] } = useQuery({
@@ -225,9 +255,16 @@ export default function CreateShipment() {
     const { agreeToTerms, ...apiData } = pendingValues;
     createMutation.mutate({ data: apiData as any }, {
       onSuccess: (data) => {
-        toast({ title: "Load Posted!", description: "Drivers can now bid on your shipment." });
         setConfirmOpen(false);
-        setLocation(`/shipments/${data.id}`);
+        if (savedDrivers.length > 0) {
+          setPostedShipmentId(data.id);
+          setSelectedDriverIds([]);
+          setInviteOpen(true);
+          toast({ title: "Load Posted!", description: "Invite your saved drivers for first look." });
+        } else {
+          toast({ title: "Load Posted!", description: "Drivers can now bid on your shipment." });
+          setLocation(`/shipments/${data.id}`);
+        }
       },
       onError: (err: any) => {
         setConfirmOpen(false);
@@ -667,6 +704,47 @@ export default function CreateShipment() {
         onConfirm={confirmPost}
         isLoading={createMutation.isPending}
       />
+      {/* Saved driver invite dialog */}
+      <Dialog open={inviteOpen} onOpenChange={(v) => { if (!v && postedShipmentId) setLocation(`/shipments/${postedShipmentId}`); setInviteOpen(v); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>⭐ Invite Saved Drivers — First Look</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Select saved drivers to receive a private 2-hour exclusive window before your load goes public on the board.</p>
+            <div className="divide-y rounded-xl border overflow-hidden">
+              {savedDrivers.map(({ driver }) => (
+                <label key={driver.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <Checkbox
+                    checked={selectedDriverIds.includes(driver.id)}
+                    onCheckedChange={(checked) => setSelectedDriverIds(ids => checked ? [...ids, driver.id] : ids.filter(id => id !== driver.id))}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{driver.firstName} {driver.lastName}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      {(driver.averageRating ?? 0) > 0 && <span><Star className="inline h-3 w-3 text-amber-400 fill-amber-400 mr-0.5" />{driver.averageRating?.toFixed(1)}</span>}
+                      <span>{driver.completedJobs ?? 0} hauls</span>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <button className="text-sm text-muted-foreground hover:text-foreground px-4" onClick={() => { setInviteOpen(false); if (postedShipmentId) setLocation(`/shipments/${postedShipmentId}`); }}>
+              Skip — post publicly
+            </button>
+            <button
+              disabled={selectedDriverIds.length === 0 || inviteMutation.isPending}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-primary/90 transition-colors"
+              onClick={() => postedShipmentId && inviteMutation.mutate({ shipmentId: postedShipmentId, driverIds: selectedDriverIds })}
+            >
+              {inviteMutation.isPending ? "Sending…" : `Invite ${selectedDriverIds.length > 0 ? selectedDriverIds.length : ""} Driver${selectedDriverIds.length !== 1 ? "s" : ""}`}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       </MainLayout>
     </AuthGuard>
   );

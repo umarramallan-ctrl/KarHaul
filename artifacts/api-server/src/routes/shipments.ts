@@ -37,6 +37,8 @@ router.get("/shipments", async (req, res) => {
   } = req.query;
 
   const conditions: any[] = [];
+  // Exclude invite-only loads still within their exclusive window
+  conditions.push(sql`(${shipmentsTable.inviteOnlyUntil} is null or ${shipmentsTable.inviteOnlyUntil} <= now())`);
   if (status) conditions.push(eq(shipmentsTable.status, status as string));
   if (originState) conditions.push(eq(shipmentsTable.originState, originState as string));
   if (destinationState) conditions.push(eq(shipmentsTable.destinationState, destinationState as string));
@@ -55,9 +57,7 @@ router.get("/shipments", async (req, res) => {
     )`);
   }
 
-  const rows = conditions.length > 0
-    ? await db.select().from(shipmentsTable).where(and(...conditions)).orderBy(desc(shipmentsTable.createdAt))
-    : await db.select().from(shipmentsTable).orderBy(desc(shipmentsTable.createdAt));
+  const rows = await db.select().from(shipmentsTable).where(and(...conditions)).orderBy(desc(shipmentsTable.createdAt));
 
   const enriched = await Promise.all(rows.map(async (s) => {
     const [shipper] = await db.select().from(usersTable).where(eq(usersTable.id, s.shipperId)).limit(1);
@@ -194,6 +194,36 @@ router.delete("/shipments/:shipmentId", async (req, res) => {
   }
   await db.update(shipmentsTable).set({ status: "cancelled", updatedAt: new Date() }).where(eq(shipmentsTable.id, shipmentId));
   res.json({ success: true });
+});
+
+// Invite saved drivers for a 2-hour exclusive first-look window
+router.post("/shipments/:shipmentId/invite-drivers", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
+  const { shipmentId } = req.params;
+  const { driverIds } = req.body as { driverIds: string[] };
+  if (!Array.isArray(driverIds) || driverIds.length === 0) { res.status(400).json({ error: "driverIds required" }); return; }
+
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, shipmentId)).limit(1);
+  if (!shipment) { res.status(404).json({ error: "Not found" }); return; }
+  if (shipment.shipperId !== dbUser.id) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const inviteOnlyUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+  await db.update(shipmentsTable).set({ inviteOnlyUntil, updatedAt: new Date() }).where(eq(shipmentsTable.id, shipmentId));
+
+  const vehicleLabel = `${shipment.vehicleYear} ${shipment.vehicleMake} ${shipment.vehicleModel}`;
+  for (const driverId of driverIds) {
+    await createNotification({
+      userId: driverId,
+      type: "driver_invite",
+      title: "⭐ First look — new load from a shipper you've worked with",
+      body: `${vehicleLabel} — ${shipment.originCity}, ${shipment.originState} → ${shipment.destinationCity}, ${shipment.destinationState}. You have 2 hours to bid before it goes public.`,
+      linkPath: `/shipments/${shipmentId}`,
+    });
+  }
+
+  res.json({ success: true, inviteOnlyUntil, invitedCount: driverIds.length });
 });
 
 export default router;

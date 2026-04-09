@@ -37,6 +37,8 @@ export const shipmentsTable = pgTable("shipments", {
   shipperEscrowStatus: text("shipper_escrow_status").default("none"), // none | held | captured | returned
   // Premium priority placement
   isPriority: boolean("is_priority").notNull().default(false),
+  // Saved-driver exclusive window: load hidden from public list until this time
+  inviteOnlyUntil: timestamp("invite_only_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
