@@ -266,7 +266,7 @@ export function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  {(role === "driver" || role === "shipper") && (
+                  {(role === "driver" || role === "shipper" || role === "both") && (
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard" className="cursor-pointer flex items-center">
                         <FileText className="mr-2 h-4 w-4 text-slate-500" />
