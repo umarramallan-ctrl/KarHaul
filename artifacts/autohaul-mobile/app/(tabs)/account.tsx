@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, TextInput, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -7,8 +7,10 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
 import { useTheme, ThemeMode } from "@/lib/ThemeContext";
+import { API_URL } from "@/lib/api";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -79,6 +81,37 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { isAuthenticated, logout } = useAuth();
+  const { getToken } = useClerkAuth();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== "DELETE") return;
+    setDeleteLoading(true);
+    try {
+      const clerkToken = await getToken();
+      const res = await fetch(`${API_URL}/users/account/delete-request`, {
+        method: "POST",
+        headers: clerkToken ? { Authorization: `Bearer ${clerkToken}` } : {},
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        Alert.alert("Cannot delete account", data.error || "Something went wrong.");
+        return;
+      }
+      setDeleteModalOpen(false);
+      Alert.alert(
+        "Account deactivated",
+        "Your personal data will be purged in 30 days. Transaction and BOL records are retained. You will be signed out.",
+        [{ text: "OK", onPress: logout }]
+      );
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile"],
@@ -205,6 +238,62 @@ export default function AccountScreen() {
       <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
         <MenuItem icon="log-out" label="Sign Out" onPress={handleLogout} danger />
       </View>
+
+      <View style={[styles.section, { backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", marginTop: 12 }]}>
+        <Text style={[styles.sectionTitle, { color: "#991B1B" }]}>DANGER ZONE</Text>
+        <MenuItem
+          icon="trash-2"
+          label="Delete Account"
+          subtitle="30-day grace period · Data purged after 30 days"
+          onPress={() => setDeleteModalOpen(true)}
+          danger
+        />
+      </View>
+
+      {/* Delete Account Modal */}
+      <Modal visible={deleteModalOpen} transparent animationType="fade">
+        <View style={deleteStyles.overlay}>
+          <View style={deleteStyles.modal}>
+            <View style={deleteStyles.iconRow}>
+              <View style={deleteStyles.iconBg}>
+                <Feather name="alert-triangle" size={22} color="#DC2626" />
+              </View>
+              <Text style={deleteStyles.title}>Delete Account</Text>
+            </View>
+            <Text style={deleteStyles.body}>
+              Your account will be deactivated immediately. Personal data is purged after 30 days. Transaction and BOL records are retained for compliance.
+            </Text>
+            <View style={deleteStyles.warningBox}>
+              <Text style={deleteStyles.warningText}>• Cannot be undone after 30 days</Text>
+              <Text style={deleteStyles.warningText}>• Blocked if you have active bookings</Text>
+              <Text style={deleteStyles.warningText}>• You'll be signed out immediately</Text>
+            </View>
+            <Text style={deleteStyles.confirmLabel}>Type DELETE to confirm:</Text>
+            <TextInput
+              style={deleteStyles.confirmInput}
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder="DELETE"
+              autoCapitalize="characters"
+            />
+            <View style={deleteStyles.btnRow}>
+              <Pressable
+                style={[deleteStyles.btn, { backgroundColor: "#F1F5F9" }]}
+                onPress={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
+              >
+                <Text style={[deleteStyles.btnText, { color: "#334155" }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[deleteStyles.btn, { backgroundColor: deleteConfirmText === "DELETE" && !deleteLoading ? "#DC2626" : "#FCA5A5" }]}
+                onPress={handleDeleteAccount}
+                disabled={deleteConfirmText !== "DELETE" || deleteLoading}
+              >
+                <Text style={[deleteStyles.btnText, { color: "#fff" }]}>{deleteLoading ? "Processing…" : "Delete Account"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -241,4 +330,20 @@ const styles = StyleSheet.create({
   menuSub: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 1 },
   themeBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: "#E2E8F0" },
   themeBtnText: { fontFamily: "Inter_500Medium", fontSize: 11 },
+});
+
+const deleteStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", paddingHorizontal: 20 },
+  modal: { backgroundColor: "#fff", borderRadius: 20, padding: 24, width: "100%", maxWidth: 400, gap: 14 },
+  iconRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  iconBg: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center" },
+  title: { fontFamily: "Inter_700Bold", fontSize: 18, color: "#1E293B" },
+  body: { fontFamily: "Inter_400Regular", fontSize: 14, color: "#475569", lineHeight: 21 },
+  warningBox: { backgroundColor: "#FEF2F2", borderRadius: 10, borderWidth: 1, borderColor: "#FECACA", padding: 12, gap: 4 },
+  warningText: { fontFamily: "Inter_400Regular", fontSize: 13, color: "#991B1B" },
+  confirmLabel: { fontFamily: "Inter_500Medium", fontSize: 13, color: "#475569" },
+  confirmInput: { fontFamily: "Inter_700Bold", fontSize: 15, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#F8FAFC", color: "#1E293B", letterSpacing: 2 },
+  btnRow: { flexDirection: "row", gap: 10 },
+  btn: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  btnText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
 });

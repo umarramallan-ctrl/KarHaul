@@ -36,6 +36,9 @@ export const usersTable = pgTable("users", {
   stripeAccountStatus: text("stripe_account_status"), // pending | active | restricted
   // Push notification token (Expo push token for mobile)
   pushToken: text("push_token"),
+  // Account deletion: 30-day grace period
+  isDeactivated: boolean("is_deactivated").notNull().default(false),
+  deletionRequestedAt: timestamp("deletion_requested_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

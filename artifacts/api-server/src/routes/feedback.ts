@@ -41,4 +41,23 @@ router.post("/feedback", async (req, res) => {
   res.status(201).json({ id });
 });
 
+// Contact form — stores as feedback with category "contact"
+router.post("/contact", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    res.status(400).json({ error: "name, email, and message are required" });
+    return;
+  }
+  const id = randomUUID();
+  await db.insert(feedbackTable).values({
+    id,
+    userId: null,
+    email,
+    category: "contact",
+    rating: null,
+    message: `Name: ${name}\nSubject: ${subject || "(none)"}\n\n${message}`,
+  });
+  res.status(201).json({ id });
+});
+
 export default router;
