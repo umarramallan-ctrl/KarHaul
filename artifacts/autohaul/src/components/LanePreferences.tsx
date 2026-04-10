@@ -16,16 +16,24 @@ interface LanePreferencesProps {
   isPremium?: boolean;
 }
 
+async function clerkHeaders(): Promise<HeadersInit> {
+  const token = await (window as any).Clerk?.session?.getToken?.();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function fetchPrefs() {
-  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include" });
+  const headers = await clerkHeaders();
+  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include", headers });
+  if (!res.ok) return { preferences: [] };
   return res.json();
 }
 
 async function addPref(data: { originState: string; destinationState: string; role: string }) {
+  const headers = await clerkHeaders();
   const res = await fetch(`${apiBase}/lane-preferences`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
@@ -33,9 +41,11 @@ async function addPref(data: { originState: string; destinationState: string; ro
 }
 
 async function deletePref(id: string) {
+  const headers = await clerkHeaders();
   const res = await fetch(`${apiBase}/lane-preferences/${id}`, {
     method: "DELETE",
     credentials: "include",
+    headers,
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
   return res.json();
