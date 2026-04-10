@@ -186,6 +186,19 @@ export default function CreateShipment() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedDriverIds, setSelectedDriverIds] = useState<string[]>([]);
 
+  // useForm MUST be declared before any form.watch() calls
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
+  });
+
+  // All watch() subscriptions — safe here because useForm is already initialised above
+  const watchedOriginState = form.watch("originState");
+  const watchedDestState = form.watch("destinationState");
+  const watchedMake = form.watch("vehicleMake");
+  const watchedYear = form.watch("vehicleYear");
+  const watchedTransport = form.watch("transportType");
+
   const { data: savedDriversData } = useQuery({
     queryKey: ["saved-drivers"],
     queryFn: async () => {
@@ -211,14 +224,8 @@ export default function CreateShipment() {
   });
 
   // AI budget suggestion — fires when step 3 is reached
-  const watchedOriginState = form.watch("originState");
-  const watchedDestState = form.watch("destinationState");
-  const watchedMakeForBudget = form.watch("vehicleMake");
-  const watchedYear = form.watch("vehicleYear");
-  const watchedTransport = form.watch("transportType");
-
   const { data: budgetSuggestion, isFetching: budgetFetching } = useQuery({
-    queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
+    queryKey: ["budget-suggest", watchedMake, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
     queryFn: async () => {
       const res = await fetch(`${apiBase}/ai/budget-suggest`, {
         method: "POST", credentials: "include",
@@ -238,7 +245,7 @@ export default function CreateShipment() {
       });
       return res.json();
     },
-    enabled: step === 3 && !!watchedMakeForBudget && !!watchedOriginState && !!watchedDestState,
+    enabled: step === 3 && !!watchedMake && !!watchedOriginState && !!watchedDestState,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -255,13 +262,6 @@ export default function CreateShipment() {
     staleTime: Infinity,
     gcTime: Infinity,
   });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
-  });
-
-  const watchedMake = form.watch("vehicleMake");
 
   // Fetch models for the selected make from NHTSA
   const { data: nhtsaModels = [] } = useQuery({
