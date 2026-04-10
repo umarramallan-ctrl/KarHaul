@@ -66,6 +66,8 @@ function RootLayoutNav() {
       <Stack.Screen name="messages/[conversationId]" options={{ presentation: "card" }} />
       <Stack.Screen name="profile/[userId]" options={{ presentation: "card" }} />
       <Stack.Screen name="profile-setup" options={{ presentation: "modal" }} />
+      <Stack.Screen name="about" options={{ presentation: "card" }} />
+      <Stack.Screen name="contact" options={{ presentation: "card" }} />
     </Stack>
   );
 }

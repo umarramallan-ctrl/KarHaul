@@ -1,0 +1,233 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Platform,
+} from "react-native";
+import { router } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Colors from "@/constants/colors";
+
+const C = Colors.light;
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+function StepCard({ num, icon, title, body }: { num: string; icon: string; title: string; body: string }) {
+  return (
+    <View style={styles.stepCard}>
+      <View style={styles.stepIcon}>
+        <Feather name={icon as any} size={20} color={C.primary} />
+      </View>
+      <Text style={styles.stepNum}>Step {num}</Text>
+      <Text style={styles.stepTitle}>{title}</Text>
+      <Text style={styles.stepBody}>{body}</Text>
+    </View>
+  );
+}
+
+export default function AboutScreen() {
+  const insets = useSafeAreaInsets();
+  const topPadding = Platform.OS === "web" ? 67 : insets.top;
+
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: C.background }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+    >
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: topPadding + 12 }]}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Feather name="arrow-left" size={20} color={C.text} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: C.text }]}>About KarHaul</Text>
+        <View style={{ width: 36 }} />
+      </View>
+
+      {/* Hero */}
+      <View style={styles.hero}>
+        <Text style={styles.heroTagline}>DIRECT AUTO TRANSPORT</Text>
+        <Text style={styles.heroTitle}>Zero brokers.{"\n"}Zero middlemen.</Text>
+        <Text style={styles.heroBody}>
+          KarHaul is a technology marketplace connecting vehicle shippers directly with licensed carriers — putting money back in the pockets of both drivers and customers.
+        </Text>
+      </View>
+
+      <View style={styles.content}>
+
+        {/* Problem */}
+        <Section title="The problem we solve">
+          <View style={styles.callout}>
+            <Text style={styles.calloutText}>
+              Traditional auto transport brokers take 20–40% of shipping costs while adding little value. Shippers overpay, carriers are underpaid, and communication is opaque.
+            </Text>
+            <Text style={[styles.calloutText, { marginTop: 10 }]}>
+              KarHaul eliminates this by letting shippers post loads directly and receive bids from verified carriers. Our platform handles escrow, messaging, BOL documents, and ratings — no broker needed.
+            </Text>
+          </View>
+        </Section>
+
+        {/* For Shippers */}
+        <Section title="For shippers">
+          <StepCard num="1" icon="dollar-sign" title="Post your load" body="Describe your vehicle, enter addresses, set your budget, and go live in minutes." />
+          <StepCard num="2" icon="users" title="Receive bids" body="Verified carriers bid directly. Compare ratings, completed jobs, and pricing — then accept the best offer." />
+          <StepCard num="3" icon="shield" title="Ship with confidence" body="Funds held in escrow until delivery. Download your Bill of Lading. Rate your carrier." />
+        </Section>
+
+        {/* For Drivers */}
+        <Section title="For drivers">
+          <StepCard num="1" icon="truck" title="Browse open loads" body="Filter by route, vehicle type, and transport style. Find backhaul opportunities on your existing routes." />
+          <StepCard num="2" icon="dollar-sign" title="Bid your price" body="Submit your own pricing — no broker telling you what you'll earn. Keep 95% of every job." />
+          <StepCard num="3" icon="check-circle" title="Get paid fast" body="Escrow releases on delivery confirmation. Build your rating to win more business." />
+        </Section>
+
+        {/* Company */}
+        <Section title="About EvoPoint LLC">
+          <View style={styles.companyCard}>
+            <View style={styles.companyRow}>
+              <Feather name="map-pin" size={16} color={C.primary} />
+              <Text style={[styles.companyMeta, { color: C.textSecondary }]}>Woodstock, Georgia · EvoPoint LLC</Text>
+            </View>
+            <Text style={[styles.companyBody, { color: C.textSecondary }]}>
+              KarHaul is a product of EvoPoint LLC, a technology company based in Woodstock, Georgia. We build software that removes friction from industries that have historically relied on inefficient intermediaries.
+            </Text>
+            <Text style={[styles.companyBody, { color: C.textSecondary, marginTop: 10 }]}>
+              Our team has first-hand experience with the pain points on both sides of the auto transport equation — and we built KarHaul to fix them.
+            </Text>
+          </View>
+        </Section>
+
+        {/* CTA */}
+        <Pressable
+          style={[styles.ctaBtn, { backgroundColor: C.primary }]}
+          onPress={() => router.push("/")}
+        >
+          <Text style={styles.ctaBtnText}>Get Started</Text>
+          <Feather name="arrow-right" size={16} color="#fff" />
+        </Pressable>
+
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  backBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 20 },
+  hero: {
+    backgroundColor: "#0F172A",
+    paddingHorizontal: 20,
+    paddingVertical: 32,
+    marginBottom: 8,
+  },
+  heroTagline: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 10,
+    color: C.primary,
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  heroTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 30,
+    color: "#fff",
+    lineHeight: 36,
+    marginBottom: 12,
+  },
+  heroBody: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 15,
+    color: "#94A3B8",
+    lineHeight: 22,
+  },
+  content: { paddingHorizontal: 16, paddingTop: 4, gap: 24 },
+  section: { gap: 12 },
+  sectionTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    color: C.text,
+  },
+  callout: {
+    backgroundColor: "#FFFBEB",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    padding: 16,
+  },
+  calloutText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#92400E",
+    lineHeight: 21,
+  },
+  stepCard: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    gap: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  stepIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  stepNum: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 10,
+    color: C.textMuted,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  stepTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: C.text },
+  stepBody: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textSecondary, lineHeight: 19 },
+  companyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    gap: 8,
+  },
+  companyRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  companyMeta: { fontFamily: "Inter_500Medium", fontSize: 13 },
+  companyBody: { fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21 },
+  ctaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  ctaBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
+});

@@ -193,6 +193,8 @@ export default function AccountScreen() {
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>SUPPORT</Text>
         <MenuItem icon="help-circle" label="Help & FAQ" subtitle="Common questions answered" onPress={() => {}} />
         <MenuItem icon="shield" label="Safety & Liability" subtitle="How we protect you" onPress={() => {}} />
+        <MenuItem icon="info" label="About KarHaul" subtitle="Our story and how it works" onPress={() => router.push("/about")} />
+        <MenuItem icon="mail" label="Contact Us" subtitle="Get in touch with our team" onPress={() => router.push("/contact")} />
       </View>
 
       <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
