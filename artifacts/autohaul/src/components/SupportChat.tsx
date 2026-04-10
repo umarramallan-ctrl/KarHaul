@@ -45,7 +45,7 @@ export function SupportChat() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center justify-center"
         aria-label="Support chat"
       >
         {open ? <X className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
@@ -53,7 +53,7 @@ export function SupportChat() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-22 left-6 z-50 w-80 h-[420px] bg-background border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-22 right-6 z-50 w-80 h-[420px] bg-background border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-4 py-3 border-b bg-primary/5">
             <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
