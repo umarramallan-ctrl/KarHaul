@@ -266,7 +266,7 @@ function TrackingPanel({ bookingId, isDriver, bookingStatus }: { bookingId: stri
                 <label className="text-xs text-muted-foreground mb-1 block">State</label>
                 <Select value={form.state} onValueChange={v => setForm(f => ({ ...f, state: v }))}>
                   <SelectTrigger className="h-9"><SelectValue placeholder="State" /></SelectTrigger>
-                  <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>

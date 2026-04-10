@@ -117,7 +117,7 @@ export function LanePreferences({ role, isPremium }: LanePreferencesProps) {
               <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-10">
                 <SelectValue placeholder="Origin" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -129,7 +129,7 @@ export function LanePreferences({ role, isPremium }: LanePreferencesProps) {
               <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-10">
                 <SelectValue placeholder="Destination" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
