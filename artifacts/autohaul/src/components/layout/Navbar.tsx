@@ -239,6 +239,12 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer flex items-center">
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Profile & Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="cursor-pointer flex items-center">
                       <Briefcase className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
@@ -274,12 +280,6 @@ export function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer flex items-center">
-                      <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Profile & Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
                     Log out
