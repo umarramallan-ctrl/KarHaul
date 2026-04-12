@@ -22,7 +22,7 @@ export default function CreateShipmentScreen() {
   const [form, setForm] = useState({
     vehicleYear: "", vehicleMake: "", vehicleModel: "",
     vehicleType: "sedan", vehicleCondition: "running", vin: "",
-    transportType: "open",
+    transportType: "open", serviceType: "door_to_door",
     originCity: "", originState: "", originZip: "",
     destinationCity: "", destinationState: "", destinationZip: "",
     pickupDateFrom: "", pickupDateTo: "",
@@ -32,26 +32,34 @@ export default function CreateShipmentScreen() {
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
 
   const createMutation = useMutation({
-    mutationFn: () => createShipment({
-      vehicleYear: parseInt(form.vehicleYear),
-      vehicleMake: form.vehicleMake,
-      vehicleModel: form.vehicleModel,
-      vehicleType: form.vehicleType as any,
-      vehicleCondition: form.vehicleCondition as any,
-      vin: form.vin || undefined,
-      transportType: form.transportType as any,
-      originCity: form.originCity,
-      originState: form.originState,
-      originZip: form.originZip,
-      destinationCity: form.destinationCity,
-      destinationState: form.destinationState,
-      destinationZip: form.destinationZip,
-      pickupDateFrom: form.pickupDateFrom || undefined,
-      pickupDateTo: form.pickupDateTo || undefined,
-      budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : undefined,
-      budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : undefined,
-      notes: form.notes || undefined,
-    }),
+    mutationFn: () => {
+      const fmt = (d: Date) => d.toISOString().split("T")[0];
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      return createShipment({
+        vehicleYear: parseInt(form.vehicleYear, 10),
+        vehicleMake: form.vehicleMake,
+        vehicleModel: form.vehicleModel,
+        vehicleType: form.vehicleType as any,
+        vehicleCondition: form.vehicleCondition as any,
+        vin: form.vin || undefined,
+        transportType: form.transportType as any,
+        serviceType: (form.serviceType as any) || "door_to_door",
+        originCity: form.originCity,
+        originState: form.originState,
+        originZip: form.originZip,
+        destinationCity: form.destinationCity,
+        destinationState: form.destinationState,
+        destinationZip: form.destinationZip,
+        pickupDateFrom: form.pickupDateFrom || fmt(today),
+        pickupDateTo: form.pickupDateTo || fmt(tomorrow),
+        budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : undefined,
+        budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : undefined,
+        notes: form.notes || undefined,
+      });
+    },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["my-shipments"] });
       qc.invalidateQueries({ queryKey: ["shipments"] });
@@ -71,8 +79,9 @@ export default function CreateShipmentScreen() {
       if (!form.vehicleYear || !form.vehicleMake || !form.vehicleModel) {
         Alert.alert("Missing Info", "Please fill in year, make, and model."); return false;
       }
-      if (isNaN(parseInt(form.vehicleYear))) {
-        Alert.alert("Invalid Year", "Please enter a valid year."); return false;
+      const yr = parseInt(form.vehicleYear, 10);
+      if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) {
+        Alert.alert("Invalid Year", "Please enter a valid 4-digit year."); return false;
       }
     }
     if (step === 1) {

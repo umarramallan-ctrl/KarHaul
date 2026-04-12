@@ -277,7 +277,20 @@ export default function CreateShipment() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    setPendingValues(values);
+    // vehicleYear is already validated by Zod (z.coerce.number().min(1900))
+    // Default pickupDateFrom to today, pickupDateTo to tomorrow if empty
+    const fmt = (d: Date) => d.toISOString().split("T")[0];
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const normalized: z.infer<typeof formSchema> = {
+      ...values,
+      serviceType: values.serviceType || "door_to_door",
+      pickupDateFrom: values.pickupDateFrom || fmt(today),
+      pickupDateTo: values.pickupDateTo || fmt(tomorrow),
+    };
+    setPendingValues(normalized);
     setConfirmOpen(true);
   }
 
