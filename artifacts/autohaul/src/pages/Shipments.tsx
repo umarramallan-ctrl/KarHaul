@@ -137,7 +137,7 @@ export default function Shipments() {
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">{label}</label>
                     <Select value={value} onValueChange={onChange}>
                       <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-11"><SelectValue placeholder={placeholder} /></SelectTrigger>
-                      <SelectContent className="max-h-60 overflow-y-auto"><SelectItem value="all">{placeholder}</SelectItem>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectContent><SelectItem value="all">{placeholder}</SelectItem>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 ))}
