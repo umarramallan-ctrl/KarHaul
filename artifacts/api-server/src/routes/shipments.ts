@@ -71,59 +71,46 @@ router.post("/shipments", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  try {
-    const dbUser = await getDbUser((req.user as any).id);
-    if (!dbUser) {
-      res.status(400).json({ error: "Profile not found. Please set up your profile first." });
-      return;
-    }
-    const body = req.body;
-
-    const vehicleYear = parseInt(body.vehicleYear, 10);
-    if (isNaN(vehicleYear)) {
-      res.status(400).json({ error: "vehicleYear must be a valid integer year" });
-      return;
-    }
-
-    const id = randomUUID();
-    await db.insert(shipmentsTable).values({
-      id,
-      shipperId: dbUser.id,
-      vehicleYear,
-      vehicleMake: body.vehicleMake,
-      vehicleModel: body.vehicleModel,
-      vehicleType: body.vehicleType,
-      vehicleCondition: body.vehicleCondition,
-      vin: body.vin || null,
-      transportType: body.transportType,
-      serviceType: body.serviceType || "door_to_door",
-      originAddress: body.originAddress || null,
-      originCity: body.originCity,
-      originState: body.originState,
-      originZip: body.originZip,
-      destinationAddress: body.destinationAddress || null,
-      destinationCity: body.destinationCity,
-      destinationState: body.destinationState,
-      destinationZip: body.destinationZip,
-      pickupDateFrom: body.pickupDateFrom || null,
-      pickupDateTo: body.pickupDateTo || null,
-      budgetMin: body.budgetMin != null ? Number(body.budgetMin) : null,
-      budgetMax: body.budgetMax != null ? Number(body.budgetMax) : null,
-      notes: body.notes || null,
-      pickupLocationType: body.pickupLocationType || null,
-      deliveryLocationType: body.deliveryLocationType || null,
-      status: "open",
-    });
-    const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, id)).limit(1);
-
-    // Notify drivers who have matching lane preferences
-    notifyMatchingDrivers(shipment!).catch(() => {});
-
-    res.status(201).json(shipment);
-  } catch (err) {
-    console.error("POST /shipments error:", err);
-    res.status(500).json({ error: "Failed to create shipment", detail: err instanceof Error ? err.message : String(err) });
+  const dbUser = await getDbUser((req.user as any).id);
+  if (!dbUser) {
+    res.status(400).json({ error: "Profile not found. Please set up your profile first." });
+    return;
   }
+  const body = req.body;
+  const id = randomUUID();
+  await db.insert(shipmentsTable).values({
+    id,
+    shipperId: dbUser.id,
+    vehicleYear: body.vehicleYear,
+    vehicleMake: body.vehicleMake,
+    vehicleModel: body.vehicleModel,
+    vehicleType: body.vehicleType,
+    vehicleCondition: body.vehicleCondition,
+    vin: body.vin || null,
+    transportType: body.transportType,
+    originAddress: body.originAddress || null,
+    originCity: body.originCity,
+    originState: body.originState,
+    originZip: body.originZip,
+    destinationAddress: body.destinationAddress || null,
+    destinationCity: body.destinationCity,
+    destinationState: body.destinationState,
+    destinationZip: body.destinationZip,
+    pickupDateFrom: body.pickupDateFrom || null,
+    pickupDateTo: body.pickupDateTo || null,
+    budgetMin: body.budgetMin || null,
+    budgetMax: body.budgetMax || null,
+    notes: body.notes || null,
+    pickupLocationType: body.pickupLocationType || null,
+    deliveryLocationType: body.deliveryLocationType || null,
+    status: "open",
+  });
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, id)).limit(1);
+
+  // Notify drivers who have matching lane preferences
+  notifyMatchingDrivers(shipment!).catch(() => {});
+
+  res.status(201).json(shipment);
 });
 
 async function notifyMatchingDrivers(shipment: typeof shipmentsTable.$inferSelect) {
