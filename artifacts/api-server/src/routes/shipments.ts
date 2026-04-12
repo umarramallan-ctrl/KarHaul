@@ -119,7 +119,7 @@ router.post("/shipments", async (req, res) => {
       vehicleCondition: body.vehicleCondition,
       vin: body.vin || null,
       transportType: body.transportType,
-      serviceType: body.serviceType || null,
+      serviceType: body.serviceType || "door_to_door",
       originAddress: body.originAddress || null,
       originCity: body.originCity,
       originState: body.originState,
