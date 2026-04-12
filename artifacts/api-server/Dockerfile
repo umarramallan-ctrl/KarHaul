@@ -1,6 +1,17 @@
 FROM node:18-alpine
 WORKDIR /app
-COPY artifacts/api-server/dist/ ./dist/
-RUN mv ./dist/index.js ./dist/index.mjs
+
+# Install pnpm (required for workspace dependency resolution)
+RUN npm install -g pnpm
+
+# Copy the full monorepo so workspace packages (lib/*) resolve correctly
+COPY . .
+
+# Install all workspace dependencies from the monorepo root
+RUN pnpm install --frozen-lockfile
+
+# Build the api-server — esbuild bundles all workspace packages into dist/index.js
+RUN node ./artifacts/api-server/build.mjs
+
 EXPOSE 3000
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "artifacts/api-server/dist/index.js"]
