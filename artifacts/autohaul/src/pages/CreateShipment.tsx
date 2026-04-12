@@ -189,7 +189,7 @@ export default function CreateShipment() {
   // useForm MUST be declared before any form.watch() calls
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", serviceType: "door_to_door" as const, agreeToTerms: false },
+    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
   });
 
   // All watch() subscriptions — safe here because useForm is already initialised above
@@ -624,7 +624,7 @@ export default function CreateShipment() {
                       {/* Service type */}
                       <FormField control={form.control} name="serviceType" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Service Type</FormLabel>
+                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Service Type (optional)</FormLabel>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { val: "door_to_door", title: "Door to Door", desc: "Pickup and delivery directly at your addresses." },

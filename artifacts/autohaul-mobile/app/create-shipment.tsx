@@ -22,7 +22,7 @@ export default function CreateShipmentScreen() {
   const [form, setForm] = useState({
     vehicleYear: "", vehicleMake: "", vehicleModel: "",
     vehicleType: "sedan", vehicleCondition: "running", vin: "",
-    transportType: "open", serviceType: "door_to_door",
+    transportType: "open",
     originCity: "", originState: "", originZip: "",
     destinationCity: "", destinationState: "", destinationZip: "",
     pickupDateFrom: "", pickupDateTo: "",
@@ -40,7 +40,6 @@ export default function CreateShipmentScreen() {
       vehicleCondition: form.vehicleCondition as any,
       vin: form.vin || undefined,
       transportType: form.transportType as any,
-      serviceType: form.serviceType as any,
       originCity: form.originCity,
       originState: form.originState,
       originZip: form.originZip,

@@ -68,7 +68,6 @@ export default function BookingDetailScreen() {
   const [calling, setCalling] = useState<string | null>(null);
   const [uploadPhase, setUploadPhase] = useState<"pickup" | "delivery">("pickup");
   const [uploading, setUploading] = useState(false);
-  const [p2pLoading, setP2pLoading] = useState(false);
   const { getToken } = useClerkAuth();
 
   const { data: booking, isLoading } = useQuery({ queryKey: ["booking", id], queryFn: () => getBooking(id!) });
@@ -153,21 +152,6 @@ export default function BookingDetailScreen() {
     }
   };
 
-  async function handleP2pAction(endpoint: string, successMsg: string) {
-    setP2pLoading(true);
-    try {
-      const token = await getToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      const res = await fetch(`${getApiBaseUrl()}/${endpoint}`, { method: "POST", headers });
-      const data = await res.json();
-      if (!res.ok) { Alert.alert("Error", data.error || "Something went wrong"); return; }
-      Alert.alert("Success", successMsg);
-      qc.invalidateQueries({ queryKey: ["booking", id] });
-    } catch { Alert.alert("Error", "Network error. Please try again."); }
-    finally { setP2pLoading(false); }
-  }
-
   const handleInAppCall = (name: string) => {
     Alert.alert("In-App Call", `Initiating a secure call with ${name}. Both parties will be connected through the platform.`, [
       { text: "Cancel", style: "cancel" },
@@ -233,87 +217,6 @@ export default function BookingDetailScreen() {
             })}
           </View>
         </View>
-
-        {/* P2P Stripe Escrow */}
-        {(() => {
-          const bk = booking as any;
-          const driverActive = bk?.driver?.stripeAccountStatus === "active";
-          const shipperActive = bk?.shipper?.stripeAccountStatus === "active";
-          const bothConnected = driverActive && shipperActive;
-          const isActiveBooking = ["confirmed", "picked_up", "in_transit"].includes(bk?.status);
-          const p2pStatus: string = bk?.p2pEscrowStatus ?? "none";
-          if (!bothConnected && p2pStatus === "none") return null;
-          return (
-            <View style={[styles.section]}>
-              <Text style={[styles.sectionTitle, { color: C.text }]}>P2P Stripe Escrow</Text>
-              <View style={[styles.card, { backgroundColor: "#EEF2FF", borderColor: "#C7D2FE", borderWidth: 1 }]}>
-                {bk?.p2pEscrowEnabled && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <Text style={{ fontSize: 13, color: "#1e1b4b", fontFamily: "Inter_600SemiBold" }}>
-                      ${Number(bk?.p2pEscrowAmount ?? bk?.agreedPrice ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </Text>
-                    <Text style={{ fontSize: 11, color: p2pStatus === "released" ? "#065F46" : p2pStatus === "held" ? "#92400E" : "#6B7280", fontFamily: "Inter_600SemiBold" }}>
-                      {p2pStatus === "held" ? "HELD" : p2pStatus === "released" ? "RELEASED" : p2pStatus === "returned" ? "RETURNED" : "NOT FUNDED"}
-                    </Text>
-                  </View>
-                )}
-
-                {isShipper && isActiveBooking && !bk?.p2pEscrowEnabled && bothConnected && (
-                  <>
-                    <Text style={{ fontSize: 12, color: "#4338CA", marginBottom: 12, lineHeight: 18 }}>
-                      Both you and the driver have Stripe connected. Enable P2P escrow to hold ${Number(bk?.agreedPrice ?? 0).toLocaleString()} in Stripe — released to the driver on delivery with no platform cut.
-                    </Text>
-                    <Pressable
-                      style={[{ backgroundColor: "#4F46E5", borderRadius: 10, paddingVertical: 12, alignItems: "center" }, p2pLoading && { opacity: 0.6 }]}
-                      disabled={p2pLoading}
-                      onPress={() => handleP2pAction(`stripe/p2p-escrow/enable/${id}`, "P2P escrow enabled. You can now fund it.")}
-                    >
-                      <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Use Stripe Escrow</Text>
-                    </Pressable>
-                  </>
-                )}
-
-                {isShipper && isActiveBooking && bk?.p2pEscrowEnabled && p2pStatus === "none" && (
-                  <Pressable
-                    style={[{ backgroundColor: "#4F46E5", borderRadius: 10, paddingVertical: 12, alignItems: "center" }, p2pLoading && { opacity: 0.6 }]}
-                    disabled={p2pLoading}
-                    onPress={() => handleP2pAction(`stripe/p2p-escrow/fund/${id}`, "Escrow payment initiated. Complete the payment in Stripe.")}
-                  >
-                    <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Fund Escrow · ${Number(bk?.agreedPrice ?? 0).toLocaleString()}</Text>
-                  </Pressable>
-                )}
-
-                {isShipper && isActiveBooking && p2pStatus === "held" && (
-                  <Pressable
-                    style={[{ backgroundColor: "#059669", borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 8 }, p2pLoading && { opacity: 0.6 }]}
-                    disabled={p2pLoading}
-                    onPress={() => Alert.alert("Release Payment?", `Transfer $${bk?.p2pEscrowAmount?.toFixed(2)} to the driver's Stripe account?`, [
-                      { text: "Cancel", style: "cancel" },
-                      { text: "Release", onPress: () => handleP2pAction(`stripe/p2p-escrow/release/${id}`, "Payment released to driver!") },
-                    ])}
-                  >
-                    <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Release Payment to Driver</Text>
-                  </Pressable>
-                )}
-
-                {isDriver && bk?.p2pEscrowEnabled && (
-                  <Text style={{ fontSize: 12, color: "#4338CA", lineHeight: 18 }}>
-                    {p2pStatus === "none" && "Shipper enabled P2P escrow but hasn't funded it yet."}
-                    {p2pStatus === "held" && `$${bk?.p2pEscrowAmount?.toFixed(2)} held in Stripe — transfers to you on delivery.`}
-                    {p2pStatus === "released" && `$${bk?.p2pEscrowAmount?.toFixed(2)} has been sent to your Stripe account.`}
-                    {p2pStatus === "returned" && "Escrow returned to shipper (booking cancelled)."}
-                  </Text>
-                )}
-
-                <View style={{ marginTop: 12, padding: 10, backgroundColor: "#FEF3C7", borderRadius: 8 }}>
-                  <Text style={{ fontSize: 11, color: "#92400E", lineHeight: 16 }}>
-                    Disclaimer: KarHaul is not a payment processor. P2P escrow is a direct Stripe feature. KarHaul takes no cut and assumes no liability for payment disputes or failed transfers.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          );
-        })()}
 
         {/* Location Tracking */}
         <View style={styles.section}>

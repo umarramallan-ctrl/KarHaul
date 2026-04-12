@@ -12,9 +12,7 @@ async function getDbUser(authId: string) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Stripe Connect Express — onboarding for shippers and drivers
-// Shippers: connect to authorize escrow payments
-// Drivers: connect to receive payouts
+// Stripe Connect Express — driver onboarding
 // ──────────────────────────────────────────────────────────────
 
 router.post("/stripe/connect/onboard", async (req, res) => {
@@ -256,9 +254,6 @@ router.post("/bookings/:bookingId/cancel", async (req, res) => {
     await createNotification({ userId: booking.shipperId, type: "escrow_released", title: "Escrow returned", body: "The driver cancelled. Your escrow fee has been returned.", linkPath: `/bookings/${booking.id}` });
   }
 
-  // Cancel any held P2P escrow — always return funds to shipper on cancellation
-  await cancelP2pEscrow(booking);
-
   await db.update(bookingsTable)
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(eq(bookingsTable.id, booking.id));
@@ -344,152 +339,6 @@ router.post("/stripe/webhook", async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// Peer-to-peer Stripe escrow
-// Shipper holds full agreed price; released to driver on delivery.
-// No platform cut. Both parties must have active Stripe Connect accounts.
-// ──────────────────────────────────────────────────────────────
-
-router.post("/stripe/p2p-escrow/enable/:bookingId", async (req, res) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  try {
-    const dbUser = await getDbUser((req.user as any).id);
-    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
-
-    const [booking] = await db.select().from(bookingsTable)
-      .where(eq(bookingsTable.id, req.params.bookingId)).limit(1);
-    if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
-    if (booking.shipperId !== dbUser.id) { res.status(403).json({ error: "Only the shipper can enable P2P escrow" }); return; }
-    if (!["confirmed", "picked_up", "in_transit"].includes(booking.status)) {
-      res.status(400).json({ error: "P2P escrow can only be enabled on an active booking" }); return;
-    }
-    if (booking.p2pEscrowStatus !== "none" && booking.p2pEscrowStatus !== null) {
-      res.status(400).json({ error: "P2P escrow is already active" }); return;
-    }
-
-    // Both parties need active Stripe Connect accounts
-    const [driver] = await db.select().from(usersTable).where(eq(usersTable.id, booking.driverId)).limit(1);
-    if (!driver?.stripeAccountId || driver.stripeAccountStatus !== "active") {
-      res.status(400).json({ error: "Driver does not have an active Stripe account" }); return;
-    }
-    if (!dbUser.stripeAccountId || dbUser.stripeAccountStatus !== "active") {
-      res.status(400).json({ error: "You must connect Stripe before enabling P2P escrow" }); return;
-    }
-
-    await db.update(bookingsTable)
-      .set({ p2pEscrowEnabled: true, updatedAt: new Date() })
-      .where(eq(bookingsTable.id, booking.id));
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("POST /stripe/p2p-escrow/enable error:", err);
-    res.status(500).json({ error: "Failed to enable P2P escrow" });
-  }
-});
-
-router.post("/stripe/p2p-escrow/fund/:bookingId", async (req, res) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  try {
-    const dbUser = await getDbUser((req.user as any).id);
-    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
-
-    const [booking] = await db.select().from(bookingsTable)
-      .where(eq(bookingsTable.id, req.params.bookingId)).limit(1);
-    if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
-    if (booking.shipperId !== dbUser.id) { res.status(403).json({ error: "Only the shipper can fund P2P escrow" }); return; }
-    if (!booking.p2pEscrowEnabled) { res.status(400).json({ error: "P2P escrow is not enabled for this booking" }); return; }
-    if (booking.p2pEscrowStatus === "held") {
-      res.json({ status: "held", intentId: booking.p2pEscrowIntentId, amount: booking.p2pEscrowAmount });
-      return;
-    }
-
-    const [driver] = await db.select().from(usersTable).where(eq(usersTable.id, booking.driverId)).limit(1);
-    if (!driver?.stripeAccountId || driver.stripeAccountStatus !== "active") {
-      res.status(400).json({ error: "Driver does not have an active Stripe account" }); return;
-    }
-
-    const amountCents = Math.round((booking.agreedPrice ?? 0) * 100);
-    if (amountCents < 50) { res.status(400).json({ error: "Agreed price is too low for Stripe escrow" }); return; }
-
-    const intent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: "usd",
-      capture_method: "manual",
-      description: `KarHaul P2P escrow — Booking #${booking.id.slice(0, 8)} · $${booking.agreedPrice} to driver on delivery`,
-      transfer_data: { destination: driver.stripeAccountId },
-      metadata: { bookingId: booking.id, type: "p2p_escrow", shipperId: dbUser.id, driverId: driver.id },
-      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
-    });
-
-    await db.update(bookingsTable).set({
-      p2pEscrowIntentId: intent.id,
-      p2pEscrowAmount: booking.agreedPrice,
-      p2pEscrowStatus: "held",
-      updatedAt: new Date(),
-    }).where(eq(bookingsTable.id, booking.id));
-
-    await createNotification({
-      userId: dbUser.id,
-      type: "escrow_held",
-      title: "P2P escrow funded",
-      body: `$${booking.agreedPrice?.toFixed(2)} is held in escrow and will be released to the driver upon delivery.`,
-      linkPath: `/bookings/${booking.id}`,
-    });
-    await createNotification({
-      userId: driver.id,
-      type: "escrow_held",
-      title: "Shipper funded P2P escrow",
-      body: `The shipper has placed $${booking.agreedPrice?.toFixed(2)} in Stripe escrow for this booking. You'll receive it on delivery confirmation.`,
-      linkPath: `/bookings/${booking.id}`,
-    });
-
-    res.json({ clientSecret: intent.client_secret, intentId: intent.id, amount: booking.agreedPrice });
-  } catch (err) {
-    console.error("POST /stripe/p2p-escrow/fund error:", err);
-    res.status(500).json({ error: "Failed to fund P2P escrow" });
-  }
-});
-
-router.post("/stripe/p2p-escrow/release/:bookingId", async (req, res) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  try {
-    const dbUser = await getDbUser((req.user as any).id);
-    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
-
-    const [booking] = await db.select().from(bookingsTable)
-      .where(eq(bookingsTable.id, req.params.bookingId)).limit(1);
-    if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
-    if (booking.shipperId !== dbUser.id) { res.status(403).json({ error: "Only the shipper can release P2P escrow" }); return; }
-    if (booking.p2pEscrowStatus !== "held" || !booking.p2pEscrowIntentId) {
-      res.status(400).json({ error: "No held P2P escrow to release" }); return;
-    }
-
-    await stripe.paymentIntents.capture(booking.p2pEscrowIntentId);
-    await db.update(bookingsTable).set({ p2pEscrowStatus: "released", updatedAt: new Date() })
-      .where(eq(bookingsTable.id, booking.id));
-
-    await createNotification({
-      userId: booking.driverId,
-      type: "escrow_released",
-      title: "Payment released",
-      body: `The shipper has released $${booking.p2pEscrowAmount?.toFixed(2)} to your Stripe account.`,
-      linkPath: `/bookings/${booking.id}`,
-    });
-    await createNotification({
-      userId: dbUser.id,
-      type: "escrow_released",
-      title: "P2P escrow released",
-      body: `$${booking.p2pEscrowAmount?.toFixed(2)} has been transferred to the driver's Stripe account.`,
-      linkPath: `/bookings/${booking.id}`,
-    });
-
-    res.json({ success: true, amount: booking.p2pEscrowAmount });
-  } catch (err) {
-    console.error("POST /stripe/p2p-escrow/release error:", err);
-    res.status(500).json({ error: "Failed to release P2P escrow" });
-  }
-});
-
-// ──────────────────────────────────────────────────────────────
 // Register push token
 // ──────────────────────────────────────────────────────────────
 
@@ -560,29 +409,5 @@ async function releaseEscrow(
   }
 }
 
-/** Cancel a held P2P escrow intent (returns funds to shipper). */
-async function cancelP2pEscrow(booking: any) {
-  if (booking?.p2pEscrowIntentId && booking.p2pEscrowStatus === "held") {
-    try {
-      await stripe.paymentIntents.cancel(booking.p2pEscrowIntentId);
-      await db.update(bookingsTable)
-        .set({ p2pEscrowStatus: "returned", updatedAt: new Date() })
-        .where(eq(bookingsTable.id, booking.id));
-    } catch { /* already cancelled */ }
-  }
-}
-
-/** Capture a held P2P escrow intent (transfers to driver). */
-async function captureP2pEscrow(booking: any) {
-  if (booking?.p2pEscrowIntentId && booking.p2pEscrowStatus === "held") {
-    try {
-      await stripe.paymentIntents.capture(booking.p2pEscrowIntentId);
-      await db.update(bookingsTable)
-        .set({ p2pEscrowStatus: "released", updatedAt: new Date() })
-        .where(eq(bookingsTable.id, booking.id));
-    } catch { /* already captured or cancelled */ }
-  }
-}
-
-export { releaseEscrow, cancelP2pEscrow, captureP2pEscrow };
+export { releaseEscrow };
 export default router;

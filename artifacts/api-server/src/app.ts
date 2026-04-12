@@ -11,10 +11,6 @@ import { generalLimiter, authLimiter } from "./lib/rate-limit";
 
 const app: Express = express();
 
-// Trust the Railway / reverse-proxy X-Forwarded-For header.
-// Required to avoid ERR_ERL_UNEXPECTED_X_FORWARDED_FOR from express-rate-limit.
-app.set("trust proxy", 1);
-
 app.use(
   pinoHttp({
     logger,
