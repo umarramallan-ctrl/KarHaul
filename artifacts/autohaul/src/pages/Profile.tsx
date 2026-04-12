@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
 import { ShieldCheck, Truck, User, Lock, Key, Map, CreditCard, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useAuth } from "@clerk/clerk-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { apiBase } from "@/lib/api";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
@@ -52,7 +52,10 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
 
 export default function Profile() {
   const { toast } = useToast();
-  const { data: profile, isLoading } = useGetMyProfile();
+  const { isSignedIn } = useAuth();
+  const { data: profile, isLoading, isError } = useGetMyProfile({
+    query: { enabled: isSignedIn === true, retry: false } as any,
+  });
   const updateMutation = useUpdateMyProfile();
   const { signOut } = useClerk();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -109,6 +112,14 @@ export default function Profile() {
     <MainLayout>
       <div className="bg-slate-950 min-h-screen flex items-center justify-center">
         <div className="text-slate-500 animate-pulse">Loading…</div>
+      </div>
+    </MainLayout>
+  );
+
+  if (isError) return (
+    <MainLayout>
+      <div className="bg-slate-950 min-h-screen flex items-center justify-center">
+        <div className="text-slate-400">Failed to load profile. Please refresh the page.</div>
       </div>
     </MainLayout>
   );
