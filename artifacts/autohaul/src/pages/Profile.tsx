@@ -291,12 +291,10 @@ export default function Profile() {
               </form>
             </Form>
 
-            {/* Payments & Escrow — driver only */}
-            {(profile?.role === "driver" || profile?.role === "both") && (
-              <Section title="Payment Setup" icon={<CreditCard className="h-4 w-4" />}>
-                <StripeConnectSetup />
-              </Section>
-            )}
+            {/* Payments & Stripe Connect — all roles */}
+            <Section title="Payment Setup" icon={<CreditCard className="h-4 w-4" />}>
+              <StripeConnectSetup role={profile?.role ?? "shipper"} />
+            </Section>
 
             {/* Lane Preferences */}
             {(profile?.role === "driver" || profile?.role === "both") && (

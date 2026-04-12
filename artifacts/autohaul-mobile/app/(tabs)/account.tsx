@@ -219,6 +219,12 @@ export default function AccountScreen() {
         {(profile?.role === "shipper" || profile?.role === "both") && (
           <MenuItem icon="heart" label="Saved Drivers" subtitle="Rebook trusted carriers directly" onPress={() => router.push("/saved-drivers")} />
         )}
+        <MenuItem
+          icon="credit-card"
+          label="Payment Setup (Stripe)"
+          subtitle={(profile as any)?.stripeAccountStatus === "active" ? "Connected" : "Connect Stripe for P2P escrow"}
+          onPress={() => router.push("/profile-setup")}
+        />
         <MenuItem icon="file-text" label="Terms of Service" subtitle="Platform rules and liability" onPress={() => {}} />
       </View>
 

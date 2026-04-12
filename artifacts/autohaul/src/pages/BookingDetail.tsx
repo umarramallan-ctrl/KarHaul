@@ -359,6 +359,180 @@ function InAppCallButton({ otherName }: { otherName: string }) {
   );
 }
 
+function P2pEscrowPanel({ booking, isShipper, isDriver, onRefetch }: {
+  booking: any;
+  isShipper: boolean;
+  isDriver: boolean;
+  onRefetch: () => void;
+}) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const b = booking;
+
+  const driverStripeActive = b.driver?.stripeAccountStatus === "active";
+  const shipperStripeActive = b.shipper?.stripeAccountStatus === "active";
+  const bothConnected = driverStripeActive && shipperStripeActive;
+  const isActive = ["confirmed", "picked_up", "in_transit"].includes(b.status);
+
+  const [enabling, setEnabling] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+
+  if (!bothConnected || (!isActive && b.p2pEscrowStatus === "none")) return null;
+
+  async function handleEnable() {
+    setEnabling(true);
+    try {
+      const res = await fetch(`${apiBase}/stripe/p2p-escrow/enable/${b.id}`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ title: "Error", description: data.error, variant: "destructive" }); return; }
+      toast({ title: "P2P escrow enabled", description: "You can now fund the escrow with the agreed transport price." });
+      onRefetch();
+    } finally { setEnabling(false); }
+  }
+
+  async function handleFund() {
+    setFunding(true);
+    try {
+      const res = await fetch(`${apiBase}/stripe/p2p-escrow/fund/${b.id}`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ title: "Error", description: data.error, variant: "destructive" }); return; }
+      toast({ title: "Escrow payment initiated", description: "Complete the Stripe payment to hold funds for the driver." });
+      onRefetch();
+    } finally { setFunding(false); }
+  }
+
+  async function handleRelease() {
+    setReleasing(true);
+    try {
+      const res = await fetch(`${apiBase}/stripe/p2p-escrow/release/${b.id}`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) { toast({ title: "Error", description: data.error, variant: "destructive" }); return; }
+      toast({ title: "Payment released", description: `$${b.p2pEscrowAmount?.toFixed(2)} sent to the driver's Stripe account.` });
+      onRefetch();
+    } finally { setReleasing(false); }
+  }
+
+  const statusColor: Record<string, string> = {
+    held: "text-amber-400",
+    released: "text-emerald-400",
+    returned: "text-blue-400",
+    none: "text-slate-500",
+  };
+  const statusLabel: Record<string, string> = {
+    held: "Held in escrow",
+    released: "Released to driver",
+    returned: "Returned to shipper",
+    none: "Not funded",
+  };
+  const p2pStatus = b.p2pEscrowStatus ?? "none";
+
+  return (
+    <Card className="mb-6 border-indigo-500/30 bg-indigo-500/5">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-indigo-400" />
+          <span className="text-sm font-bold text-white">Peer-to-Peer Stripe Escrow</span>
+          {b.p2pEscrowEnabled && (
+            <span className="ml-auto text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-widest">Enabled</span>
+          )}
+        </div>
+
+        {/* Status row */}
+        {b.p2pEscrowEnabled && (
+          <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3 flex items-center justify-between">
+            <div>
+              <div className="text-xs text-slate-500 mb-0.5">Escrow amount</div>
+              <div className="font-bold text-white text-lg">
+                {b.p2pEscrowAmount ? `$${Number(b.p2pEscrowAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${Number(b.agreedPrice).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              </div>
+              <div className="text-xs text-slate-500">Full agreed transport price · no platform cut</div>
+            </div>
+            <div className={`text-xs font-bold uppercase tracking-wide ${statusColor[p2pStatus] ?? "text-slate-500"}`}>
+              {statusLabel[p2pStatus] ?? p2pStatus}
+            </div>
+          </div>
+        )}
+
+        {/* Shipper controls */}
+        {isShipper && isActive && (
+          <div className="space-y-2">
+            {!b.p2pEscrowEnabled && (
+              <>
+                <p className="text-xs text-slate-400">
+                  Both you and the driver have Stripe connected. Enable P2P escrow to hold the full transport price of{" "}
+                  <strong className="text-white">${Number(b.agreedPrice).toLocaleString()}</strong> in Stripe until delivery — then release it directly to the driver with no KarHaul fee.
+                </p>
+                <Button
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white border-0 font-bold h-10"
+                  onClick={handleEnable}
+                  disabled={enabling}
+                >
+                  {enabling ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Enabling…</> : "Use Stripe Escrow for This Booking"}
+                </Button>
+              </>
+            )}
+
+            {b.p2pEscrowEnabled && p2pStatus === "none" && (
+              <Button
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white border-0 font-bold h-10"
+                onClick={handleFund}
+                disabled={funding}
+              >
+                {funding ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Processing…</> : `Fund Escrow · $${Number(b.agreedPrice).toLocaleString()}`}
+              </Button>
+            )}
+
+            {b.p2pEscrowEnabled && p2pStatus === "held" && b.status !== "delivered" && (
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-bold h-10"
+                onClick={handleRelease}
+                disabled={releasing}
+              >
+                {releasing ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Releasing…</> : "Release Payment to Driver"}
+              </Button>
+            )}
+
+            {b.p2pEscrowEnabled && p2pStatus === "released" && (
+              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                Payment released to the driver's Stripe account. Delivery complete.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Driver view */}
+        {isDriver && b.p2pEscrowEnabled && (
+          <div className="text-xs text-slate-400">
+            {p2pStatus === "none" && "The shipper has enabled P2P escrow but has not yet funded it. Funds will appear here once the shipper completes the Stripe payment."}
+            {p2pStatus === "held" && `$${b.p2pEscrowAmount?.toFixed(2)} is held in Stripe escrow. It will be transferred to your account automatically when the booking is marked delivered, or when the shipper manually releases it.`}
+            {p2pStatus === "released" && `$${b.p2pEscrowAmount?.toFixed(2)} has been transferred to your Stripe account.`}
+            {p2pStatus === "returned" && "The P2P escrow was returned to the shipper (booking cancelled)."}
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 flex gap-2 text-[11px] text-amber-300/80 leading-relaxed">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-400" />
+          <span>
+            <strong className="text-amber-300">Disclaimer:</strong> KarHaul is not a payment processor. P2P escrow is a direct Stripe-to-Stripe feature between shipper and driver. KarHaul takes no cut and assumes no liability for payment disputes, failed transfers, or Stripe account issues. All transport payments are solely between the shipper and carrier.
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function StarRating({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   const [hover, setHover] = useState(0);
   return (
@@ -904,6 +1078,9 @@ export default function BookingDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {/* P2P Stripe Escrow */}
+            <P2pEscrowPanel booking={b} isShipper={isShipper} isDriver={isDriver} onRefetch={refetch} />
 
             {/* Location Tracking */}
             <TrackingPanel bookingId={bookingId} isDriver={isDriver} bookingStatus={b.status} />

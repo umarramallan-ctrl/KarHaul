@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import { bookingsTable, shipmentsTable, usersTable } from "@workspace/db";
 import { eq, or, desc } from "drizzle-orm";
 import { createNotification } from "../lib/notify";
-import { releaseEscrow } from "./stripe";
+import { releaseEscrow, captureP2pEscrow } from "./stripe";
 import { CANCELLATION_WINDOW_MS } from "../lib/stripe";
 
 const router: IRouter = Router();
@@ -77,9 +77,11 @@ router.put("/bookings/:bookingId/status", async (req, res) => {
     if (shipper) {
       await db.update(usersTable).set({ completedJobs: (shipper.completedJobs || 0) + 1 }).where(eq(usersTable.id, booking.shipperId));
     }
-    // Release both escrow amounts to the platform on delivery
+    // Release both platform escrow amounts on delivery
     const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, booking.shipmentId)).limit(1);
     await releaseEscrow(shipment, booking, "capture", "capture");
+    // Auto-release P2P escrow to the driver (no platform cut)
+    await captureP2pEscrow(booking);
     await createNotification({
       userId: booking.shipperId,
       type: "escrow_released",

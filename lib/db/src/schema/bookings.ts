@@ -1,4 +1,4 @@
-import { pgTable, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, real, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -19,6 +19,11 @@ export const bookingsTable = pgTable("bookings", {
   driverEscrowIntentId: text("driver_escrow_intent_id"),
   driverEscrowAmount: real("driver_escrow_amount"),
   driverEscrowStatus: text("driver_escrow_status").default("none"), // none | held | captured | returned
+  // Peer-to-peer payment escrow: shipper holds full agreed price, released to driver on delivery
+  p2pEscrowEnabled: boolean("p2p_escrow_enabled").notNull().default(false),
+  p2pEscrowIntentId: text("p2p_escrow_intent_id"),
+  p2pEscrowAmount: real("p2p_escrow_amount"),
+  p2pEscrowStatus: text("p2p_escrow_status").default("none"), // none | held | released | returned
   // Cancellation policy
   acceptedAt: timestamp("accepted_at"),
   cancellationDeadline: timestamp("cancellation_deadline"), // acceptedAt + 1 hour
