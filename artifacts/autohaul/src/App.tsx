@@ -23,8 +23,6 @@ import VerifyTwoFactor from "./pages/VerifyTwoFactor";
 import Support from "./pages/Support";
 import Privacy from "./pages/Privacy";
 import BackhaulBoard from "./pages/Backhaul";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,8 +50,6 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/users/:userId" component={UserProfile} />
       <Route path="/backhaul" component={BackhaulBoard} />
-      <Route path="/about" component={About} />
-      <Route path="/contact" component={Contact} />
       <Route component={NotFound} />
     </Switch>
   );

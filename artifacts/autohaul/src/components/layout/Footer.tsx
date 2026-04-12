@@ -29,12 +29,12 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-white mb-4">Company</h3>
+            <h3 className="font-semibold text-white mb-4">Support</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
               <li><Link href="/support" className="hover:text-white transition-colors">Help Center</Link></li>
               <li><Link href="/support?tab=safety" className="hover:text-white transition-colors">Safety & Insurance</Link></li>
+              <li><Link href="/support?tab=contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link href="/support?tab=feedback" className="hover:text-white transition-colors">Share Feedback</Link></li>
             </ul>
           </div>
 

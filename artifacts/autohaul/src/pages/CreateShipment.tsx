@@ -18,6 +18,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { apiBase } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
 
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
@@ -186,19 +187,6 @@ export default function CreateShipment() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedDriverIds, setSelectedDriverIds] = useState<string[]>([]);
 
-  // useForm MUST be declared before any form.watch() calls
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
-  });
-
-  // All watch() subscriptions — safe here because useForm is already initialised above
-  const watchedOriginState = form.watch("originState");
-  const watchedDestState = form.watch("destinationState");
-  const watchedMake = form.watch("vehicleMake");
-  const watchedYear = form.watch("vehicleYear");
-  const watchedTransport = form.watch("transportType");
-
   const { data: savedDriversData } = useQuery({
     queryKey: ["saved-drivers"],
     queryFn: async () => {
@@ -224,8 +212,14 @@ export default function CreateShipment() {
   });
 
   // AI budget suggestion — fires when step 3 is reached
+  const watchedOriginState = form.watch("originState");
+  const watchedDestState = form.watch("destinationState");
+  const watchedMakeForBudget = form.watch("vehicleMake");
+  const watchedYear = form.watch("vehicleYear");
+  const watchedTransport = form.watch("transportType");
+
   const { data: budgetSuggestion, isFetching: budgetFetching } = useQuery({
-    queryKey: ["budget-suggest", watchedMake, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
+    queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
     queryFn: async () => {
       const res = await fetch(`${apiBase}/ai/budget-suggest`, {
         method: "POST", credentials: "include",
@@ -245,7 +239,7 @@ export default function CreateShipment() {
       });
       return res.json();
     },
-    enabled: step === 3 && !!watchedMake && !!watchedOriginState && !!watchedDestState,
+    enabled: step === 3 && !!watchedMakeForBudget && !!watchedOriginState && !!watchedDestState,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -263,6 +257,13 @@ export default function CreateShipment() {
     gcTime: Infinity,
   });
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vehicleType: "sedan", vehicleCondition: "running", transportType: "open", agreeToTerms: false },
+  });
+
+  const watchedMake = form.watch("vehicleMake");
+
   // Fetch models for the selected make from NHTSA
   const { data: nhtsaModels = [] } = useQuery({
     queryKey: ["nhtsa-models", watchedMake],
@@ -277,20 +278,7 @@ export default function CreateShipment() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // vehicleYear is already validated by Zod (z.coerce.number().min(1900))
-    // Default pickupDateFrom to today, pickupDateTo to tomorrow if empty
-    const fmt = (d: Date) => d.toISOString().split("T")[0];
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const normalized: z.infer<typeof formSchema> = {
-      ...values,
-      serviceType: values.serviceType || "door_to_door",
-      pickupDateFrom: values.pickupDateFrom || fmt(today),
-      pickupDateTo: values.pickupDateTo || fmt(tomorrow),
-    };
-    setPendingValues(normalized);
+    setPendingValues(values);
     setConfirmOpen(true);
   }
 

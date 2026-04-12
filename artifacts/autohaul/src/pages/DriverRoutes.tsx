@@ -60,7 +60,7 @@ function PostRouteDialog({ onSuccess }: { onSuccess: () => void }) {
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">State</label>
                 <Select value={(form as any)[stateKey]} onValueChange={v => set(stateKey, v)}>
                   <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-11"><SelectValue placeholder="State" /></SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function DriverRoutes() {
             ].map(({ value, onChange, placeholder }, i) => (
               <Select key={i} value={value} onValueChange={onChange}>
                 <SelectTrigger className="w-40 bg-slate-900 border-slate-800 text-slate-300 h-9 text-xs"><SelectValue placeholder={placeholder} /></SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto"><SelectItem value="all">{placeholder}</SelectItem>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent><SelectItem value="all">{placeholder}</SelectItem>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             ))}
             <Select value={transportType} onValueChange={setTransportType}>

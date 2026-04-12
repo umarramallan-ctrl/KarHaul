@@ -16,24 +16,16 @@ interface LanePreferencesProps {
   isPremium?: boolean;
 }
 
-async function clerkHeaders(): Promise<HeadersInit> {
-  const token = await (window as any).Clerk?.session?.getToken?.();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function fetchPrefs() {
-  const headers = await clerkHeaders();
-  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include", headers });
-  if (!res.ok) return { preferences: [] };
+  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include" });
   return res.json();
 }
 
 async function addPref(data: { originState: string; destinationState: string; role: string }) {
-  const headers = await clerkHeaders();
   const res = await fetch(`${apiBase}/lane-preferences`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
@@ -41,11 +33,9 @@ async function addPref(data: { originState: string; destinationState: string; ro
 }
 
 async function deletePref(id: string) {
-  const headers = await clerkHeaders();
   const res = await fetch(`${apiBase}/lane-preferences/${id}`, {
     method: "DELETE",
     credentials: "include",
-    headers,
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
   return res.json();
@@ -127,7 +117,7 @@ export function LanePreferences({ role, isPremium }: LanePreferencesProps) {
               <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-10">
                 <SelectValue placeholder="Origin" />
               </SelectTrigger>
-              <SelectContent className="max-h-60 overflow-y-auto">
+              <SelectContent>
                 {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -139,7 +129,7 @@ export function LanePreferences({ role, isPremium }: LanePreferencesProps) {
               <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white h-10">
                 <SelectValue placeholder="Destination" />
               </SelectTrigger>
-              <SelectContent className="max-h-60 overflow-y-auto">
+              <SelectContent>
                 {US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>

@@ -11,11 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
-import { ShieldCheck, Truck, User, Lock, Key, Map, CreditCard, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
-import { useState } from "react";
-import { useClerk } from "@clerk/clerk-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { apiBase } from "@/lib/api";
+import { ShieldCheck, Truck, User, Lock, Key, Map, CreditCard, ArrowLeft } from "lucide-react";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
 import { TwoFASettings } from "@/components/security/TwoFASettings";
 import { UserRatingsCard } from "@/components/UserRatingsCard";
@@ -54,10 +50,6 @@ export default function Profile() {
   const { toast } = useToast();
   const { data: profile, isLoading } = useGetMyProfile();
   const updateMutation = useUpdateMyProfile();
-  const { signOut } = useClerk();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -74,25 +66,6 @@ export default function Profile() {
       });
     }
   }, [profile, form]);
-
-  async function handleDeleteAccount() {
-    setDeleteLoading(true);
-    try {
-      const res = await fetch(`${apiBase}/users/account/delete-request`, { method: "POST", credentials: "include" });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: "Cannot delete account", description: data.error, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Account deactivated", description: "Your account will be permanently deleted in 30 days. You've been signed out." });
-      setDeleteOpen(false);
-      await signOut();
-    } catch {
-      toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" });
-    } finally {
-      setDeleteLoading(false);
-    }
-  }
 
   function onSubmit(values: z.infer<typeof profileSchema>) {
     const validRole = (values.role === "admin" ? "both" : values.role) as UpdateProfileBodyRole;
@@ -329,80 +302,8 @@ export default function Profile() {
                 <UserRatingsCard userId={profile.id} role={profile.role} />
               </div>
             )}
-
-            {/* Danger Zone — Account Deletion */}
-            <div className="rounded-2xl border border-red-900/50 bg-red-950/20 overflow-hidden">
-              <div className="px-6 py-4 border-b border-red-900/40 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-red-900/40 flex items-center justify-center text-red-400">
-                  <Trash2 className="h-4 w-4" />
-                </div>
-                <h2 className="font-bold text-red-300 text-sm uppercase tracking-wider">Danger Zone</h2>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-red-200">Delete my account</p>
-                  <p className="text-xs text-red-400/80 leading-relaxed">
-                    Your account will be deactivated immediately. After a <strong>30-day grace period</strong>, your personal data (name, phone, email) will be permanently purged. Transaction records and Bills of Lading are retained for legal compliance. You cannot delete your account if you have active bookings.
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setDeleteOpen(true)}
-                  className="bg-red-900/60 hover:bg-red-800 border border-red-700 text-red-200"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Request Account Deletion
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
-
-        {/* Delete Account Confirmation Dialog */}
-        <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
-            <DialogHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 text-red-400" />
-                </div>
-                <DialogTitle className="text-white text-lg">Delete Account</DialogTitle>
-              </div>
-              <DialogDescription className="text-slate-400 text-sm leading-relaxed">
-                This will <strong className="text-red-300">immediately deactivate</strong> your account. Your personal data will be permanently purged after 30 days. Transaction history and Bills of Lading are retained for compliance.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 space-y-2 text-xs text-red-300 leading-relaxed">
-              <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-400" /><span>Cannot be undone after 30 days</span></div>
-              <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-400" /><span>Blocked if you have active bookings</span></div>
-              <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-400" /><span>You'll be signed out immediately</span></div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs text-slate-400">Type <strong className="text-white">DELETE</strong> to confirm:</p>
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                placeholder="DELETE"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 text-white px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-500"
-              />
-            </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800" onClick={() => { setDeleteOpen(false); setDeleteConfirmText(""); }} disabled={deleteLoading}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="bg-red-700 hover:bg-red-600 border-0 font-bold"
-                onClick={handleDeleteAccount}
-                disabled={deleteLoading || deleteConfirmText !== "DELETE"}
-              >
-                {deleteLoading ? "Processing…" : "Delete My Account"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </MainLayout>
     </AuthGuard>
   );
