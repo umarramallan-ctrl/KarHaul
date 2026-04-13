@@ -44,7 +44,7 @@ export default function CreateShipmentScreen() {
         vehicleModel: form.vehicleModel,
         vehicleType: form.vehicleType as any,
         vehicleCondition: form.vehicleCondition as any,
-        vin: form.vin || undefined,
+        vin: form.vin,
         transportType: form.transportType as any,
         serviceType: (form.serviceType as any) || "door_to_door",
         originCity: form.originCity,
@@ -78,6 +78,12 @@ export default function CreateShipmentScreen() {
     if (step === 0) {
       if (!form.vehicleYear || !form.vehicleMake || !form.vehicleModel) {
         Alert.alert("Missing Info", "Please fill in year, make, and model."); return false;
+      }
+      if (!form.vin) {
+        Alert.alert("VIN Required", "Please enter the vehicle VIN."); return false;
+      }
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(form.vin)) {
+        Alert.alert("Invalid VIN", "VIN must be exactly 17 alphanumeric characters (no I, O, Q)."); return false;
       }
       const yr = parseInt(form.vehicleYear, 10);
       if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) {
@@ -121,7 +127,7 @@ export default function CreateShipmentScreen() {
               <F label="Year *" value={form.vehicleYear} onChange={v => set("vehicleYear", v)} placeholder="e.g. 2019" keyboardType="numeric" />
               <F label="Make *" value={form.vehicleMake} onChange={v => set("vehicleMake", v)} placeholder="e.g. Toyota" />
               <F label="Model *" value={form.vehicleModel} onChange={v => set("vehicleModel", v)} placeholder="e.g. Camry" />
-              <F label="VIN (optional)" value={form.vin} onChange={v => set("vin", v)} placeholder="17-character VIN" />
+              <F label="VIN *" value={form.vin} onChange={v => set("vin", v)} placeholder="17-character VIN" />
             </View>
 
             <View>

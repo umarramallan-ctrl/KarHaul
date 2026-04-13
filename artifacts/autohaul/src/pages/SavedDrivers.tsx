@@ -2,7 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Star, Shield, Truck, MessageCircle, Trash2, Loader2, Users, ArrowRight } from "lucide-react";
+import { Heart, Star, Shield, Truck, MessageCircle, Trash2, Loader2, Users, ArrowRight, Info } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -126,22 +126,26 @@ export default function SavedDrivers() {
                           )}
                         </div>
 
-                        <div className="flex gap-2 pt-4 border-t border-slate-800/60">
-                          <Button size="sm" className="flex-1 gap-1.5 bg-amber-500 hover:bg-amber-400 border-0 text-slate-900 text-xs font-bold" asChild>
-                            <Link href={`/post-load?inviteDriver=${saved.driverId}&driverName=${encodeURIComponent(name)}`}>
-                              <ArrowRight className="h-3.5 w-3.5" /> Invite to Bid
-                            </Link>
-                          </Button>
-                          <Button size="sm" className="flex-1 gap-1.5 bg-blue-600 hover:bg-blue-500 border-0 text-white text-xs" asChild>
-                            <Link href={`/messages?driverId=${saved.driverId}`}>
+                        <div className="space-y-2 pt-4 border-t border-slate-800/60">
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1 gap-1.5 bg-amber-500 hover:bg-amber-400 border-0 text-slate-900 text-xs font-bold" asChild>
+                              <Link href={`/post-load?inviteDriver=${saved.driverId}&driverName=${encodeURIComponent(name)}`}>
+                                <ArrowRight className="h-3.5 w-3.5" /> Invite to Bid
+                              </Link>
+                            </Button>
+                            <Button size="sm" className="flex-1 gap-1.5 border-0 text-xs" disabled title="Contact requires an active booking with this driver">
                               <MessageCircle className="h-3.5 w-3.5" /> Message
-                            </Link>
-                          </Button>
-                          <Button size="sm" variant="outline"
-                            className="gap-1.5 border-red-500/25 text-red-400 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/40"
-                            onClick={() => removeMutation.mutate(saved.driverId)} disabled={removeMutation.isPending}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                            </Button>
+                            <Button size="sm" variant="outline"
+                              className="gap-1.5 border-red-500/25 text-red-400 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/40"
+                              onClick={() => removeMutation.mutate(saved.driverId)} disabled={removeMutation.isPending}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                            <Info className="h-3 w-3 shrink-0" />
+                            <span>Messaging requires an active booking with this driver.</span>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

@@ -121,6 +121,7 @@ export default function BookingDetailScreen() {
   const platformFee = (booking as any).platformFeeAmount ?? 0;
   const agreedPrice = (booking as any).agreedPrice ?? 0;
 
+  const isBookingActive = !["delivered", "cancelled"].includes((booking as any).status);
   const nextStatus: Record<string, string> = { confirmed: "picked_up", picked_up: "in_transit", in_transit: "delivered" };
   const nextStatusLabel: Record<string, string> = { confirmed: "Mark as Picked Up", picked_up: "Mark as In Transit", in_transit: "Mark as Delivered" };
   const nextSt = nextStatus[(booking as any).status];
@@ -159,6 +160,13 @@ export default function BookingDetailScreen() {
         setCalling(name);
         setTimeout(() => { setCalling(null); Alert.alert("Call initiated", `${name} has been notified. Connecting...`); }, 1500);
       }},
+    ]);
+  };
+
+  const handleReport = (name: string) => {
+    Alert.alert("Report User", `Report ${name} for a policy violation?`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Report", style: "destructive", onPress: () => Alert.alert("Report submitted", "Our team will review your report. Thank you.") },
     ]);
   };
 
@@ -378,33 +386,49 @@ export default function BookingDetailScreen() {
         {/* Contact */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: C.text }]}>Contact</Text>
+          {!isBookingActive && (
+            <View style={[styles.inactiveNotice, { backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" }]}>
+              <Feather name="lock" size={13} color="#94A3B8" />
+              <Text style={[styles.inactiveNoticeText, { color: "#64748B" }]}>This booking is complete. Communication is no longer available.</Text>
+            </View>
+          )}
           <View style={[styles.card, { backgroundColor: "#fff" }]}>
-            {[{ label: "Driver", user: driver, otherId: (booking as any).driverId }, { label: "Shipper", user: shipper, otherId: (booking as any).shipperId }].map(({ label, user, otherId }) => (
-              <View key={label} style={[styles.partyRow, { borderTopColor: "#F1F5F9" }]}>
-                <View style={[styles.partyAvatar, { backgroundColor: C.primary }]}>
-                  <Text style={styles.partyAvatarText}>{((user?.firstName || "U").charAt(0))}</Text>
+            {[{ label: "Driver", user: driver, otherId: (booking as any).driverId }, { label: "Shipper", user: shipper, otherId: (booking as any).shipperId }].map(({ label, user, otherId }) => {
+              const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || label;
+              return (
+                <View key={label} style={[styles.partyRow, { borderTopColor: "#F1F5F9" }]}>
+                  <View style={[styles.partyAvatar, { backgroundColor: C.primary }]}>
+                    <Text style={styles.partyAvatarText}>{((user?.firstName || "U").charAt(0))}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.partyRole, { color: C.textMuted }]}>{label}</Text>
+                    <Text style={[styles.partyName, { color: C.text }]}>{fullName}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <Pressable
+                      style={[styles.contactBtn, { borderColor: isBookingActive ? "#D1D5DB" : "#E2E8F0", opacity: isBookingActive ? 1 : 0.35 }]}
+                      onPress={() => isBookingActive && router.push({ pathname: "/messages/[conversationId]", params: { conversationId: "new", recipientId: otherId, name: fullName } })}
+                      disabled={!isBookingActive}
+                    >
+                      <Feather name="message-circle" size={16} color={isBookingActive ? C.primary : "#94A3B8"} />
+                    </Pressable>
+                    <Pressable
+                      style={[styles.contactBtn, { borderColor: isBookingActive ? "#D1FAE5" : "#E2E8F0", opacity: isBookingActive ? 1 : 0.35 }]}
+                      onPress={() => isBookingActive && handleInAppCall(fullName)}
+                      disabled={!isBookingActive || calling !== null}
+                    >
+                      {calling === fullName ? <ActivityIndicator size="small" color="#10B981" /> : <Feather name="phone" size={16} color={isBookingActive ? "#10B981" : "#94A3B8"} />}
+                    </Pressable>
+                    <Pressable
+                      style={[styles.contactBtn, { borderColor: "#FEE2E2" }]}
+                      onPress={() => handleReport(fullName)}
+                    >
+                      <Feather name="flag" size={15} color="#EF4444" />
+                    </Pressable>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.partyRole, { color: C.textMuted }]}>{label}</Text>
-                  <Text style={[styles.partyName, { color: C.text }]}>{[user?.firstName, user?.lastName].filter(Boolean).join(" ") || label}</Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <Pressable
-                    style={[styles.contactBtn, { borderColor: "#D1D5DB" }]}
-                    onPress={() => router.push({ pathname: "/messages/[conversationId]", params: { conversationId: "new", recipientId: otherId, name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") } })}
-                  >
-                    <Feather name="message-circle" size={16} color={C.primary} />
-                  </Pressable>
-                  <Pressable
-                    style={[styles.contactBtn, { borderColor: "#D1FAE5" }]}
-                    onPress={() => handleInAppCall([user?.firstName, user?.lastName].filter(Boolean).join(" ") || label)}
-                    disabled={calling !== null}
-                  >
-                    {calling ? <ActivityIndicator size="small" color="#10B981" /> : <Feather name="phone" size={16} color="#10B981" />}
-                  </Pressable>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
           <Text style={[styles.contactDisclaimer, { color: C.textMuted }]}>
             Phone numbers cannot be shared in messages. Use the call button to connect securely.
@@ -479,6 +503,8 @@ const styles = StyleSheet.create({
   partyName: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
   contactBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   contactDisclaimer: { fontFamily: "Inter_400Regular", fontSize: 11, textAlign: "center", marginTop: 8 },
+  inactiveNotice: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, borderRadius: 12, borderWidth: 1, marginBottom: 10 },
+  inactiveNoticeText: { fontFamily: "Inter_400Regular", fontSize: 12, flex: 1, lineHeight: 17 },
   bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
   updateBtn: { paddingVertical: 16, borderRadius: 14, alignItems: "center" },
   updateBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
