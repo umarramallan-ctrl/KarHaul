@@ -3,7 +3,7 @@
     "name": "KarHaul",
     "slug": "karhaul",
     "version": "1.0.0",
-    "owner": "karhaul",
+    "owner": "theevopointllc",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "karhaul",
@@ -43,7 +43,10 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiUrl": "https://karhaul-production.up.railway.app"
+      "apiUrl": "https://karhaul-production.up.railway.app",
+      "eas": {
+        "projectId": "c9fc7597-d844-4d54-929e-704e8cbf0e25"
+      }
     }
   }
 }

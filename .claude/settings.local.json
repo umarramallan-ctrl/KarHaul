@@ -61,7 +61,22 @@
       "Bash(npx expo:*)",
       "Bash(find /home/runner/workspace/artifacts/api-server/src/routes -type f -name \"*.ts\" -exec basename {} \\\\;)",
       "Bash(BASE_PATH=/ pnpm --filter @workspace/autohaul run build)",
-      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_UTGPHm9cQk4L@ep-floral-pond-anh16o3b.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require\" pnpm run push)"
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_UTGPHm9cQk4L@ep-floral-pond-anh16o3b.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require\" pnpm run push)",
+      "Bash(eas env:create --scope project --environment preview --name EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY --value pk_test_bWVldC1vd2wtNjUuY2xlcmsuYWNjb3VudHMuZGV2JA --visibility plaintext)",
+      "Bash(npx eas-cli:*)",
+      "Bash(export PNPM_HOME=\"/root/.local/share/pnpm\")",
+      "Bash(export PATH=\"$PNPM_HOME:$PATH\")",
+      "Bash(export PNPM_HOME=\"/home/runner/.pnpm-global\")",
+      "Bash(mkdir -p /home/runner/.pnpm-global)",
+      "Bash(eas build:*)",
+      "Bash(find:*)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(printf '\\\\n')",
+      "Bash(printf 'No\\\\n')",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(railway --version)",
+      "Bash(vercel --version)"
     ]
   }
 }
