@@ -864,21 +864,27 @@ export default function ShipmentDetail() {
                   </UserProfileModal>
                   {isAuthenticated && !isOwner && (
                     <div className="space-y-2 mt-2">
-                      <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
-                        <Link href={`/messages?to=${shipment.shipperId}`}>
-                          <MessageSquare className="h-3.5 w-3.5" /> Message Shipper
-                        </Link>
-                      </Button>
-                      {(shipment as any).shipper?.phone ? (
-                        <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
-                          <a href={`tel:${(shipment as any).shipper.phone}`}>
-                            <Phone className="h-3.5 w-3.5" /> Call Shipper
-                          </a>
-                        </Button>
+                      {myBidAccepted ? (
+                        <>
+                          <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
+                            <Link href={`/messages?to=${shipment.shipperId}`}>
+                              <MessageSquare className="h-3.5 w-3.5" /> Message Shipper
+                            </Link>
+                          </Button>
+                          {(shipment as any).shipper?.phone ? (
+                            <Button variant="outline" className="w-full text-xs h-8 gap-1.5" asChild>
+                              <a href={`tel:${(shipment as any).shipper.phone}`}>
+                                <Phone className="h-3.5 w-3.5" /> Call Shipper
+                              </a>
+                            </Button>
+                          ) : (
+                            <Button variant="outline" className="w-full text-xs h-8 gap-1.5" onClick={() => toast({ title: "In-App Call", description: `Connecting you with ${(shipment as any).shipper?.firstName || "the shipper"}. Both parties will be notified.` })}>
+                              <Phone className="h-3.5 w-3.5" /> Call Shipper
+                            </Button>
+                          )}
+                        </>
                       ) : (
-                        <Button variant="outline" className="w-full text-xs h-8 gap-1.5" onClick={() => toast({ title: "In-App Call", description: `Connecting you with ${(shipment as any).shipper?.firstName || "the shipper"}. Both parties will be notified.` })}>
-                          <Phone className="h-3.5 w-3.5" /> Call Shipper
-                        </Button>
+                        <p className="text-[11px] text-muted-foreground text-center py-1">Contact is only available once your bid is accepted.</p>
                       )}
                       <ReportModal
                         reportedUserId={shipment.shipperId}
