@@ -77,9 +77,6 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const quickReplies = userRole === "driver" ? DRIVER_REPLIES : userRole === "shipper" ? SHIPPER_REPLIES : [...DRIVER_REPLIES.slice(0, 4), ...SHIPPER_REPLIES.slice(0, 4)];
 
-  const INACTIVE_BOOKING_STATUSES = ["delivered", "cancelled"];
-  const isBookingInactive = INACTIVE_BOOKING_STATUSES.includes((conv as any).bookingStatus);
-
   const { data, isLoading } = useQuery({
     queryKey: ["messages", conv.id],
     queryFn: () => fetchMessages(conv.id),
@@ -139,26 +136,24 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          {!isBookingInactive && (
-            conv.otherUserPhone ? (
-              <>
-                <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" asChild>
-                  <a href={`tel:${conv.otherUserPhone}`}>
-                    <Phone className="h-3.5 w-3.5" /> Call
-                  </a>
-                </Button>
-                <Button size="sm" variant="outline" className="gap-1.5 h-8 text-blue-700 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700" asChild>
-                  <a href={`sms:${conv.otherUserPhone}`}>
-                    <MessageCircle className="h-3.5 w-3.5" /> Text
-                  </a>
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" onClick={handleCall} disabled={calling}>
-                {calling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
-                {calling ? "Connecting..." : "Call"}
+          {conv.otherUserPhone ? (
+            <>
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" asChild>
+                <a href={`tel:${conv.otherUserPhone}`}>
+                  <Phone className="h-3.5 w-3.5" /> Call
+                </a>
               </Button>
-            )
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-blue-700 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700" asChild>
+                <a href={`sms:${conv.otherUserPhone}`}>
+                  <MessageCircle className="h-3.5 w-3.5" /> Text
+                </a>
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" variant="outline" className="gap-1.5 h-8 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700" onClick={handleCall} disabled={calling}>
+              {calling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
+              {calling ? "Connecting..." : "Call"}
+            </Button>
           )}
           <ReportModal
             reportedUserId={conv.otherUserId}
@@ -192,13 +187,6 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
 
       {/* Input */}
       <div className="border-t p-4 space-y-2">
-        {isBookingInactive ? (
-          <div className="flex items-start gap-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3">
-            <AlertCircle className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-500 dark:text-slate-400">This booking is complete. Communication is no longer available.</p>
-          </div>
-        ) : (
-          <>
         {blockedError && (
           <div className="flex items-start gap-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl px-3 py-2">
             <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
@@ -242,8 +230,6 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground text-center">⚡ Quick replies — tap to fill, edit before sending</p>
-          </>
-        )}
       </div>
     </div>
   );

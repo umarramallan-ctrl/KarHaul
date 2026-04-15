@@ -7,10 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon, Flag } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon } from "lucide-react";
 import { useState, useEffect, Component, type ReactNode } from "react";
 import { UserProfileModal } from "@/components/UserProfileModal";
-import { ReportModal } from "@/components/ReportModal";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -608,7 +607,6 @@ export default function BookingDetail() {
   const isDriver = profile?.id === (booking as any)?.driverId;
   const isShipper = profile?.id === (booking as any)?.shipperId;
   const b = booking as any;
-  const isBookingActive = !["delivered", "cancelled"].includes(b?.status);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [alertedWindows] = useState(() => new Set<string>());
@@ -1034,33 +1032,16 @@ export default function BookingDetail() {
                           <div className="flex justify-between"><span className="text-muted-foreground">Rating:</span><span className="font-medium">★ {b.driver?.averageRating?.toFixed(1)} ({b.driver?.totalReviews} reviews)</span></div>
                         )}
                       </div>
-                      {isBookingActive ? (
-                        <>
-                          <Button className="w-full gap-2" asChild>
-                            <Link href={`/messages?to=${b.driverId}`}><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
-                          </Button>
-                          {b.driver?.phone ? (
-                            <Button className="w-full gap-2" variant="outline" asChild>
-                              <a href={`tel:${b.driver.phone}`}><Phone className="h-4 w-4" /> Call Carrier</a>
-                            </Button>
-                          ) : (
-                            <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
-                          )}
-                        </>
+                      <Button className="w-full gap-2" asChild>
+                        <Link href={`/messages?to=${b.driverId}`}><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
+                      </Button>
+                      {b.driver?.phone ? (
+                        <Button className="w-full gap-2" variant="outline" asChild>
+                          <a href={`tel:${b.driver.phone}`}><Phone className="h-4 w-4" /> Call Carrier</a>
+                        </Button>
                       ) : (
-                        <div className="rounded-xl border border-slate-700/40 bg-slate-800/30 px-4 py-3 text-center">
-                          <p className="text-xs text-slate-400">This booking is complete. Communication is no longer available.</p>
-                        </div>
+                        <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
                       )}
-                      <ReportModal
-                        reportedUserId={b.driverId}
-                        reportedUserName={`${b.driver?.firstName || ""} ${b.driver?.lastName || ""}`.trim() || "this carrier"}
-                        trigger={
-                          <div className="flex items-center justify-center gap-1.5 w-full text-xs text-muted-foreground hover:text-destructive transition-colors py-1 cursor-pointer">
-                            <Flag className="h-3 w-3" /> Report Carrier
-                          </div>
-                        }
-                      />
                     </CardContent>
                   </Card>
                 )}
@@ -1082,33 +1063,16 @@ export default function BookingDetail() {
                         </div>
                       </div>
                       </UserProfileModal>
-                      {isBookingActive ? (
-                        <>
-                          <Button className="w-full gap-2" variant="outline" asChild>
-                            <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
-                          </Button>
-                          {b.shipper?.phone ? (
-                            <Button className="w-full gap-2" variant="outline" asChild>
-                              <a href={`tel:${b.shipper.phone}`}><Phone className="h-4 w-4" /> Call Shipper</a>
-                            </Button>
-                          ) : (
-                            <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
-                          )}
-                        </>
+                      <Button className="w-full gap-2" variant="outline" asChild>
+                        <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
+                      </Button>
+                      {b.shipper?.phone ? (
+                        <Button className="w-full gap-2" variant="outline" asChild>
+                          <a href={`tel:${b.shipper.phone}`}><Phone className="h-4 w-4" /> Call Shipper</a>
+                        </Button>
                       ) : (
-                        <div className="rounded-xl border border-slate-200 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/30 px-4 py-3 text-center">
-                          <p className="text-xs text-muted-foreground">This booking is complete. Communication is no longer available.</p>
-                        </div>
+                        <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
                       )}
-                      <ReportModal
-                        reportedUserId={b.shipperId}
-                        reportedUserName={`${b.shipper?.firstName || ""} ${b.shipper?.lastName || ""}`.trim() || "this shipper"}
-                        trigger={
-                          <div className="flex items-center justify-center gap-1.5 w-full text-xs text-muted-foreground hover:text-destructive transition-colors py-1 cursor-pointer">
-                            <Flag className="h-3 w-3" /> Report Shipper
-                          </div>
-                        }
-                      />
                     </CardContent>
                   </Card>
                 )}
