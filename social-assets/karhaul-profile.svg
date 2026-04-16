@@ -1,0 +1,74 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGrad" cx="38%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#0F2D8A"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="800" fill="url(#bgGrad)"/>
+
+  <!-- Subtle inner highlight -->
+  <ellipse cx="320" cy="180" rx="300" ry="200" fill="rgba(255,255,255,0.06)"/>
+
+  <!--
+    Car carrier icon from CarCarrierIcon.tsx
+    Original viewBox: 0 0 28 22  |  drawn bounds: x 2–26, y 6.2–19.6
+    Scale 20 → content width 480, height 268
+    Center drawn content at (400, 310):
+      tx = 400 − (2+26)/2 × 20 = 400 − 280 = 120
+      ty = 310 − (6.2+19.6)/2 × 20 = 310 − 258 = 52
+    stroke-width 3.5px → 3.5/20 = 0.175 in local units
+  -->
+  <g transform="translate(120,52) scale(20)"
+     stroke="white" stroke-width="0.175" stroke-linecap="round" stroke-linejoin="round" fill="none"
+     filter="url(#glow)">
+    <!-- Upper deck rail -->
+    <line x1="2"  y1="8"    x2="17" y2="8"/>
+    <!-- Lower deck rail -->
+    <line x1="2"  y1="12.5" x2="17" y2="12.5"/>
+    <!-- Trailer bottom frame -->
+    <line x1="2"  y1="16.5" x2="16" y2="16.5"/>
+    <!-- Vertical struts -->
+    <line x1="2"  y1="8"    x2="2"  y2="16.5"/>
+    <line x1="9"  y1="8"    x2="9"  y2="16.5"/>
+    <line x1="16" y1="8"    x2="16" y2="16.5"/>
+    <!-- Car silhouette — upper deck -->
+    <path d="M3 8 C3 8 3.6 6.2 4.3 6.2 H7.2 C7.9 6.2 8.5 8 8.5 8"/>
+    <!-- Car silhouette — lower deck -->
+    <path d="M10 12.5 C10 12.5 10.6 10.7 11.3 10.7 H14.2 C14.9 10.7 15.5 12.5 15.5 12.5"/>
+    <!-- Semi cab body -->
+    <path d="M16 8.5 L18 7 L24 7 L26 9.5 L26 16.5 L16 16.5 Z"/>
+    <!-- Windshield -->
+    <path d="M18 7 L19 9.5 L26 9.5"/>
+    <!-- Cab door divider -->
+    <line x1="20.5" y1="9.5" x2="20.5" y2="16.5"/>
+    <!-- Wheels -->
+    <circle cx="5.5"  cy="18" r="1.6"/>
+    <circle cx="12.5" cy="18" r="1.6"/>
+    <circle cx="22.5" cy="18" r="1.6"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="400" y="620"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="108"
+        fill="white"
+        text-anchor="middle"
+        letter-spacing="-4">KarHaul</text>
+
+  <!-- Tagline -->
+  <text x="400" y="692"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="400"
+        font-size="26"
+        fill="rgba(255,255,255,0.55)"
+        text-anchor="middle"
+        letter-spacing="3">AUTO TRANSPORT · NO BROKERS</text>
+</svg>

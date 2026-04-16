@@ -1,0 +1,141 @@
+<svg width="1500" height="500" viewBox="0 0 1500 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#0D1B3E"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#1A56DB" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#1A56DB" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="iconFade" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="white" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0.03"/>
+    </radialGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="canvas">
+      <rect width="1500" height="500"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1500" height="500" fill="url(#bg)"/>
+
+  <!-- Blue accent stripe left edge -->
+  <rect x="0" y="0" width="5" height="500" fill="#1A56DB"/>
+
+  <!-- Radial blue glow behind left text area -->
+  <ellipse cx="200" cy="250" rx="380" ry="300" fill="url(#blueGlow)"/>
+
+  <!-- ─── RIGHT SIDE: large ghost carrier icon ─── -->
+  <!--
+    Original viewBox 0 0 28 22, drawn bounds x 2–26 y 6.2–19.6
+    Scale 26 → drawn width 624, height 347
+    Center at (1130, 255):
+      tx = 1130 − 14×26 = 1130 − 364 = 766
+      ty = 255 − 12.9×26 = 255 − 335 = −80
+    stroke-width 4px → 4/26 ≈ 0.154
+  -->
+  <g transform="translate(766,-80) scale(26)"
+     stroke="white" stroke-width="0.154" stroke-linecap="round" stroke-linejoin="round" fill="none"
+     opacity="0.10" clip-path="url(#canvas)">
+    <line x1="2"  y1="8"    x2="17" y2="8"/>
+    <line x1="2"  y1="12.5" x2="17" y2="12.5"/>
+    <line x1="2"  y1="16.5" x2="16" y2="16.5"/>
+    <line x1="2"  y1="8"    x2="2"  y2="16.5"/>
+    <line x1="9"  y1="8"    x2="9"  y2="16.5"/>
+    <line x1="16" y1="8"    x2="16" y2="16.5"/>
+    <path d="M3 8 C3 8 3.6 6.2 4.3 6.2 H7.2 C7.9 6.2 8.5 8 8.5 8"/>
+    <path d="M10 12.5 C10 12.5 10.6 10.7 11.3 10.7 H14.2 C14.9 10.7 15.5 12.5 15.5 12.5"/>
+    <path d="M16 8.5 L18 7 L24 7 L26 9.5 L26 16.5 L16 16.5 Z"/>
+    <path d="M18 7 L19 9.5 L26 9.5"/>
+    <line x1="20.5" y1="9.5" x2="20.5" y2="16.5"/>
+    <circle cx="5.5"  cy="18" r="1.6"/>
+    <circle cx="12.5" cy="18" r="1.6"/>
+    <circle cx="22.5" cy="18" r="1.6"/>
+  </g>
+
+  <!-- ─── LOGO MARK (small, left) ─── -->
+  <!-- Blue pill background -->
+  <rect x="72" y="148" width="58" height="46" rx="10" fill="#1A56DB"/>
+  <!--
+    Carrier icon inside logo mark
+    Scale 1.45, viewBox 28×22 → 40×32
+    Center at (101, 171):
+      tx = 101 − 14×1.45 = 101 − 20.3 = 80.7 ≈ 81
+      ty = 171 − 12.9×1.45 = 171 − 18.7 = 152.3 ≈ 152
+    stroke-width 1.5px → 1.5/1.45 ≈ 1.03
+  -->
+  <g transform="translate(81,152) scale(1.45)"
+     stroke="white" stroke-width="1.03" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="2"  y1="8"    x2="17" y2="8"/>
+    <line x1="2"  y1="12.5" x2="17" y2="12.5"/>
+    <line x1="2"  y1="16.5" x2="16" y2="16.5"/>
+    <line x1="2"  y1="8"    x2="2"  y2="16.5"/>
+    <line x1="9"  y1="8"    x2="9"  y2="16.5"/>
+    <line x1="16" y1="8"    x2="16" y2="16.5"/>
+    <path d="M3 8 C3 8 3.6 6.2 4.3 6.2 H7.2 C7.9 6.2 8.5 8 8.5 8"/>
+    <path d="M10 12.5 C10 12.5 10.6 10.7 11.3 10.7 H14.2 C14.9 10.7 15.5 12.5 15.5 12.5"/>
+    <path d="M16 8.5 L18 7 L24 7 L26 9.5 L26 16.5 L16 16.5 Z"/>
+    <path d="M18 7 L19 9.5 L26 9.5"/>
+    <line x1="20.5" y1="9.5" x2="20.5" y2="16.5"/>
+    <circle cx="5.5"  cy="18" r="1.6"/>
+    <circle cx="12.5" cy="18" r="1.6"/>
+    <circle cx="22.5" cy="18" r="1.6"/>
+  </g>
+
+  <!-- "KarHaul" brand name next to logo mark -->
+  <text x="144" y="184"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="38"
+        fill="white"
+        letter-spacing="-1">KarHaul</text>
+
+  <!-- Divider line -->
+  <line x1="72" y1="210" x2="680" y2="210" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- ─── MAIN HEADLINE ─── -->
+  <text x="72" y="298"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="72"
+        fill="white"
+        letter-spacing="-2">The auto transport</text>
+
+  <text x="72" y="376"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="72"
+        fill="#3B82F6"
+        letter-spacing="-2">market</text>
+
+  <text x="310" y="376"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="72"
+        fill="white"
+        letter-spacing="-2"> without the middleman.</text>
+
+  <!-- Tagline pill -->
+  <rect x="72" y="410" width="320" height="38" rx="19" fill="rgba(26,86,219,0.25)" stroke="#1A56DB" stroke-width="1"/>
+  <text x="232" y="434"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="700"
+        font-size="16"
+        fill="#93C5FD"
+        text-anchor="middle"
+        letter-spacing="1.5">ZERO BROKER FEES · ZERO SUBSCRIPTIONS</text>
+
+  <!-- URL / handle -->
+  <text x="1428" y="476"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="400"
+        font-size="18"
+        fill="rgba(255,255,255,0.25)"
+        text-anchor="end"
+        letter-spacing="1">karhaul.com</text>
+</svg>
