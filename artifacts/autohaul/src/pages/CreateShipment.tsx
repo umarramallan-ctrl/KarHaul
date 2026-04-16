@@ -197,7 +197,12 @@ export default function CreateShipment() {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return res.json();
+      if (!res.ok) return { savedDrivers: [] };
+      try {
+        return await res.json();
+      } catch {
+        return { savedDrivers: [] };
+      }
     },
   });
   const savedDrivers = (savedDriversData?.savedDrivers || []) as Array<{ driver: { id: string; firstName: string; lastName: string; averageRating?: number; completedJobs?: number } }>;
