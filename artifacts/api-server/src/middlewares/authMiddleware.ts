@@ -37,27 +37,31 @@ export async function authMiddleware(
     return;
   }
 
-  const [user] = await db
-    .insert(usersTable)
-    .values({
-      id: randomUUID(),
-      authId: userId,
-    })
-    .onConflictDoUpdate({
-      target: usersTable.authId,
-      set: {
-        updatedAt: new Date(),
-      },
-    })
-    .returning();
+  try {
+    const [user] = await db
+      .insert(usersTable)
+      .values({
+        id: randomUUID(),
+        authId: userId,
+      })
+      .onConflictDoUpdate({
+        target: usersTable.authId,
+        set: {
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
 
-  // Use the Clerk userId as req.user.id so that getDbUser(req.user.id)
-  // can look up by authId (Clerk ID) and consistently find the correct DB row.
-  req.user = {
-    id: userId,
-    firstName: user.firstName ?? undefined,
-    lastName: user.lastName ?? undefined,
-    profileImage: user.profileImageUrl ?? undefined,
-  };
+    // Use the Clerk userId as req.user.id so that getDbUser(req.user.id)
+    // can look up by authId (Clerk ID) and consistently find the correct DB row.
+    req.user = {
+      id: userId,
+      firstName: user.firstName ?? undefined,
+      lastName: user.lastName ?? undefined,
+      profileImage: user.profileImageUrl ?? undefined,
+    };
+  } catch (err) {
+    console.error("[authMiddleware] upsert failed, continuing unauthenticated:", err);
+  }
   next();
 }
