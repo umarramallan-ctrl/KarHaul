@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, X, ArrowRight, Lock } from "lucide-react";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
@@ -17,15 +17,17 @@ interface LanePreferencesProps {
 }
 
 async function fetchPrefs() {
-  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/lane-preferences`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 
 async function addPref(data: { originState: string; destinationState: string; role: string }) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/lane-preferences`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
@@ -33,9 +35,11 @@ async function addPref(data: { originState: string; destinationState: string; ro
 }
 
 async function deletePref(id: string) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/lane-preferences/${id}`, {
     method: "DELETE",
     credentials: "include",
+    headers: authHeaders,
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
   return res.json();

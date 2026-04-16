@@ -28,13 +28,17 @@ const MILESTONE_LABELS: Record<string, string> = {
 const MILESTONE_OPTIONS = Object.entries(MILESTONE_LABELS).map(([k, v]) => ({ key: k, label: v }));
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
-async function fetchTracking(bookingId: string) {
-  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/tracking`);
+async function fetchTracking(bookingId: string, token: string | null) {
+  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/tracking`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return res.json();
 }
 
-async function fetchPhotos(bookingId: string) {
-  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/photos`);
+async function fetchPhotos(bookingId: string, token: string | null) {
+  const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/photos`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return res.json();
 }
 
@@ -48,10 +52,11 @@ async function addPhoto(bookingId: string, data: { photoUrl: string; phase: stri
   return res.json();
 }
 
-async function postCheckpoint(bookingId: string, data: Record<string, string>) {
+async function postCheckpoint(bookingId: string, data: Record<string, string>, token: string | null) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${getApiBaseUrl()}/bookings/${bookingId}/tracking`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    method: "POST", headers, body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
   return res.json();
@@ -74,13 +79,19 @@ export default function BookingDetailScreen() {
   const { data: myProfile } = useQuery({ queryKey: ["my-profile"], queryFn: getMyProfile, enabled: isAuthenticated });
   const { data: trackingData, refetch: refetchTracking } = useQuery({
     queryKey: ["tracking-mobile", id],
-    queryFn: () => fetchTracking(id!),
+    queryFn: async () => {
+      const token = await getToken();
+      return fetchTracking(id!, token);
+    },
     enabled: !!id,
     refetchInterval: 60000,
   });
   const { data: photosData } = useQuery({
     queryKey: ["photos-mobile", id],
-    queryFn: () => fetchPhotos(id!),
+    queryFn: async () => {
+      const token = await getToken();
+      return fetchPhotos(id!, token);
+    },
     enabled: !!id,
     refetchInterval: 30000,
   });
@@ -91,7 +102,10 @@ export default function BookingDetailScreen() {
   });
 
   const checkpointMutation = useMutation({
-    mutationFn: (data: Record<string, string>) => postCheckpoint(id!, data),
+    mutationFn: async (data: Record<string, string>) => {
+      const token = await getToken();
+      return postCheckpoint(id!, data, token);
+    },
     onSuccess: () => {
       refetchTracking();
       setShowCheckpointForm(false);

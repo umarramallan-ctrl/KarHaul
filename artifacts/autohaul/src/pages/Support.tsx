@@ -13,7 +13,7 @@ import {
   Clock, CheckCircle2, Search, Star, MessageSquarePlus,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 import { useAuth } from "@clerk/clerk-react";
 
 interface FaqItem { q: string; a: string }
@@ -153,10 +153,11 @@ function FeedbackStars({ value, onChange }: { value: number; onChange: (v: numbe
 }
 
 async function postFeedback(data: Record<string, any>) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/feedback`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }

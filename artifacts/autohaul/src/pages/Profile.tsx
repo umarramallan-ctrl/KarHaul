@@ -46,7 +46,7 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
   );
 }
 
-export default function Profile() {
+function ProfileContent() {
   const { toast } = useToast();
   const { data: profile, isLoading } = useGetMyProfile();
   const updateMutation = useUpdateMyProfile();
@@ -87,8 +87,7 @@ export default function Profile() {
   );
 
   return (
-    <AuthGuard>
-      <MainLayout>
+    <MainLayout>
         <div className="bg-slate-950 border-b border-slate-800/60 py-14">
           <div className="container mx-auto px-4 md:px-8">
             <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-6 -ml-1 group">
@@ -305,6 +304,13 @@ export default function Profile() {
           </div>
         </div>
       </MainLayout>
+  );
+}
+
+export default function Profile() {
+  return (
+    <AuthGuard>
+      <ProfileContent />
     </AuthGuard>
   );
 }

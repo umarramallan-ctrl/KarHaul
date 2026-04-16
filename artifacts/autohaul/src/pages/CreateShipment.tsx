@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check, Star } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { apiBase } from "@/lib/api";
@@ -176,6 +177,7 @@ const STEPS = [
 export default function CreateShipment() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { getToken } = useAuth();
   const createMutation = useCreateShipment();
   // Check for invited driver from Saved Drivers page
   const inviteDriverId = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("inviteDriver");
@@ -190,7 +192,11 @@ export default function CreateShipment() {
   const { data: savedDriversData } = useQuery({
     queryKey: ["saved-drivers"],
     queryFn: async () => {
-      const res = await fetch(`${apiBase}/users/saved-drivers`, { credentials: "include" });
+      const token = await getToken();
+      const res = await fetch(`${apiBase}/users/saved-drivers`, {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       return res.json();
     },
   });
@@ -198,9 +204,10 @@ export default function CreateShipment() {
 
   const inviteMutation = useMutation({
     mutationFn: async ({ shipmentId, driverIds }: { shipmentId: string; driverIds: string[] }) => {
+      const token = await getToken();
       const res = await fetch(`${apiBase}/shipments/${shipmentId}/invite-drivers`, {
         method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ driverIds }),
       });
       return res.json();
@@ -221,9 +228,10 @@ export default function CreateShipment() {
   const { data: budgetSuggestion, isFetching: budgetFetching } = useQuery({
     queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
     queryFn: async () => {
+      const token = await getToken();
       const res = await fetch(`${apiBase}/ai/budget-suggest`, {
         method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           vehicleYear: form.getValues("vehicleYear"),
           vehicleMake: form.getValues("vehicleMake"),

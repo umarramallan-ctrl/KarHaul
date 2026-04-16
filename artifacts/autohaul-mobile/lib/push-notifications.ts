@@ -52,11 +52,13 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 /**
  * Register a push token with the KarHaul server so the user receives push notifications.
  */
-export async function savePushTokenToServer(token: string, baseUrl: string): Promise<void> {
+export async function savePushTokenToServer(token: string, baseUrl: string, authToken: string | null): Promise<void> {
   await fetch(`${baseUrl}/api/push-token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    },
     body: JSON.stringify({ pushToken: token }),
   });
 }

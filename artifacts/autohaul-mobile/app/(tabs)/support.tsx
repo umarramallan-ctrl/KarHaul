@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
+import { useAuth } from "@clerk/clerk-expo";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -15,6 +16,7 @@ const INITIAL_MESSAGE: Message = {
 export default function SupportScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
+  const { getToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,9 +35,10 @@ export default function SupportScreen() {
     setInput("");
     setLoading(true);
     try {
+      const token = await getToken();
       const res = await fetch(`${getApiBaseUrl()}/ai/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ messages: next }),
       });
       const data = await res.json();

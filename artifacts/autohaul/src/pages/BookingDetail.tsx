@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 const MILESTONE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   departed_origin: { label: "Departed Origin", icon: "🚛", color: "text-blue-600" },
@@ -26,19 +26,22 @@ const MILESTONE_LABELS: Record<string, { label: string; icon: string; color: str
 };
 
 async function fetchTracking(bookingId: string) {
-  const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 
 async function fetchPhotos(bookingId: string) {
-  const res = await fetch(`${apiBase}/bookings/${bookingId}/photos`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/bookings/${bookingId}/photos`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 
 async function addPhoto(bookingId: string, data: { photoUrl: string; phase: string; caption?: string }) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/bookings/${bookingId}/photos`, {
     method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Upload failed"); }
@@ -201,9 +204,10 @@ function PhotosSection({ bookingId, isDriver, bookingStatus }: { bookingId: stri
 }
 
 async function postCheckpoint(bookingId: string, data: Record<string, string>) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/bookings/${bookingId}/tracking`, {
     method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed"); }
@@ -387,16 +391,18 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
 }
 
 async function fetchBookingReviews(bookingId: string) {
-  const res = await fetch(`${apiBase}/reviews/booking/${bookingId}`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/reviews/booking/${bookingId}`, { credentials: "include", headers: authHeaders });
   if (!res.ok) return { reviews: [], total: 0 };
   return res.json();
 }
 
 async function submitReview(data: Record<string, any>) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/reviews`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Failed to submit review"); }
@@ -640,10 +646,11 @@ export default function BookingDetail() {
     : false;
 
   async function handleCancel() {
+    const authHeaders = await clerkAuthHeaders();
     const res = await fetch(`${apiBase}/bookings/${bookingId}/cancel`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
     });
     if (!res.ok) {
       const e = await res.json();

@@ -73,15 +73,16 @@ function RootLayoutNav() {
 }
 
 function PushNotificationRegistrar() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
   useEffect(() => {
     if (!isSignedIn || !apiUrl) return;
-    registerForPushNotificationsAsync().then(token => {
+    registerForPushNotificationsAsync().then(async token => {
       if (token) {
-        savePushTokenToServer(token, apiUrl).catch(() => {});
+        const authToken = await getToken();
+        savePushTokenToServer(token, apiUrl, authToken).catch(() => {});
       }
     }).catch(() => {});
-  }, [isSignedIn]);
+  }, [isSignedIn, getToken]);
   return null;
 }
 

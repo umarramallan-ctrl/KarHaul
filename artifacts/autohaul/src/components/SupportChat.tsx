@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -26,9 +26,10 @@ export function SupportChat() {
     setInput("");
     setLoading(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/ai/chat`, {
         method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ messages: next }),
       });
       const data = await res.json();

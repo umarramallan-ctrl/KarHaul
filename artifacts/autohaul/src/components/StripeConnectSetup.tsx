@@ -4,18 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ExternalLink, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 async function fetchStripeStatus() {
-  const res = await fetch(`${apiBase}/stripe/connect/status`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/stripe/connect/status`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 
 async function startOnboarding() {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/stripe/connect/onboard`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify({
       returnUrl: window.location.href,
       refreshUrl: window.location.href,

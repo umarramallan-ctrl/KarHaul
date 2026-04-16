@@ -15,7 +15,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 const DRIVER_REPLIES = [
   "I'm interested in this load — when is the pickup window?",
@@ -40,14 +40,16 @@ const SHIPPER_REPLIES = [
 ];
 
 async function fetchMessages(conversationId: string) {
-  const res = await fetch(`${apiBase}/messages/${conversationId}`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/messages/${conversationId}`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 
 async function sendMessage(data: { recipientId: string; conversationId?: string; content: string; shipmentId?: string }) {
+  const authHeaders = await clerkAuthHeaders();
   const res = await fetch(`${apiBase}/messages`, {
     method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify(data),
   });
   const json = await res.json();
@@ -108,9 +110,10 @@ function ChatWindow({ conv, currentUserId, userRole }: { conv: any; currentUserI
   const handleCall = async () => {
     setCalling(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       await fetch(`${apiBase}/messages/call-notify`, {
         method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ recipientId: conv.otherUserId }),
       });
     } catch {}
@@ -254,11 +257,11 @@ export default function Messages() {
     if (existing) { setSelectedConv(existing); return; }
     // No existing conversation — create one then open it
     if (isLoading) return; // wait for conversations to load first
-    fetch(`${apiBase}/conversations`, {
+    clerkAuthHeaders().then(authHeaders => fetch(`${apiBase}/conversations`, {
       method: "POST", credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ recipientId: toUserId }),
-    }).then(r => r.json()).then(conv => {
+    })).then(r => r.json()).then(conv => {
       if (conv?.id) { setSelectedConv(conv); refetchConversations(); }
     }).catch(() => {});
   }, [conversations, location, isLoading]);

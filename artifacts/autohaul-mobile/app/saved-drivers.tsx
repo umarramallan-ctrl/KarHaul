@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/lib/auth";
+import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import { getApiBaseUrl } from "@/lib/api";
 import Colors from "@/constants/colors";
 
@@ -28,16 +29,18 @@ type SavedDriver = {
   } | null;
 };
 
-async function fetchSavedDrivers(): Promise<{ savedDrivers: SavedDriver[] }> {
-  const res = await fetch(`${getApiBaseUrl()}/saved-drivers`, { credentials: "include" });
+async function fetchSavedDrivers(token: string | null): Promise<{ savedDrivers: SavedDriver[] }> {
+  const res = await fetch(`${getApiBaseUrl()}/saved-drivers`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (!res.ok) throw new Error("Failed to load saved drivers");
   return res.json();
 }
 
-async function removeSavedDriver(savedId: string): Promise<void> {
+async function removeSavedDriver(savedId: string, token: string | null): Promise<void> {
   const res = await fetch(`${getApiBaseUrl()}/saved-drivers/${savedId}`, {
     method: "DELETE",
-    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) throw new Error("Failed to remove driver");
 }
@@ -118,17 +121,24 @@ export default function SavedDriversScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { isAuthenticated } = useAuth();
+  const { getToken } = useClerkAuth();
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["saved-drivers"],
-    queryFn: fetchSavedDrivers,
+    queryFn: async () => {
+      const token = await getToken();
+      return fetchSavedDrivers(token);
+    },
     enabled: isAuthenticated,
   });
 
   const removeMutation = useMutation({
-    mutationFn: removeSavedDriver,
+    mutationFn: async (savedId: string) => {
+      const token = await getToken();
+      return removeSavedDriver(savedId, token);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["saved-drivers"] }),
     onError: () => Alert.alert("Error", "Failed to remove driver. Try again."),
   });

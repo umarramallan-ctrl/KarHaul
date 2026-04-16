@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Smartphone, ScanLine, CheckCircle2, XCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 interface TwoFAStatus {
   totpEnabled: boolean;
@@ -37,7 +37,8 @@ export function TwoFASettings() {
 
   async function fetchStatus() {
     try {
-      const res = await fetch(`${apiBase}/auth/2fa/status`, { credentials: "include" });
+      const authHeaders = await clerkAuthHeaders();
+      const res = await fetch(`${apiBase}/auth/2fa/status`, { credentials: "include", headers: authHeaders });
       const data = await res.json();
       setStatus(data);
       if (data.phone) setSmsPhone(data.phone);
@@ -53,7 +54,8 @@ export function TwoFASettings() {
   async function startTotpSetup() {
     setTotpBusy(true);
     try {
-      const res = await fetch(`${apiBase}/auth/2fa/totp/setup`, { credentials: "include" });
+      const authHeaders = await clerkAuthHeaders();
+      const res = await fetch(`${apiBase}/auth/2fa/totp/setup`, { credentials: "include", headers: authHeaders });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setTotpSetup(data);
@@ -68,9 +70,10 @@ export function TwoFASettings() {
     if (!totpSetup || !totpCode.trim()) return;
     setTotpBusy(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/auth/2fa/totp/enable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         credentials: "include",
         body: JSON.stringify({ secret: totpSetup.secret, code: totpCode }),
       });
@@ -91,9 +94,10 @@ export function TwoFASettings() {
   async function disableTotp() {
     setTotpBusy(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/auth/2fa/totp/disable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         credentials: "include",
         body: JSON.stringify({ code: totpDisableCode }),
       });
@@ -116,9 +120,10 @@ export function TwoFASettings() {
     if (!smsPhone.trim()) return;
     setSmsBusy(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/auth/2fa/sms/send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         credentials: "include",
         body: JSON.stringify({ phone: smsPhone }),
       });
@@ -137,9 +142,10 @@ export function TwoFASettings() {
     if (!smsCode.trim()) return;
     setSmsBusy(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/auth/2fa/sms/enable`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         credentials: "include",
         body: JSON.stringify({ code: smsCode, phone: smsPhone }),
       });
@@ -160,9 +166,11 @@ export function TwoFASettings() {
   async function disableSms() {
     setSmsBusy(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/auth/2fa/sms/disable`, {
         method: "POST",
         credentials: "include",
+        headers: authHeaders,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

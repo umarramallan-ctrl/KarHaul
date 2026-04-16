@@ -6,14 +6,16 @@ import { Heart, Star, Shield, Truck, MessageCircle, Trash2, Loader2, Users, Arro
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 async function fetchSavedDrivers() {
-  const res = await fetch(`${apiBase}/saved-drivers`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/saved-drivers`, { credentials: "include", headers: authHeaders });
   return res.json();
 }
 async function removeDriver(driverId: string) {
-  const res = await fetch(`${apiBase}/saved-drivers/${driverId}`, { method: "DELETE", credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/saved-drivers/${driverId}`, { method: "DELETE", credentials: "include", headers: authHeaders });
   return res.json();
 }
 

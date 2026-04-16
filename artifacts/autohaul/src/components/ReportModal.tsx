@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Flag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 
 const CATEGORIES = [
   { value: "fraud_scam", label: "Fraud / Scam" },
@@ -33,9 +33,10 @@ export function ReportModal({ reportedUserId, reportedUserName, trigger }: Repor
     if (!category) { toast({ title: "Select a category", variant: "destructive" }); return; }
     setLoading(true);
     try {
+      const authHeaders = await clerkAuthHeaders();
       const res = await fetch(`${apiBase}/reports`, {
         method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ reportedUserId, category, description: description.trim() || undefined }),
       });
       const json = await res.json();

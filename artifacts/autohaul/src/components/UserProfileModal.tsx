@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Truck, ShieldCheck, MessageSquare, Flag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { apiBase } from "@/lib/api";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 import { Link } from "wouter";
 import { ReportModal } from "@/components/ReportModal";
 
 async function fetchPublicProfile(userId: string) {
-  const res = await fetch(`${apiBase}/users/${userId}`, { credentials: "include" });
+  const authHeaders = await clerkAuthHeaders();
+  const res = await fetch(`${apiBase}/users/${userId}`, { credentials: "include", headers: authHeaders });
   if (!res.ok) return null;
   return res.json();
 }
