@@ -135,6 +135,7 @@ export default function BookingDetailScreen() {
   const platformFee = (booking as any).platformFeeAmount ?? 0;
   const agreedPrice = (booking as any).agreedPrice ?? 0;
 
+  const isBookingActive = !["delivered", "cancelled"].includes((booking as any).status);
   const nextStatus: Record<string, string> = { confirmed: "picked_up", picked_up: "in_transit", in_transit: "delivered" };
   const nextStatusLabel: Record<string, string> = { confirmed: "Mark as Picked Up", picked_up: "Mark as In Transit", in_transit: "Mark as Delivered" };
   const nextSt = nextStatus[(booking as any).status];
@@ -392,36 +393,65 @@ export default function BookingDetailScreen() {
         {/* Contact */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: C.text }]}>Contact</Text>
+          {!isBookingActive && (
+            <View style={{ backgroundColor: "#FFF7ED", borderColor: "#FED7AA", borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 8 }}>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: "#92400E", textAlign: "center" }}>
+                This booking is complete. Communication is no longer available.
+              </Text>
+            </View>
+          )}
           <View style={[styles.card, { backgroundColor: "#fff" }]}>
-            {[{ label: "Driver", user: driver, otherId: (booking as any).driverId }, { label: "Shipper", user: shipper, otherId: (booking as any).shipperId }].map(({ label, user, otherId }) => (
-              <View key={label} style={[styles.partyRow, { borderTopColor: "#F1F5F9" }]}>
-                <View style={[styles.partyAvatar, { backgroundColor: C.primary }]}>
-                  <Text style={styles.partyAvatarText}>{((user?.firstName || "U").charAt(0))}</Text>
+            {[{ label: "Driver", user: driver, otherId: (booking as any).driverId }, { label: "Shipper", user: shipper, otherId: (booking as any).shipperId }].map(({ label, user, otherId }) => {
+              const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || label;
+              return (
+                <View key={label} style={[styles.partyRow, { borderTopColor: "#F1F5F9" }]}>
+                  <View style={[styles.partyAvatar, { backgroundColor: C.primary }]}>
+                    <Text style={styles.partyAvatarText}>{(user?.firstName || "U").charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.partyRole, { color: C.textMuted }]}>{label}</Text>
+                    <Text style={[styles.partyName, { color: C.text }]}>{fullName}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    {isBookingActive ? (
+                      <>
+                        <Pressable
+                          style={[styles.contactBtn, { borderColor: "#D1D5DB" }]}
+                          onPress={() => router.push({ pathname: "/messages/[conversationId]", params: { conversationId: "new", recipientId: otherId, name: fullName, bookingActive: "true" } })}
+                        >
+                          <Feather name="message-circle" size={16} color={C.primary} />
+                        </Pressable>
+                        <Pressable
+                          style={[styles.contactBtn, { borderColor: "#D1FAE5" }]}
+                          onPress={() => handleInAppCall(fullName)}
+                          disabled={calling !== null}
+                        >
+                          {calling ? <ActivityIndicator size="small" color="#10B981" /> : <Feather name="phone" size={16} color="#10B981" />}
+                        </Pressable>
+                      </>
+                    ) : null}
+                    <Pressable
+                      style={[styles.contactBtn, { borderColor: "#FECACA" }]}
+                      onPress={() => Alert.alert(
+                        `Report ${fullName}`,
+                        "Report this user to our trust & safety team?",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Report", style: "destructive", onPress: () => Alert.alert("Report submitted", "Our team will review and take appropriate action.") },
+                        ]
+                      )}
+                    >
+                      <Feather name="flag" size={16} color="#EF4444" />
+                    </Pressable>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.partyRole, { color: C.textMuted }]}>{label}</Text>
-                  <Text style={[styles.partyName, { color: C.text }]}>{[user?.firstName, user?.lastName].filter(Boolean).join(" ") || label}</Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <Pressable
-                    style={[styles.contactBtn, { borderColor: "#D1D5DB" }]}
-                    onPress={() => router.push({ pathname: "/messages/[conversationId]", params: { conversationId: "new", recipientId: otherId, name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") } })}
-                  >
-                    <Feather name="message-circle" size={16} color={C.primary} />
-                  </Pressable>
-                  <Pressable
-                    style={[styles.contactBtn, { borderColor: "#D1FAE5" }]}
-                    onPress={() => handleInAppCall([user?.firstName, user?.lastName].filter(Boolean).join(" ") || label)}
-                    disabled={calling !== null}
-                  >
-                    {calling ? <ActivityIndicator size="small" color="#10B981" /> : <Feather name="phone" size={16} color="#10B981" />}
-                  </Pressable>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
           <Text style={[styles.contactDisclaimer, { color: C.textMuted }]}>
-            Phone numbers cannot be shared in messages. Use the call button to connect securely.
+            {isBookingActive
+              ? "Phone numbers cannot be shared in messages. Use the call button to connect securely."
+              : "Booking ended. Use the flag icon to report any issues."}
           </Text>
         </View>
       </ScrollView>

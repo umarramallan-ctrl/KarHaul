@@ -12,9 +12,10 @@ import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
 
 export default function MessagesScreen() {
-  const { conversationId, name, recipientId, shipmentId } = useLocalSearchParams<{
-    conversationId: string; name?: string; recipientId?: string; shipmentId?: string;
+  const { conversationId, name, recipientId, shipmentId, bookingActive } = useLocalSearchParams<{
+    conversationId: string; name?: string; recipientId?: string; shipmentId?: string; bookingActive?: string;
   }>();
+  const commAllowed = bookingActive !== "false";
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { isAuthenticated } = useAuth();
@@ -96,23 +97,31 @@ export default function MessagesScreen() {
         />
       )}
 
-      <View style={[styles.inputBar, { paddingBottom: bottomPadding + 8, borderTopColor: C.border }]}>
-        <TextInput
-          style={[styles.input, { backgroundColor: "#fff", borderColor: C.border, color: C.text }]}
-          value={text}
-          onChangeText={setText}
-          placeholder="Type a message..."
-          placeholderTextColor={C.textMuted}
-          multiline
-        />
-        <Pressable
-          style={[styles.sendBtn, { backgroundColor: text.trim() ? C.primary : C.border }]}
-          onPress={() => { if (text.trim()) sendMutation.mutate(text.trim()); }}
-          disabled={!text.trim() || sendMutation.isPending}
-        >
-          {sendMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Feather name="send" size={16} color="#fff" />}
-        </Pressable>
-      </View>
+      {commAllowed ? (
+        <View style={[styles.inputBar, { paddingBottom: bottomPadding + 8, borderTopColor: C.border }]}>
+          <TextInput
+            style={[styles.input, { backgroundColor: "#fff", borderColor: C.border, color: C.text }]}
+            value={text}
+            onChangeText={setText}
+            placeholder="Type a message..."
+            placeholderTextColor={C.textMuted}
+            multiline
+          />
+          <Pressable
+            style={[styles.sendBtn, { backgroundColor: text.trim() ? C.primary : C.border }]}
+            onPress={() => { if (text.trim()) sendMutation.mutate(text.trim()); }}
+            disabled={!text.trim() || sendMutation.isPending}
+          >
+            {sendMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Feather name="send" size={16} color="#fff" />}
+          </Pressable>
+        </View>
+      ) : (
+        <View style={[styles.inputBar, { paddingBottom: bottomPadding + 8, borderTopColor: C.border, justifyContent: "center" }]}>
+          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, textAlign: "center", flex: 1 }}>
+            This booking is complete. Communication is no longer available.
+          </Text>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

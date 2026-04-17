@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon } from "lucide-react";
+import { Truck, MapPin, CheckCircle2, Navigation, MessageSquare, AlertTriangle, User, Info, Phone, PlusCircle, Loader2, Shield, DollarSign, Clock, Star, XCircle, ArrowLeft, CreditCard, Banknote, Heart, FileText, Camera, Download, ImageIcon, Flag } from "lucide-react";
 import { useState, useEffect, Component, type ReactNode } from "react";
 import { UserProfileModal } from "@/components/UserProfileModal";
+import { ReportModal } from "@/components/ReportModal";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -690,6 +691,7 @@ export default function BookingDetail() {
     );
   }
 
+  const isBookingActive = !["delivered", "cancelled"].includes(b.status);
   const steps = ["confirmed", "picked_up", "in_transit", "delivered"];
   const currentStepIndex = steps.indexOf(b.status);
   const platformFee = Number(b.platformFeeAmount ?? 0);
@@ -1039,16 +1041,33 @@ export default function BookingDetail() {
                           <div className="flex justify-between"><span className="text-muted-foreground">Rating:</span><span className="font-medium">★ {b.driver?.averageRating?.toFixed(1)} ({b.driver?.totalReviews} reviews)</span></div>
                         )}
                       </div>
-                      <Button className="w-full gap-2" asChild>
-                        <Link href={`/messages?to=${b.driverId}`}><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
-                      </Button>
-                      {b.driver?.phone ? (
-                        <Button className="w-full gap-2" variant="outline" asChild>
-                          <a href={`tel:${b.driver.phone}`}><Phone className="h-4 w-4" /> Call Carrier</a>
-                        </Button>
+                      {isBookingActive ? (
+                        <>
+                          <Button className="w-full gap-2" asChild>
+                            <Link href={`/messages?to=${b.driverId}`}><MessageSquare className="h-4 w-4" /> Message Carrier</Link>
+                          </Button>
+                          {b.driver?.phone ? (
+                            <Button className="w-full gap-2" variant="outline" asChild>
+                              <a href={`tel:${b.driver.phone}`}><Phone className="h-4 w-4" /> Call Carrier</a>
+                            </Button>
+                          ) : (
+                            <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
+                          )}
+                        </>
                       ) : (
-                        <InAppCallButton otherName={`${b.driver?.firstName || "Carrier"}`} />
+                        <p className="text-xs text-muted-foreground text-center bg-muted/30 rounded-lg border px-3 py-3">
+                          This booking is complete. Communication is no longer available.
+                        </p>
                       )}
+                      <ReportModal
+                        reportedUserId={b.driverId}
+                        reportedUserName={`${b.driver?.firstName || "Carrier"} ${b.driver?.lastName || ""}`.trim()}
+                        trigger={
+                          <Button size="sm" variant="ghost" className="w-full gap-1.5 text-muted-foreground hover:text-destructive">
+                            <Flag className="h-3.5 w-3.5" /> Report this user
+                          </Button>
+                        }
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -1070,16 +1089,33 @@ export default function BookingDetail() {
                         </div>
                       </div>
                       </UserProfileModal>
-                      <Button className="w-full gap-2" variant="outline" asChild>
-                        <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
-                      </Button>
-                      {b.shipper?.phone ? (
-                        <Button className="w-full gap-2" variant="outline" asChild>
-                          <a href={`tel:${b.shipper.phone}`}><Phone className="h-4 w-4" /> Call Shipper</a>
-                        </Button>
+                      {isBookingActive ? (
+                        <>
+                          <Button className="w-full gap-2" variant="outline" asChild>
+                            <Link href={`/messages?to=${b.shipperId}`}><MessageSquare className="h-4 w-4" /> Message Shipper</Link>
+                          </Button>
+                          {b.shipper?.phone ? (
+                            <Button className="w-full gap-2" variant="outline" asChild>
+                              <a href={`tel:${b.shipper.phone}`}><Phone className="h-4 w-4" /> Call Shipper</a>
+                            </Button>
+                          ) : (
+                            <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
+                          )}
+                        </>
                       ) : (
-                        <InAppCallButton otherName={`${b.shipper?.firstName || "Shipper"}`} />
+                        <p className="text-xs text-muted-foreground text-center bg-muted/30 rounded-lg border px-3 py-3">
+                          This booking is complete. Communication is no longer available.
+                        </p>
                       )}
+                      <ReportModal
+                        reportedUserId={b.shipperId}
+                        reportedUserName={`${b.shipper?.firstName || "Shipper"} ${b.shipper?.lastName || ""}`.trim()}
+                        trigger={
+                          <Button size="sm" variant="ghost" className="w-full gap-1.5 text-muted-foreground hover:text-destructive">
+                            <Flag className="h-3.5 w-3.5" /> Report this user
+                          </Button>
+                        }
+                      />
                     </CardContent>
                   </Card>
                 )}

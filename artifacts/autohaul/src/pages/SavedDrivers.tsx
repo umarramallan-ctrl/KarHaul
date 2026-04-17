@@ -2,7 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Star, Shield, Truck, MessageCircle, Trash2, Loader2, Users, ArrowRight } from "lucide-react";
+import { Heart, Star, Shield, Truck, Trash2, Loader2, Users, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -134,17 +134,13 @@ export default function SavedDrivers() {
                               <ArrowRight className="h-3.5 w-3.5" /> Invite to Bid
                             </Link>
                           </Button>
-                          <Button size="sm" className="flex-1 gap-1.5 bg-blue-600 hover:bg-blue-500 border-0 text-white text-xs" asChild>
-                            <Link href={`/messages?driverId=${saved.driverId}`}>
-                              <MessageCircle className="h-3.5 w-3.5" /> Message
-                            </Link>
-                          </Button>
                           <Button size="sm" variant="outline"
                             className="gap-1.5 border-red-500/25 text-red-400 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/40"
                             onClick={() => removeMutation.mutate(saved.driverId)} disabled={removeMutation.isPending}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
+                        <p className="text-[10px] text-slate-600 mt-2 text-center">Messaging available from an active booking only</p>
                       </div>
                     </motion.div>
                   );
