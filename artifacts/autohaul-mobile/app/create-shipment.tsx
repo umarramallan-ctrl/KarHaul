@@ -76,8 +76,11 @@ export default function CreateShipmentScreen() {
 
   const validate = () => {
     if (step === 0) {
-      if (!form.vehicleYear || !form.vehicleMake || !form.vehicleModel) {
-        Alert.alert("Missing Info", "Please fill in year, make, and model."); return false;
+      if (!form.vehicleYear) {
+        Alert.alert("Year is required", "Please enter the vehicle year."); return false;
+      }
+      if (!form.vehicleMake || !form.vehicleModel) {
+        Alert.alert("Missing Info", "Please fill in make and model."); return false;
       }
       if (!form.vin || form.vin.trim().length === 0) {
         Alert.alert("VIN Required", "Please enter the 17-character VIN."); return false;

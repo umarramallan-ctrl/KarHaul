@@ -45,7 +45,7 @@ const LOCATION_TYPES = [
 ];
 
 const formSchema = z.object({
-  vehicleYear: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
+  vehicleYear: z.coerce.number({ invalid_type_error: "Year is required" }).min(1900).max(new Date().getFullYear() + 1),
   vehicleMake: z.string().min(2, "Make is required"),
   vehicleModel: z.string().min(1, "Model is required"),
   vehicleType: z.enum(["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"]),
@@ -241,7 +241,7 @@ export default function CreateShipment() {
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
-    if (step === 1) fieldsToValidate = ["vehicleYear", "vehicleMake", "vehicleModel", "vehicleType", "vehicleCondition"];
+    if (step === 1) fieldsToValidate = ["vehicleYear", "vehicleMake", "vehicleModel", "vehicleType", "vehicleCondition", "vin"];
     if (step === 2) fieldsToValidate = ["originStreet", "originCity", "originState", "originZip", "destinationStreet", "destinationCity", "destinationState", "destinationZip"];
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) setStep(step + 1);
@@ -389,7 +389,7 @@ export default function CreateShipment() {
                       </div>
                       <FormField control={form.control} name="vin" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VIN (Optional but recommended)</FormLabel>
+                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VIN (REQUIRED)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="17-character VIN"
