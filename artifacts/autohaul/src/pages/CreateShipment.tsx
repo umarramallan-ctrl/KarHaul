@@ -14,11 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Car, MapPin, DollarSign, Truck, AlertTriangle, Home, Building2, Anchor, ShieldAlert, Warehouse, PlaneTakeoff, HelpCircle, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { motion } from "framer-motion";
-import { InviteDriversModal } from "@/components/InviteDriversModal";
 
 type ShipmentVehicleType = "sedan" | "suv" | "truck" | "van" | "motorcycle" | "rv" | "exotic" | "other";
 type ShipmentVehicleCondition = "running" | "non_running" | "starts_does_not_drive";
@@ -52,7 +50,7 @@ const formSchema = z.object({
   vehicleModel: z.string().min(1, "Model is required"),
   vehicleType: z.enum(["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"]),
   vehicleCondition: z.enum(["running", "non_running", "starts_does_not_drive"]),
-  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)"),
+  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)").optional().or(z.literal("")),
   transportType: z.enum(["open", "enclosed"]),
   serviceType: z.enum(["door_to_door", "door_to_port"]).optional(),
   originStreet: z.string().min(3, "Street address is required"),
@@ -175,7 +173,6 @@ const STEPS = [
 export default function CreateShipment() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { getToken } = useAuth();
   const createMutation = useCreateShipment();
   // Check for invited driver from Saved Drivers page
   const inviteDriverId = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("inviteDriver");
@@ -183,76 +180,6 @@ export default function CreateShipment() {
   const [step, setStep] = useState(1);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<z.infer<typeof formSchema> | null>(null);
-  const [postedShipmentId, setPostedShipmentId] = useState<string | null>(null);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [selectedDriverIds, setSelectedDriverIds] = useState<string[]>([]);
-
-  const { data: savedDriversData } = useQuery({
-    queryKey: ["saved-drivers"],
-    queryFn: async () => {
-      const token = await getToken();
-      const res = await fetch(`https://karhaul-production.up.railway.app/api/users/saved-drivers`, {
-        credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!res.ok) return { savedDrivers: [] };
-      try {
-        return await res.json();
-      } catch {
-        return { savedDrivers: [] };
-      }
-    },
-  });
-  const savedDrivers = (savedDriversData?.savedDrivers || []) as Array<{ driver: { id: string; firstName: string; lastName: string; averageRating?: number; completedJobs?: number } }>;
-
-  const inviteMutation = useMutation({
-    mutationFn: async ({ shipmentId, driverIds }: { shipmentId: string; driverIds: string[] }) => {
-      const token = await getToken();
-      const res = await fetch(`https://karhaul-production.up.railway.app/api/shipments/${shipmentId}/invite-drivers`, {
-        method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ driverIds }),
-      });
-      return res.json();
-    },
-    onSettled: (_, __, { shipmentId }) => {
-      setInviteOpen(false);
-      setLocation(`/shipments/${shipmentId}`);
-    },
-  });
-
-  // AI budget suggestion — fires when step 3 is reached
-  const watchedOriginState = form.watch("originState");
-  const watchedDestState = form.watch("destinationState");
-  const watchedMakeForBudget = form.watch("vehicleMake");
-  const watchedYear = form.watch("vehicleYear");
-  const watchedTransport = form.watch("transportType");
-
-  const { data: budgetSuggestion, isFetching: budgetFetching } = useQuery({
-    queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
-    queryFn: async () => {
-      const token = await getToken();
-      const res = await fetch(`https://karhaul-production.up.railway.app/api/ai/budget-suggest`, {
-        method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          vehicleYear: form.getValues("vehicleYear"),
-          vehicleMake: form.getValues("vehicleMake"),
-          vehicleModel: form.getValues("vehicleModel"),
-          vehicleType: form.getValues("vehicleType"),
-          vehicleCondition: form.getValues("vehicleCondition"),
-          transportType: form.getValues("transportType"),
-          originCity: form.getValues("originCity"),
-          originState: watchedOriginState,
-          destinationCity: form.getValues("destinationCity"),
-          destinationState: watchedDestState,
-        }),
-      });
-      return res.json();
-    },
-    enabled: step === 3 && !!watchedMakeForBudget && !!watchedOriginState && !!watchedDestState,
-    staleTime: 5 * 60 * 1000,
-  });
 
   // Fetch car makes from NHTSA (no form dependency)
   const { data: nhtsaMakes = [] } = useQuery({
@@ -298,16 +225,9 @@ export default function CreateShipment() {
     const { agreeToTerms, ...apiData } = pendingValues;
     createMutation.mutate({ data: apiData as any }, {
       onSuccess: (data) => {
+        toast({ title: "Load Posted!", description: "Drivers can now bid on your shipment." });
         setConfirmOpen(false);
-        if (savedDrivers.length > 0) {
-          setPostedShipmentId(data.id);
-          setSelectedDriverIds([]);
-          setInviteOpen(true);
-          toast({ title: "Load Posted!", description: "Invite your saved drivers for first look." });
-        } else {
-          toast({ title: "Load Posted!", description: "Drivers can now bid on your shipment." });
-          setLocation(`/shipments/${data.id}`);
-        }
+        setLocation(`/shipments/${data.id}`);
       },
       onError: (err: any) => {
         setConfirmOpen(false);
@@ -321,7 +241,7 @@ export default function CreateShipment() {
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
-    if (step === 1) fieldsToValidate = ["vehicleYear", "vehicleMake", "vehicleModel", "vehicleType", "vehicleCondition", "vin"];
+    if (step === 1) fieldsToValidate = ["vehicleYear", "vehicleMake", "vehicleModel", "vehicleType", "vehicleCondition"];
     if (step === 2) fieldsToValidate = ["originStreet", "originCity", "originState", "originZip", "destinationStreet", "destinationCity", "destinationState", "destinationZip"];
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) setStep(step + 1);
@@ -469,7 +389,7 @@ export default function CreateShipment() {
                       </div>
                       <FormField control={form.control} name="vin" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VIN *</FormLabel>
+                          <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VIN (Optional but recommended)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="17-character VIN"
@@ -679,25 +599,6 @@ export default function CreateShipment() {
                             <FormMessage />
                           </FormItem>
                         )} />
-                        {budgetFetching && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                            <div className="h-3 w-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            Getting AI price suggestion…
-                          </div>
-                        )}
-                        {!budgetFetching && budgetSuggestion?.min && budgetSuggestion?.max && (
-                          <div className="mt-2 rounded-xl border border-blue-500/30 bg-blue-500/8 px-4 py-3">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">AI Estimate</span>
-                            </div>
-                            <p className="text-white font-semibold">${budgetSuggestion.min.toLocaleString()} – ${budgetSuggestion.max.toLocaleString()}</p>
-                            {budgetSuggestion.note && <p className="text-slate-400 text-xs mt-1">{budgetSuggestion.note}</p>}
-                            <button type="button" className="mt-2 text-xs text-blue-400 hover:underline"
-                              onClick={() => form.setValue("budgetMax", budgetSuggestion.max)}>
-                              Use ${budgetSuggestion.max.toLocaleString()} as budget
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       <FormField control={form.control} name="notes" render={({ field }) => (
@@ -766,18 +667,6 @@ export default function CreateShipment() {
         onConfirm={confirmPost}
         isLoading={createMutation.isPending}
       />
-      {/* Saved driver invite dialog */}
-      <InviteDriversModal
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        savedDrivers={savedDrivers}
-        selectedDriverIds={selectedDriverIds}
-        setSelectedDriverIds={setSelectedDriverIds}
-        inviteMutation={inviteMutation}
-        postedShipmentId={postedShipmentId}
-        onNavigate={(id) => setLocation(`/shipments/${id}`)}
-      />
-
       </MainLayout>
     </AuthGuard>
   );
