@@ -17,7 +17,6 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
-import { apiBase } from "@/lib/api";
 import { motion } from "framer-motion";
 import { InviteDriversModal } from "@/components/InviteDriversModal";
 
@@ -192,7 +191,7 @@ export default function CreateShipment() {
     queryKey: ["saved-drivers"],
     queryFn: async () => {
       const token = await getToken();
-      const res = await fetch(`${apiBase}/users/saved-drivers`, {
+      const res = await fetch(`https://karhaul-production.up.railway.app/api/users/saved-drivers`, {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -209,7 +208,7 @@ export default function CreateShipment() {
   const inviteMutation = useMutation({
     mutationFn: async ({ shipmentId, driverIds }: { shipmentId: string; driverIds: string[] }) => {
       const token = await getToken();
-      const res = await fetch(`${apiBase}/shipments/${shipmentId}/invite-drivers`, {
+      const res = await fetch(`https://karhaul-production.up.railway.app/api/shipments/${shipmentId}/invite-drivers`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ driverIds }),
@@ -233,7 +232,7 @@ export default function CreateShipment() {
     queryKey: ["budget-suggest", watchedMakeForBudget, watchedOriginState, watchedDestState, watchedYear, watchedTransport],
     queryFn: async () => {
       const token = await getToken();
-      const res = await fetch(`${apiBase}/ai/budget-suggest`, {
+      const res = await fetch(`https://karhaul-production.up.railway.app/api/ai/budget-suggest`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
