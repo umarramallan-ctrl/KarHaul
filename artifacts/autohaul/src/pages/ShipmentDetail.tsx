@@ -208,6 +208,7 @@ export default function ShipmentDetail() {
       if (!res.ok && res.status !== 409) throw new Error("Failed to save driver");
       return res.json();
     },
+    onSuccess: () => toast({ title: "Driver saved successfully" }),
   });
 
   const form = useForm<z.infer<typeof bidSchema>>({
@@ -947,7 +948,6 @@ export default function ShipmentDetail() {
                 if (!justAcceptedDriver?.id) return;
                 saveDriverMutation.mutate(justAcceptedDriver.id, {
                   onSettled: () => { setSaveDriverOpen(false); if (justAcceptedBookingId) setLocation(`/bookings/${justAcceptedBookingId}`); },
-                  onSuccess: () => toast({ title: `${justAcceptedDriver.name} saved!`, description: "Find them in Saved Drivers to rebook anytime." }),
                 });
               }}>
               {saveDriverMutation.isPending ? "Saving…" : "Save Driver"}
