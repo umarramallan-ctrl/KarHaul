@@ -1,36 +1,50 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, savedDriversTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { getAuth } from "@clerk/express";
 
 const router: IRouter = Router();
 
+async function getDbUser(authId: string) {
+  const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
+  return users[0] || null;
+}
+
+async function resolveUser(req: Request) {
+  const authId = req.user?.id || getAuth(req).userId;
+  if (!authId) return null;
+  return getDbUser(authId);
+}
+
+const SELECT_DRIVER_FIELDS = {
+  id: savedDriversTable.id,
+  shipperId: savedDriversTable.shipperId,
+  driverId: savedDriversTable.driverId,
+  note: savedDriversTable.note,
+  createdAt: savedDriversTable.createdAt,
+  driver: {
+    id: usersTable.id,
+    firstName: usersTable.firstName,
+    lastName: usersTable.lastName,
+    isVerified: usersTable.isVerified,
+    averageRating: usersTable.averageRating,
+    totalReviews: usersTable.totalReviews,
+    completedJobs: usersTable.completedJobs,
+    truckType: usersTable.truckType,
+    dotNumber: usersTable.dotNumber,
+    profileImageUrl: usersTable.profileImageUrl,
+  },
+};
+
 router.get("/saved-drivers", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   try {
     const saved = await db
-      .select({
-        id: savedDriversTable.id,
-        shipperId: savedDriversTable.shipperId,
-        driverId: savedDriversTable.driverId,
-        note: savedDriversTable.note,
-        createdAt: savedDriversTable.createdAt,
-        driver: {
-          id: usersTable.id,
-          firstName: usersTable.firstName,
-          lastName: usersTable.lastName,
-          isVerified: usersTable.isVerified,
-          averageRating: usersTable.averageRating,
-          totalReviews: usersTable.totalReviews,
-          completedJobs: usersTable.completedJobs,
-          truckType: usersTable.truckType,
-          dotNumber: usersTable.dotNumber,
-          profileImageUrl: usersTable.profileImageUrl,
-        },
-      })
+      .select(SELECT_DRIVER_FIELDS)
       .from(savedDriversTable)
       .leftJoin(usersTable, eq(savedDriversTable.driverId, usersTable.id))
-      .where(eq(savedDriversTable.shipperId, userId));
+      .where(eq(savedDriversTable.shipperId, dbUser.id));
     res.json({ savedDrivers: saved });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch saved drivers" });
@@ -38,16 +52,16 @@ router.get("/saved-drivers", async (req: Request, res: Response) => {
 });
 
 router.post("/saved-drivers", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   const { driverId, note } = req.body;
   if (!driverId) { res.status(400).json({ error: "driverId is required" }); return; }
   try {
     const existing = await db.select().from(savedDriversTable)
-      .where(and(eq(savedDriversTable.shipperId, userId), eq(savedDriversTable.driverId, driverId)));
+      .where(and(eq(savedDriversTable.shipperId, dbUser.id), eq(savedDriversTable.driverId, driverId)));
     if (existing.length > 0) { res.status(409).json({ error: "Driver already saved" }); return; }
     const id = crypto.randomUUID();
-    const [saved] = await db.insert(savedDriversTable).values({ id, shipperId: userId, driverId, note: note || null }).returning();
+    const [saved] = await db.insert(savedDriversTable).values({ id, shipperId: dbUser.id, driverId, note: note || null }).returning();
     res.status(201).json(saved);
   } catch (err) {
     res.status(500).json({ error: "Failed to save driver" });
@@ -55,12 +69,12 @@ router.post("/saved-drivers", async (req: Request, res: Response) => {
 });
 
 router.delete("/saved-drivers/:driverId", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   const driverId = req.params.driverId as string;
   try {
     await db.delete(savedDriversTable)
-      .where(and(eq(savedDriversTable.shipperId, userId), eq(savedDriversTable.driverId, driverId)));
+      .where(and(eq(savedDriversTable.shipperId, dbUser.id), eq(savedDriversTable.driverId, driverId)));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to remove saved driver" });
@@ -69,32 +83,14 @@ router.delete("/saved-drivers/:driverId", async (req: Request, res: Response) =>
 
 // Aliases under /users/saved-drivers for REST consistency
 router.get("/users/saved-drivers", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   try {
     const saved = await db
-      .select({
-        id: savedDriversTable.id,
-        shipperId: savedDriversTable.shipperId,
-        driverId: savedDriversTable.driverId,
-        note: savedDriversTable.note,
-        createdAt: savedDriversTable.createdAt,
-        driver: {
-          id: usersTable.id,
-          firstName: usersTable.firstName,
-          lastName: usersTable.lastName,
-          isVerified: usersTable.isVerified,
-          averageRating: usersTable.averageRating,
-          totalReviews: usersTable.totalReviews,
-          completedJobs: usersTable.completedJobs,
-          truckType: usersTable.truckType,
-          dotNumber: usersTable.dotNumber,
-          profileImageUrl: usersTable.profileImageUrl,
-        },
-      })
+      .select(SELECT_DRIVER_FIELDS)
       .from(savedDriversTable)
       .leftJoin(usersTable, eq(savedDriversTable.driverId, usersTable.id))
-      .where(eq(savedDriversTable.shipperId, userId));
+      .where(eq(savedDriversTable.shipperId, dbUser.id));
     res.json({ savedDrivers: saved });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch saved drivers" });
@@ -102,16 +98,16 @@ router.get("/users/saved-drivers", async (req: Request, res: Response) => {
 });
 
 router.post("/users/saved-drivers/:driverId", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   const driverId = req.params.driverId as string;
   const { note } = req.body;
   try {
     const existing = await db.select().from(savedDriversTable)
-      .where(and(eq(savedDriversTable.shipperId, userId), eq(savedDriversTable.driverId, driverId)));
+      .where(and(eq(savedDriversTable.shipperId, dbUser.id), eq(savedDriversTable.driverId, driverId)));
     if (existing.length > 0) { res.status(409).json({ error: "Driver already saved" }); return; }
     const id = crypto.randomUUID();
-    const [saved] = await db.insert(savedDriversTable).values({ id, shipperId: userId, driverId, note: note || null }).returning();
+    const [saved] = await db.insert(savedDriversTable).values({ id, shipperId: dbUser.id, driverId, note: note || null }).returning();
     res.status(201).json(saved);
   } catch (err) {
     res.status(500).json({ error: "Failed to save driver" });
@@ -119,12 +115,12 @@ router.post("/users/saved-drivers/:driverId", async (req: Request, res: Response
 });
 
 router.delete("/users/saved-drivers/:driverId", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const dbUser = await resolveUser(req);
+  if (!dbUser) { res.status(401).json({ error: "Authentication required" }); return; }
   const driverId = req.params.driverId as string;
   try {
     await db.delete(savedDriversTable)
-      .where(and(eq(savedDriversTable.shipperId, userId), eq(savedDriversTable.driverId, driverId)));
+      .where(and(eq(savedDriversTable.shipperId, dbUser.id), eq(savedDriversTable.driverId, driverId)));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to remove saved driver" });
