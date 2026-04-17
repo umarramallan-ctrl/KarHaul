@@ -6,12 +6,8 @@ export function BackToBottom() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      const distFromBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-      setVisible(distFromBottom > 300);
-    };
+    const onScroll = () => setVisible(window.scrollY > 300);
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
