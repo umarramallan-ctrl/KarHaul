@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { BackToTop } from "@/components/ui/BackToTop";
+import { BackToBottom } from "@/components/ui/BackToBottom";
 import { SupportChat } from "@/components/SupportChat";
 
 interface MainLayoutProps {
@@ -17,6 +18,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </main>
       <Footer />
       <BackToTop />
+      <BackToBottom />
       <SupportChat />
     </div>
   );
