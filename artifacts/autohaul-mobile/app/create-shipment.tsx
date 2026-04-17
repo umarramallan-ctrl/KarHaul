@@ -82,6 +82,9 @@ export default function CreateShipmentScreen() {
       if (!form.vin || form.vin.trim().length === 0) {
         Alert.alert("VIN Required", "Please enter the 17-character VIN."); return false;
       }
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(form.vin.trim())) {
+        Alert.alert("Invalid VIN", "VIN must be exactly 17 alphanumeric characters (no I, O, Q)."); return false;
+      }
       const yr = parseInt(form.vehicleYear, 10);
       if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) {
         Alert.alert("Invalid Year", "Please enter a valid 4-digit year."); return false;

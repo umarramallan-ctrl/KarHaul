@@ -50,7 +50,7 @@ const formSchema = z.object({
   vehicleModel: z.string().min(1, "Model is required"),
   vehicleType: z.enum(["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"]),
   vehicleCondition: z.enum(["running", "non_running", "starts_does_not_drive"]),
-  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)").optional().or(z.literal("")),
+  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/i, "VIN must be exactly 17 alphanumeric characters (no I, O, Q)"),
   transportType: z.enum(["open", "enclosed"]),
   serviceType: z.enum(["door_to_door", "door_to_port"]).optional(),
   originStreet: z.string().min(3, "Street address is required"),
