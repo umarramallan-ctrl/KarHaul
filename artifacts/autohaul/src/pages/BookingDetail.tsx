@@ -592,7 +592,7 @@ export default function BookingDetail() {
   const { data: booking, isLoading, isError, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
   const updateStatusMutation = useUpdateBookingStatus();
   const [notes, setNotes] = useState("");
-  const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
+  const qc = useQueryClient();
   const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
   const [bolSignOpen, setBolSignOpen] = useState(false);
 
