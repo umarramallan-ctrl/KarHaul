@@ -1,11 +1,35 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { shipmentsTable, usersTable, bidsTable, lanePreferencesTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, lte } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { createNotification } from "../lib/notify";
 
 const router: IRouter = Router();
+
+const NUDGE_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+async function sendNoBidNudges() {
+  const cutoff = new Date(Date.now() - NUDGE_WINDOW_MS);
+  const stale = await db.select().from(shipmentsTable).where(
+    and(
+      eq(shipmentsTable.status, "open"),
+      eq(shipmentsTable.bidCount, 0),
+      eq(shipmentsTable.nudgeSent, false),
+      lte(shipmentsTable.createdAt, cutoff),
+    )
+  );
+  for (const s of stale) {
+    await createNotification({
+      userId: s.shipperId,
+      type: "no_bid_nudge",
+      title: "Your load has no bids yet",
+      body: "Your load has no bids yet. Consider raising your budget to attract more drivers.",
+      linkPath: `/shipments/${s.id}`,
+    });
+    await db.update(shipmentsTable).set({ nudgeSent: true }).where(eq(shipmentsTable.id, s.id));
+  }
+}
 
 async function getDbUser(authId: string) {
   const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
@@ -64,6 +88,9 @@ router.get("/shipments", async (req, res) => {
     return { ...s, shipper: shipper || null };
   }));
   res.json({ shipments: enriched, total: enriched.length });
+
+  // Fire-and-forget: nudge shippers whose open loads have had 0 bids for 48hrs
+  sendNoBidNudges().catch(() => {});
 });
 
 router.post("/shipments", async (req, res) => {

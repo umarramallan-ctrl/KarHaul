@@ -37,6 +37,8 @@ export const shipmentsTable = pgTable("shipments", {
   shipperEscrowStatus: text("shipper_escrow_status").default("none"), // none | held | captured | returned
   // Premium priority placement
   isPriority: boolean("is_priority").notNull().default(false),
+  // 48-hour no-bid nudge: set true once the nudge notification has been sent
+  nudgeSent: boolean("nudge_sent").notNull().default(false),
   // Saved-driver exclusive window: load hidden from public list until this time
   inviteOnlyUntil: timestamp("invite_only_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

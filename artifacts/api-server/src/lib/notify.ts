@@ -27,7 +27,8 @@ export type NotificationType =
   | "counter_offer_received"  // driver: shipper sent counter
   | "counter_offer_accepted"  // shipper: driver accepted counter
   | "counter_offer_declined"  // shipper: driver declined counter
-  | "bid_withdrawn";          // shipper: driver revoked their bid
+  | "bid_withdrawn"           // shipper: driver revoked their bid
+  | "no_bid_nudge";           // shipper: 48hr open load with 0 bids
 
 export async function createNotification(params: {
   userId: string;
