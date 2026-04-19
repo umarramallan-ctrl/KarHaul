@@ -919,10 +919,9 @@ export default function ShipmentDetail() {
         open={acceptConfirmOpen}
         onOpenChange={setAcceptConfirmOpen}
         title="Accept Bid & Create Booking"
-        description={`Accepting creates a binding booking. A 5% platform fee is held in escrow from you now; the driver's 3% is held when they confirm. Both fees go to KarHaul on delivery. You pay the driver directly — KarHaul does not process transport payments.`}
+        description={`Accepting creates a binding booking. A 5% platform fee is held in escrow from you now and released to KarHaul on delivery. You pay the driver directly — KarHaul does not process transport payments.`}
         fees={budgetMax > 0 ? [
           { label: "Your platform fee (5% of max budget)", amount: shipperFee },
-          { label: "Driver platform fee (3% of max budget)", amount: driverFee },
         ] : []}
         commitmentText="You have 1 hour to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
         confirmLabel="Accept Bid"

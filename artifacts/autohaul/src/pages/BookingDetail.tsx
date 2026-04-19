@@ -836,33 +836,37 @@ export default function BookingDetail() {
                         <Shield className="h-4 w-4 text-blue-400" />
                         <span className="text-sm font-bold text-white">Escrow Status</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
-                          <div className="text-xs text-slate-500 mb-1">Shipper escrow (5%)</div>
-                          <div className="font-bold text-white">
-                            {b.shipment?.shipperEscrowAmount ? `$${b.shipment.shipperEscrowAmount.toFixed(2)}` : "—"}
+                      <div className="grid grid-cols-1 gap-3 text-sm">
+                        {isShipper && (
+                          <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
+                            <div className="text-xs text-slate-500 mb-1">Your escrow (5%)</div>
+                            <div className="font-bold text-white">
+                              {b.shipment?.shipperEscrowAmount ? `$${b.shipment.shipperEscrowAmount.toFixed(2)}` : "—"}
+                            </div>
+                            <div className={`text-xs mt-1 ${
+                              b.shipment?.shipperEscrowStatus === "held" ? "text-amber-400" :
+                              b.shipment?.shipperEscrowStatus === "captured" ? "text-green-400" :
+                              b.shipment?.shipperEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
+                            }`}>
+                              {b.shipment?.shipperEscrowStatus ?? "none"}
+                            </div>
                           </div>
-                          <div className={`text-xs mt-1 ${
-                            b.shipment?.shipperEscrowStatus === "held" ? "text-amber-400" :
-                            b.shipment?.shipperEscrowStatus === "captured" ? "text-green-400" :
-                            b.shipment?.shipperEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
-                          }`}>
-                            {b.shipment?.shipperEscrowStatus ?? "none"}
+                        )}
+                        {isDriver && (
+                          <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
+                            <div className="text-xs text-slate-500 mb-1">Your escrow (3%)</div>
+                            <div className="font-bold text-white">
+                              {b.driverEscrowAmount ? `$${b.driverEscrowAmount.toFixed(2)}` : "—"}
+                            </div>
+                            <div className={`text-xs mt-1 ${
+                              b.driverEscrowStatus === "held" ? "text-amber-400" :
+                              b.driverEscrowStatus === "captured" ? "text-green-400" :
+                              b.driverEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
+                            }`}>
+                              {b.driverEscrowStatus ?? "none"}
+                            </div>
                           </div>
-                        </div>
-                        <div className="rounded-lg bg-slate-800/50 border border-slate-700/60 p-3">
-                          <div className="text-xs text-slate-500 mb-1">Driver escrow (3%)</div>
-                          <div className="font-bold text-white">
-                            {b.driverEscrowAmount ? `$${b.driverEscrowAmount.toFixed(2)}` : "—"}
-                          </div>
-                          <div className={`text-xs mt-1 ${
-                            b.driverEscrowStatus === "held" ? "text-amber-400" :
-                            b.driverEscrowStatus === "captured" ? "text-green-400" :
-                            b.driverEscrowStatus === "returned" ? "text-blue-400" : "text-slate-500"
-                          }`}>
-                            {b.driverEscrowStatus ?? "none"}
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                     {b.cancellationDeadline && b.status === "confirmed" && (
