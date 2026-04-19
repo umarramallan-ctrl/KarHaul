@@ -5,6 +5,7 @@
  * KarHaul Connect API - direct car transport marketplace
  * OpenAPI spec version: 1.0.0
  */
+import type { BidCounterStatus } from "./bidCounterStatus";
 import type { BidStatus } from "./bidStatus";
 import type { UserProfile } from "./userProfile";
 
@@ -18,5 +19,7 @@ export interface Bid {
   estimatedPickupDate?: string;
   estimatedDeliveryDate?: string;
   status: BidStatus;
+  counterPrice?: number;
+  counterStatus?: BidCounterStatus;
   createdAt?: string;
 }

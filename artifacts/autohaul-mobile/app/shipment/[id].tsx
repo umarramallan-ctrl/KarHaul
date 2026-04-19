@@ -7,7 +7,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getShipment, getShipmentBids, placeBid, acceptBid, getMyProfile } from "@workspace/api-client-react";
+import { getShipment, getShipmentBids, placeBid, acceptBid, getMyProfile, counterBid, acceptCounterBid, declineCounterBid } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
 
@@ -30,6 +30,9 @@ export default function ShipmentDetailScreen() {
   const [showBidModal, setShowBidModal] = useState(false);
   const [bidAmount, setBidAmount] = useState("");
   const [bidNote, setBidNote] = useState("");
+  const [showCounterModal, setShowCounterModal] = useState(false);
+  const [counterBidId, setCounterBidId] = useState<string | null>(null);
+  const [counterPriceInput, setCounterPriceInput] = useState("");
 
   const { data: shipment, isLoading } = useQuery({ queryKey: ["shipment", id], queryFn: () => getShipment(id!) });
   const { data: bidsData } = useQuery({ queryKey: ["shipment-bids", id], queryFn: () => getShipmentBids(id!) });
@@ -55,6 +58,37 @@ export default function ShipmentDetailScreen() {
       qc.invalidateQueries({ queryKey: ["shipment-bids", id] });
       Alert.alert("Bid Accepted!", "A booking has been created. Check 'My Jobs' for details.");
     },
+  });
+
+  const counterMutation = useMutation({
+    mutationFn: ({ bidId, price }: { bidId: string; price: number }) =>
+      counterBid(bidId, { counterPrice: price }),
+    onSuccess: () => {
+      setShowCounterModal(false);
+      setCounterPriceInput("");
+      qc.invalidateQueries({ queryKey: ["shipment-bids", id] });
+      Alert.alert("Counter-Offer Sent", "The driver has been notified of your counter-offer.");
+    },
+    onError: () => Alert.alert("Error", "Could not send counter-offer. Please try again."),
+  });
+
+  const acceptCounterMutation = useMutation({
+    mutationFn: (bidId: string) => acceptCounterBid(bidId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["shipment", id] });
+      qc.invalidateQueries({ queryKey: ["shipment-bids", id] });
+      Alert.alert("Counter-Offer Accepted!", "A booking has been created at the counter price. Check 'My Jobs'.");
+    },
+    onError: () => Alert.alert("Error", "Could not accept counter-offer."),
+  });
+
+  const declineCounterMutation = useMutation({
+    mutationFn: (bidId: string) => declineCounterBid(bidId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["shipment-bids", id] });
+      Alert.alert("Counter-Offer Declined", "The shipper has been notified.");
+    },
+    onError: () => Alert.alert("Error", "Could not decline counter-offer."),
   });
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
@@ -169,13 +203,22 @@ export default function ShipmentDetailScreen() {
                     </Text>
                   </View>
                   {bid.status === "pending" && (shipment as any).status === "open" && (
-                    <Pressable
-                      style={[styles.acceptBtn, { backgroundColor: C.primary }]}
-                      onPress={() => acceptMutation.mutate(bid.id)}
-                      disabled={acceptMutation.isPending}
-                    >
-                      <Text style={styles.acceptBtnText}>Accept</Text>
-                    </Pressable>
+                    <View style={{ gap: 6 }}>
+                      <Pressable
+                        style={[styles.acceptBtn, { backgroundColor: C.primary }]}
+                        onPress={() => acceptMutation.mutate(bid.id)}
+                        disabled={acceptMutation.isPending}
+                      >
+                        <Text style={styles.acceptBtnText}>Accept</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.acceptBtn, { backgroundColor: bid.counterStatus === "pending" ? "#94A3B8" : "#6366F1" }]}
+                        onPress={() => { setCounterBidId(bid.id); setCounterPriceInput(""); setShowCounterModal(true); }}
+                        disabled={bid.counterStatus === "pending"}
+                      >
+                        <Text style={styles.acceptBtnText}>{bid.counterStatus === "pending" ? "Sent" : "Counter"}</Text>
+                      </Pressable>
+                    </View>
                   )}
                 </View>
                 {bid.note && <Text style={[styles.bidNote, { color: C.textSecondary }]}>{bid.note}</Text>}
@@ -183,6 +226,34 @@ export default function ShipmentDetailScreen() {
             ))}
           </View>
         )}
+
+        {!isMyShipment && bids.filter((b: any) => b.driverId === (myProfile as any)?.id && b.counterStatus === "pending").map((bid: any) => (
+          <View key={`counter-${bid.id}`} style={[styles.card, styles.section, { borderWidth: 1, borderColor: "#F59E0B" }]}>
+            <Text style={[styles.sectionHeader, { color: C.text }]}>Counter-Offer Received</Text>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.textSecondary, marginBottom: 8 }}>
+              The shipper sent a counter-offer for your ${bid.amount?.toLocaleString()} bid:
+            </Text>
+            <Text style={{ fontFamily: "Inter_700Bold", fontSize: 28, color: "#F59E0B", marginBottom: 16 }}>
+              ${bid.counterPrice?.toLocaleString()}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                style={[styles.acceptBtn, { flex: 1, backgroundColor: C.primary, alignItems: "center" }]}
+                onPress={() => acceptCounterMutation.mutate(bid.id)}
+                disabled={acceptCounterMutation.isPending}
+              >
+                <Text style={styles.acceptBtnText}>Accept</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.acceptBtn, { flex: 1, backgroundColor: "#EF4444", alignItems: "center" }]}
+                onPress={() => declineCounterMutation.mutate(bid.id)}
+                disabled={declineCounterMutation.isPending}
+              >
+                <Text style={styles.acceptBtnText}>Decline</Text>
+              </Pressable>
+            </View>
+          </View>
+        ))}
       </ScrollView>
 
       {canBid && (
@@ -199,6 +270,47 @@ export default function ShipmentDetailScreen() {
           </Pressable>
         </View>
       )}
+
+      <Modal visible={showCounterModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowCounterModal(false)}>
+        <View style={[styles.modalContainer, { backgroundColor: C.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: C.border }]}>
+            <Text style={[styles.modalTitle, { color: C.text }]}>Send Counter-Offer</Text>
+            <Pressable onPress={() => setShowCounterModal(false)}>
+              <Feather name="x" size={22} color={C.textSecondary} />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.textSecondary }}>
+              Enter your counter price. The driver will be notified and can accept or decline.
+            </Text>
+            <View>
+              <Text style={[styles.fieldLabel, { color: C.text }]}>Counter Price ($) *</Text>
+              <TextInput
+                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: "#fff" }]}
+                value={counterPriceInput}
+                onChangeText={setCounterPriceInput}
+                placeholder="e.g. 750"
+                placeholderTextColor={C.textMuted}
+                keyboardType="numeric"
+              />
+            </View>
+            <Pressable
+              style={[styles.submitBtn, { backgroundColor: C.primary, opacity: counterMutation.isPending ? 0.7 : 1 }]}
+              onPress={() => {
+                const price = parseFloat(counterPriceInput);
+                if (!price || isNaN(price) || price <= 0) { Alert.alert("Invalid Amount", "Please enter a valid counter price."); return; }
+                if (!counterBidId) return;
+                counterMutation.mutate({ bidId: counterBidId, price });
+              }}
+              disabled={counterMutation.isPending}
+            >
+              {counterMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : (
+                <Text style={styles.submitBtnText}>Send Counter-Offer – ${counterPriceInput || "0"}</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
 
       <Modal visible={showBidModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowBidModal(false)}>
         <View style={[styles.modalContainer, { backgroundColor: C.background }]}>

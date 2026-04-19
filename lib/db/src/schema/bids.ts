@@ -11,6 +11,8 @@ export const bidsTable = pgTable("bids", {
   estimatedPickupDate: text("estimated_pickup_date"),
   estimatedDeliveryDate: text("estimated_delivery_date"),
   status: text("status").notNull().default("pending"),
+  counterPrice: real("counter_price"),
+  counterStatus: text("counter_status"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

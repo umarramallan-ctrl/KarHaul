@@ -198,6 +198,149 @@ router.post("/bids/:bidId/accept", async (req, res) => {
   res.json(booking);
 });
 
+router.post("/bids/:bidId/counter", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  const { bidId } = req.params;
+  const { counterPrice } = req.body;
+
+  if (!counterPrice || typeof counterPrice !== "number" || counterPrice <= 0) {
+    res.status(400).json({ error: "Invalid counter price." });
+    return;
+  }
+
+  const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+  if (!bid) { res.status(404).json({ error: "Bid not found" }); return; }
+
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
+  if (!shipment || shipment.shipperId !== dbUser?.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (bid.status !== "pending") { res.status(400).json({ error: "Can only counter a pending bid." }); return; }
+
+  await db.update(bidsTable).set({ counterPrice, counterStatus: "pending", updatedAt: new Date() }).where(eq(bidsTable.id, bidId));
+
+  const shipperName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "The shipper";
+  await createNotification({
+    userId: bid.driverId,
+    type: "counter_offer_received",
+    title: "Counter-offer received",
+    body: `${shipperName} sent a counter-offer of $${counterPrice} on your bid.`,
+    linkPath: `/shipments/${bid.shipmentId}`,
+  });
+
+  const [updated] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+  res.json(updated);
+});
+
+router.post("/bids/:bidId/counter-accept", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  const { bidId } = req.params;
+
+  const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+  if (!bid) { res.status(404).json({ error: "Bid not found" }); return; }
+  if (bid.driverId !== dbUser?.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (bid.counterStatus !== "pending" || bid.counterPrice == null) {
+    res.status(400).json({ error: "No pending counter-offer on this bid." });
+    return;
+  }
+
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
+  if (!shipment) { res.status(404).json({ error: "Shipment not found" }); return; }
+
+  const pendingBids = await db.select().from(bidsTable)
+    .where(and(eq(bidsTable.shipmentId, bid.shipmentId), eq(bidsTable.status, "pending")));
+
+  await db.update(bidsTable).set({ status: "accepted", counterStatus: "accepted", updatedAt: new Date() }).where(eq(bidsTable.id, bidId));
+  await db.update(bidsTable).set({ status: "rejected", updatedAt: new Date() })
+    .where(and(eq(bidsTable.shipmentId, bid.shipmentId), eq(bidsTable.status, "pending")));
+  await db.update(shipmentsTable).set({ status: "assigned", assignedDriverId: bid.driverId, updatedAt: new Date() })
+    .where(eq(shipmentsTable.id, bid.shipmentId));
+
+  const bookingId = randomUUID();
+  const PLATFORM_FEE_PERCENT = 3.0;
+  const agreedPrice = bid.counterPrice;
+  const platformFeeAmount = Math.round(agreedPrice * (PLATFORM_FEE_PERCENT / 100) * 100) / 100;
+  const now = new Date();
+  const cancellationDeadline = new Date(now.getTime() + CANCELLATION_WINDOW_MS);
+  await db.insert(bookingsTable).values({
+    id: bookingId,
+    shipmentId: bid.shipmentId,
+    driverId: bid.driverId,
+    shipperId: shipment.shipperId,
+    bidId: bid.id,
+    agreedPrice,
+    platformFeePercent: PLATFORM_FEE_PERCENT,
+    platformFeeAmount,
+    status: "confirmed",
+    acceptedAt: now,
+    cancellationDeadline,
+  });
+
+  const [existingConv] = await db.select().from(conversationsTable)
+    .where(or(
+      and(eq(conversationsTable.user1Id, shipment.shipperId), eq(conversationsTable.user2Id, bid.driverId)),
+      and(eq(conversationsTable.user1Id, bid.driverId), eq(conversationsTable.user2Id, shipment.shipperId))
+    )).limit(1);
+  if (!existingConv) {
+    await db.insert(conversationsTable).values({
+      id: randomUUID(),
+      user1Id: shipment.shipperId,
+      user2Id: bid.driverId,
+      shipmentId: bid.shipmentId,
+      lastMessageAt: now,
+    });
+  }
+
+  await createNotification({
+    userId: shipment.shipperId,
+    type: "counter_offer_accepted",
+    title: "Counter-offer accepted!",
+    body: `The driver accepted your $${agreedPrice} counter-offer. A booking has been created.`,
+    linkPath: `/bookings/${bookingId}`,
+  });
+
+  const windowNotifBody = "You have 1 hour to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
+  await createNotification({ userId: shipment.shipperId, type: "cancellation_window_open", title: "1-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
+  await createNotification({ userId: bid.driverId, type: "cancellation_window_open", title: "1-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
+
+  for (const rejected of pendingBids) {
+    if (rejected.driverId !== bid.driverId) {
+      await createNotification({ userId: rejected.driverId, type: "bid_rejected", title: "Bid not selected", body: "The shipper selected another driver for this load.", linkPath: `/shipments/${bid.shipmentId}` });
+    }
+  }
+
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
+  res.json(booking);
+});
+
+router.post("/bids/:bidId/counter-decline", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  const { bidId } = req.params;
+
+  const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+  if (!bid) { res.status(404).json({ error: "Bid not found" }); return; }
+  if (bid.driverId !== dbUser?.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (bid.counterStatus !== "pending") { res.status(400).json({ error: "No pending counter-offer to decline." }); return; }
+
+  await db.update(bidsTable).set({ counterStatus: "declined", updatedAt: new Date() }).where(eq(bidsTable.id, bidId));
+
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
+  if (shipment) {
+    const driverName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "The driver";
+    await createNotification({
+      userId: shipment.shipperId,
+      type: "counter_offer_declined",
+      title: "Counter-offer declined",
+      body: `${driverName} declined your counter-offer of $${bid.counterPrice}.`,
+      linkPath: `/shipments/${bid.shipmentId}`,
+    });
+  }
+
+  const [updated] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+  res.json(updated);
+});
+
 router.delete("/bids/:bidId", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const dbUser = await getDbUser((req.user as any).id);

@@ -26,6 +26,7 @@ import type {
   Booking,
   BookingListResponse,
   ConversationListResponse,
+  CounterBidBody,
   CreateFeedbackBody,
   CreateReviewBody,
   CreateShipmentBody,
@@ -1227,6 +1228,261 @@ export const useAcceptBid = <
   TContext
 > => {
   return useMutation(getAcceptBidMutationOptions(options));
+};
+
+/**
+ * @summary Shipper sends a counter-offer price to a driver
+ */
+export const getCounterBidUrl = (bidId: string) => {
+  return `/api/bids/${bidId}/counter`;
+};
+
+export const counterBid = async (
+  bidId: string,
+  counterBidBody: CounterBidBody,
+  options?: RequestInit,
+): Promise<Bid> => {
+  return customFetch<Bid>(getCounterBidUrl(bidId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(counterBidBody),
+  });
+};
+
+export const getCounterBidMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof counterBid>>,
+    TError,
+    { bidId: string; data: BodyType<CounterBidBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof counterBid>>,
+  TError,
+  { bidId: string; data: BodyType<CounterBidBody> },
+  TContext
+> => {
+  const mutationKey = ["counterBid"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof counterBid>>,
+    { bidId: string; data: BodyType<CounterBidBody> }
+  > = (props) => {
+    const { bidId, data } = props ?? {};
+
+    return counterBid(bidId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CounterBidMutationResult = NonNullable<
+  Awaited<ReturnType<typeof counterBid>>
+>;
+export type CounterBidMutationBody = BodyType<CounterBidBody>;
+export type CounterBidMutationError = ErrorType<void>;
+
+/**
+ * @summary Shipper sends a counter-offer price to a driver
+ */
+export const useCounterBid = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof counterBid>>,
+    TError,
+    { bidId: string; data: BodyType<CounterBidBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof counterBid>>,
+  TError,
+  { bidId: string; data: BodyType<CounterBidBody> },
+  TContext
+> => {
+  return useMutation(getCounterBidMutationOptions(options));
+};
+
+/**
+ * @summary Driver accepts a counter-offer (creates booking at counter price)
+ */
+export const getAcceptCounterBidUrl = (bidId: string) => {
+  return `/api/bids/${bidId}/counter-accept`;
+};
+
+export const acceptCounterBid = async (
+  bidId: string,
+  options?: RequestInit,
+): Promise<Booking> => {
+  return customFetch<Booking>(getAcceptCounterBidUrl(bidId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAcceptCounterBidMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptCounterBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptCounterBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  const mutationKey = ["acceptCounterBid"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptCounterBid>>,
+    { bidId: string }
+  > = (props) => {
+    const { bidId } = props ?? {};
+
+    return acceptCounterBid(bidId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptCounterBidMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptCounterBid>>
+>;
+
+export type AcceptCounterBidMutationError = ErrorType<void>;
+
+/**
+ * @summary Driver accepts a counter-offer (creates booking at counter price)
+ */
+export const useAcceptCounterBid = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptCounterBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptCounterBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  return useMutation(getAcceptCounterBidMutationOptions(options));
+};
+
+/**
+ * @summary Driver declines a counter-offer
+ */
+export const getDeclineCounterBidUrl = (bidId: string) => {
+  return `/api/bids/${bidId}/counter-decline`;
+};
+
+export const declineCounterBid = async (
+  bidId: string,
+  options?: RequestInit,
+): Promise<Bid> => {
+  return customFetch<Bid>(getDeclineCounterBidUrl(bidId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDeclineCounterBidMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineCounterBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineCounterBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  const mutationKey = ["declineCounterBid"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineCounterBid>>,
+    { bidId: string }
+  > = (props) => {
+    const { bidId } = props ?? {};
+
+    return declineCounterBid(bidId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineCounterBidMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineCounterBid>>
+>;
+
+export type DeclineCounterBidMutationError = ErrorType<void>;
+
+/**
+ * @summary Driver declines a counter-offer
+ */
+export const useDeclineCounterBid = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineCounterBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof declineCounterBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  return useMutation(getDeclineCounterBidMutationOptions(options));
 };
 
 /**

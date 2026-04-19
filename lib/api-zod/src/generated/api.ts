@@ -575,6 +575,8 @@ export const GetShipmentBidsResponse = zod.object({
       estimatedPickupDate: zod.string().optional(),
       estimatedDeliveryDate: zod.string().optional(),
       status: zod.enum(["pending", "accepted", "rejected", "withdrawn"]),
+      counterPrice: zod.number().optional(),
+      counterStatus: zod.enum(["pending", "accepted", "declined"]).optional(),
       createdAt: zod.string().optional(),
     }),
   ),
@@ -753,6 +755,263 @@ export const AcceptBidResponse = zod.object({
 });
 
 /**
+ * @summary Shipper sends a counter-offer price to a driver
+ */
+export const CounterBidParams = zod.object({
+  bidId: zod.coerce.string(),
+});
+
+export const CounterBidBody = zod.object({
+  counterPrice: zod.number(),
+});
+
+export const CounterBidResponse = zod.object({
+  id: zod.string(),
+  shipmentId: zod.string(),
+  driverId: zod.string(),
+  driver: zod
+    .object({
+      id: zod.string(),
+      authId: zod.string().optional(),
+      email: zod.string().optional(),
+      firstName: zod.string().optional(),
+      lastName: zod.string().optional(),
+      phone: zod.string().optional(),
+      role: zod.enum(["shipper", "driver", "both", "admin"]),
+      profileImageUrl: zod.string().optional(),
+      bio: zod.string().optional(),
+      dotNumber: zod.string().optional(),
+      mcNumber: zod.string().optional(),
+      insuranceProvider: zod.string().optional(),
+      insurancePolicyNumber: zod.string().optional(),
+      truckType: zod.string().optional(),
+      truckCapacity: zod.number().optional(),
+      isVerified: zod.boolean().optional(),
+      isSuspended: zod.boolean().optional(),
+      averageRating: zod.number().optional(),
+      totalReviews: zod.number().optional(),
+      completedJobs: zod.number().optional(),
+      termsAccepted: zod.boolean().optional(),
+      termsAcceptedAt: zod.string().optional(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+  amount: zod.number(),
+  note: zod.string().optional(),
+  estimatedPickupDate: zod.string().optional(),
+  estimatedDeliveryDate: zod.string().optional(),
+  status: zod.enum(["pending", "accepted", "rejected", "withdrawn"]),
+  counterPrice: zod.number().optional(),
+  counterStatus: zod.enum(["pending", "accepted", "declined"]).optional(),
+  createdAt: zod.string().optional(),
+});
+
+/**
+ * @summary Driver accepts a counter-offer (creates booking at counter price)
+ */
+export const AcceptCounterBidParams = zod.object({
+  bidId: zod.coerce.string(),
+});
+
+export const AcceptCounterBidResponse = zod.object({
+  id: zod.string(),
+  shipmentId: zod.string(),
+  shipment: zod
+    .object({
+      id: zod.string(),
+      shipperId: zod.string(),
+      shipper: zod
+        .object({
+          id: zod.string(),
+          authId: zod.string().optional(),
+          email: zod.string().optional(),
+          firstName: zod.string().optional(),
+          lastName: zod.string().optional(),
+          phone: zod.string().optional(),
+          role: zod.enum(["shipper", "driver", "both", "admin"]),
+          profileImageUrl: zod.string().optional(),
+          bio: zod.string().optional(),
+          dotNumber: zod.string().optional(),
+          mcNumber: zod.string().optional(),
+          insuranceProvider: zod.string().optional(),
+          insurancePolicyNumber: zod.string().optional(),
+          truckType: zod.string().optional(),
+          truckCapacity: zod.number().optional(),
+          isVerified: zod.boolean().optional(),
+          isSuspended: zod.boolean().optional(),
+          averageRating: zod.number().optional(),
+          totalReviews: zod.number().optional(),
+          completedJobs: zod.number().optional(),
+          termsAccepted: zod.boolean().optional(),
+          termsAcceptedAt: zod.string().optional(),
+          createdAt: zod.string().optional(),
+        })
+        .optional(),
+      title: zod.string().optional(),
+      vehicleYear: zod.number(),
+      vehicleMake: zod.string(),
+      vehicleModel: zod.string(),
+      vehicleType: zod.enum([
+        "sedan",
+        "suv",
+        "truck",
+        "van",
+        "motorcycle",
+        "rv",
+        "exotic",
+        "other",
+      ]),
+      vehicleCondition: zod.enum(["running", "non_running"]),
+      vin: zod.string().optional(),
+      transportType: zod.enum(["open", "enclosed"]),
+      serviceType: zod.enum(["door_to_door", "door_to_port"]).optional(),
+      originAddress: zod.string().optional(),
+      originCity: zod.string(),
+      originState: zod.string(),
+      originZip: zod.string().optional(),
+      destinationAddress: zod.string().optional(),
+      destinationCity: zod.string(),
+      destinationState: zod.string(),
+      destinationZip: zod.string().optional(),
+      pickupDateFrom: zod.string().optional(),
+      pickupDateTo: zod.string().optional(),
+      budgetMin: zod.number().optional(),
+      budgetMax: zod.number().optional(),
+      notes: zod.string().optional(),
+      status: zod.enum([
+        "open",
+        "assigned",
+        "in_transit",
+        "delivered",
+        "cancelled",
+      ]),
+      bidCount: zod.number().optional(),
+      assignedDriverId: zod.string().optional(),
+      createdAt: zod.string().optional(),
+      updatedAt: zod.string().optional(),
+    })
+    .optional(),
+  driverId: zod.string(),
+  driver: zod
+    .object({
+      id: zod.string(),
+      authId: zod.string().optional(),
+      email: zod.string().optional(),
+      firstName: zod.string().optional(),
+      lastName: zod.string().optional(),
+      phone: zod.string().optional(),
+      role: zod.enum(["shipper", "driver", "both", "admin"]),
+      profileImageUrl: zod.string().optional(),
+      bio: zod.string().optional(),
+      dotNumber: zod.string().optional(),
+      mcNumber: zod.string().optional(),
+      insuranceProvider: zod.string().optional(),
+      insurancePolicyNumber: zod.string().optional(),
+      truckType: zod.string().optional(),
+      truckCapacity: zod.number().optional(),
+      isVerified: zod.boolean().optional(),
+      isSuspended: zod.boolean().optional(),
+      averageRating: zod.number().optional(),
+      totalReviews: zod.number().optional(),
+      completedJobs: zod.number().optional(),
+      termsAccepted: zod.boolean().optional(),
+      termsAcceptedAt: zod.string().optional(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+  shipperId: zod.string(),
+  shipper: zod
+    .object({
+      id: zod.string(),
+      authId: zod.string().optional(),
+      email: zod.string().optional(),
+      firstName: zod.string().optional(),
+      lastName: zod.string().optional(),
+      phone: zod.string().optional(),
+      role: zod.enum(["shipper", "driver", "both", "admin"]),
+      profileImageUrl: zod.string().optional(),
+      bio: zod.string().optional(),
+      dotNumber: zod.string().optional(),
+      mcNumber: zod.string().optional(),
+      insuranceProvider: zod.string().optional(),
+      insurancePolicyNumber: zod.string().optional(),
+      truckType: zod.string().optional(),
+      truckCapacity: zod.number().optional(),
+      isVerified: zod.boolean().optional(),
+      isSuspended: zod.boolean().optional(),
+      averageRating: zod.number().optional(),
+      totalReviews: zod.number().optional(),
+      completedJobs: zod.number().optional(),
+      termsAccepted: zod.boolean().optional(),
+      termsAcceptedAt: zod.string().optional(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+  agreedPrice: zod.number(),
+  status: zod.enum([
+    "confirmed",
+    "picked_up",
+    "in_transit",
+    "delivered",
+    "disputed",
+    "cancelled",
+  ]),
+  pickupConfirmedAt: zod.string().optional(),
+  deliveryConfirmedAt: zod.string().optional(),
+  trackingNotes: zod.string().optional(),
+  createdAt: zod.string().optional(),
+  updatedAt: zod.string().optional(),
+});
+
+/**
+ * @summary Driver declines a counter-offer
+ */
+export const DeclineCounterBidParams = zod.object({
+  bidId: zod.coerce.string(),
+});
+
+export const DeclineCounterBidResponse = zod.object({
+  id: zod.string(),
+  shipmentId: zod.string(),
+  driverId: zod.string(),
+  driver: zod
+    .object({
+      id: zod.string(),
+      authId: zod.string().optional(),
+      email: zod.string().optional(),
+      firstName: zod.string().optional(),
+      lastName: zod.string().optional(),
+      phone: zod.string().optional(),
+      role: zod.enum(["shipper", "driver", "both", "admin"]),
+      profileImageUrl: zod.string().optional(),
+      bio: zod.string().optional(),
+      dotNumber: zod.string().optional(),
+      mcNumber: zod.string().optional(),
+      insuranceProvider: zod.string().optional(),
+      insurancePolicyNumber: zod.string().optional(),
+      truckType: zod.string().optional(),
+      truckCapacity: zod.number().optional(),
+      isVerified: zod.boolean().optional(),
+      isSuspended: zod.boolean().optional(),
+      averageRating: zod.number().optional(),
+      totalReviews: zod.number().optional(),
+      completedJobs: zod.number().optional(),
+      termsAccepted: zod.boolean().optional(),
+      termsAcceptedAt: zod.string().optional(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+  amount: zod.number(),
+  note: zod.string().optional(),
+  estimatedPickupDate: zod.string().optional(),
+  estimatedDeliveryDate: zod.string().optional(),
+  status: zod.enum(["pending", "accepted", "rejected", "withdrawn"]),
+  counterPrice: zod.number().optional(),
+  counterStatus: zod.enum(["pending", "accepted", "declined"]).optional(),
+  createdAt: zod.string().optional(),
+});
+
+/**
  * @summary Get current driver's bids
  */
 export const GetMyBidsResponse = zod.object({
@@ -793,6 +1052,8 @@ export const GetMyBidsResponse = zod.object({
       estimatedPickupDate: zod.string().optional(),
       estimatedDeliveryDate: zod.string().optional(),
       status: zod.enum(["pending", "accepted", "rejected", "withdrawn"]),
+      counterPrice: zod.number().optional(),
+      counterStatus: zod.enum(["pending", "accepted", "declined"]).optional(),
       createdAt: zod.string().optional(),
     }),
   ),

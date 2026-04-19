@@ -259,6 +259,15 @@ export const BidStatus = {
   withdrawn: "withdrawn",
 } as const;
 
+export type BidCounterStatus =
+  (typeof BidCounterStatus)[keyof typeof BidCounterStatus];
+
+export const BidCounterStatus = {
+  pending: "pending",
+  accepted: "accepted",
+  declined: "declined",
+} as const;
+
 export interface Bid {
   id: string;
   shipmentId: string;
@@ -269,6 +278,8 @@ export interface Bid {
   estimatedPickupDate?: string;
   estimatedDeliveryDate?: string;
   status: BidStatus;
+  counterPrice?: number;
+  counterStatus?: BidCounterStatus;
   createdAt?: string;
 }
 
@@ -277,6 +288,10 @@ export interface PlaceBidBody {
   note?: string;
   estimatedPickupDate?: string;
   estimatedDeliveryDate?: string;
+}
+
+export interface CounterBidBody {
+  counterPrice: number;
 }
 
 export interface BidListResponse {

@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetShipment, useGetShipmentBids, usePlaceBid, useAcceptBid, useGetMyProfile } from "@workspace/api-client-react";
+import { useGetShipment, useGetShipmentBids, usePlaceBid, useAcceptBid, useGetMyProfile, useCounterBid, useAcceptCounterBid, useDeclineCounterBid } from "@workspace/api-client-react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -185,6 +185,9 @@ export default function ShipmentDetail() {
 
   const placeBidMutation = usePlaceBid();
   const acceptBidMutation = useAcceptBid();
+  const counterBidMutation = useCounterBid();
+  const acceptCounterBidMutation = useAcceptCounterBid();
+  const declineCounterBidMutation = useDeclineCounterBid();
 
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
   const [bidConfirmOpen, setBidConfirmOpen] = useState(false);
@@ -194,6 +197,8 @@ export default function ShipmentDetail() {
   const [saveDriverOpen, setSaveDriverOpen] = useState(false);
   const [justAcceptedBookingId, setJustAcceptedBookingId] = useState<string | null>(null);
   const [justAcceptedDriver, setJustAcceptedDriver] = useState<{ id: string; name: string } | null>(null);
+  const [counterDialogBidId, setCounterDialogBidId] = useState<string | null>(null);
+  const [counterPriceInput, setCounterPriceInput] = useState("");
 
   const qc = useQueryClient();
   const saveDriverMutation = useMutation({
@@ -620,13 +625,55 @@ export default function ShipmentDetail() {
                                 </div>
                                 
                                 {isOwner && shipment.status === 'open' && bid.status === 'pending' && (
-                                  <Button 
-                                    className="w-full hover-elevate shadow-md shadow-primary/20" 
-                                    onClick={() => handleAcceptBid(bid.id)}
-                                    disabled={acceptBidMutation.isPending}
-                                  >
-                                    {acceptBidMutation.isPending ? 'Accepting...' : 'Accept & Book'}
-                                  </Button>
+                                  <div className="flex flex-col gap-2 w-full">
+                                    <Button
+                                      className="w-full hover-elevate shadow-md shadow-primary/20"
+                                      onClick={() => handleAcceptBid(bid.id)}
+                                      disabled={acceptBidMutation.isPending}
+                                    >
+                                      {acceptBidMutation.isPending ? 'Accepting...' : 'Accept & Book'}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full"
+                                      onClick={() => { setCounterDialogBidId(bid.id); setCounterPriceInput(""); }}
+                                      disabled={bid.counterStatus === 'pending'}
+                                    >
+                                      {bid.counterStatus === 'pending' ? 'Counter Sent' : 'Counter-Offer'}
+                                    </Button>
+                                  </div>
+                                )}
+                                {!isOwner && isMyBid && bid.counterStatus === 'pending' && bid.counterPrice != null && (
+                                  <div className="flex flex-col items-end gap-2 w-full">
+                                    <div className="text-sm text-muted-foreground">Counter-offer from shipper:</div>
+                                    <div className="text-2xl font-bold text-amber-600">{formatCurrency(bid.counterPrice)}</div>
+                                    <div className="flex gap-2 w-full">
+                                      <Button
+                                        className="flex-1"
+                                        onClick={() => acceptCounterBidMutation.mutate({ bidId: bid.id }, {
+                                          onSuccess: () => { toast({ title: "Counter-offer accepted!", description: "A booking has been created." }); refetchBids(); refetchShipment(); },
+                                          onError: () => toast({ title: "Failed to accept counter-offer", variant: "destructive" }),
+                                        })}
+                                        disabled={acceptCounterBidMutation.isPending}
+                                      >
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => declineCounterBidMutation.mutate({ bidId: bid.id }, {
+                                          onSuccess: () => { toast({ title: "Counter-offer declined." }); refetchBids(); },
+                                          onError: () => toast({ title: "Failed to decline counter-offer", variant: "destructive" }),
+                                        })}
+                                        disabled={declineCounterBidMutation.isPending}
+                                      >
+                                        Decline
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                                {!isOwner && isMyBid && bid.counterStatus === 'declined' && (
+                                  <Badge variant="outline" className="text-xs">Counter-offer declined</Badge>
                                 )}
                               </div>
                             </div>
@@ -950,6 +997,46 @@ export default function ShipmentDetail() {
                 });
               }}>
               {saveDriverMutation.isPending ? "Saving…" : "Save Driver"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Counter-offer dialog */}
+      <Dialog open={!!counterDialogBidId} onOpenChange={open => { if (!open) setCounterDialogBidId(null); }}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Send Counter-Offer</DialogTitle>
+            <DialogDescription>Enter your counter price. The driver will be notified and can accept or decline.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Counter Price ($)</label>
+            <Input
+              type="number"
+              placeholder="e.g. 750"
+              value={counterPriceInput}
+              onChange={e => setCounterPriceInput(e.target.value)}
+              className="text-lg font-semibold h-12"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCounterDialogBidId(null)}>Cancel</Button>
+            <Button
+              disabled={counterBidMutation.isPending || !counterPriceInput}
+              onClick={() => {
+                if (!counterDialogBidId) return;
+                const price = parseFloat(counterPriceInput);
+                if (!price || price <= 0) { toast({ title: "Enter a valid price", variant: "destructive" }); return; }
+                counterBidMutation.mutate({ bidId: counterDialogBidId, data: { counterPrice: price } }, {
+                  onSuccess: () => {
+                    toast({ title: "Counter-offer sent!", description: "The driver has been notified." });
+                    setCounterDialogBidId(null);
+                    refetchBids();
+                  },
+                  onError: () => toast({ title: "Failed to send counter-offer", variant: "destructive" }),
+                });
+              }}
+            >
+              {counterBidMutation.isPending ? 'Sending...' : 'Send Counter-Offer'}
             </Button>
           </DialogFooter>
         </DialogContent>

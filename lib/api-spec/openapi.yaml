@@ -306,6 +306,75 @@ paths:
         "401":
           description: Unauthorized
 
+  /bids/{bidId}/counter:
+    post:
+      operationId: counterBid
+      tags: [bids]
+      summary: Shipper sends a counter-offer price to a driver
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CounterBidBody"
+      responses:
+        "200":
+          description: Counter-offer sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "401":
+          description: Unauthorized
+
+  /bids/{bidId}/counter-accept:
+    post:
+      operationId: acceptCounterBid
+      tags: [bids]
+      summary: Driver accepts a counter-offer (creates booking at counter price)
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Counter-offer accepted and booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "401":
+          description: Unauthorized
+
+  /bids/{bidId}/counter-decline:
+    post:
+      operationId: declineCounterBid
+      tags: [bids]
+      summary: Driver declines a counter-offer
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Counter-offer declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "401":
+          description: Unauthorized
+
   /bids/my:
     get:
       operationId: getMyBids
@@ -943,6 +1012,11 @@ components:
         status:
           type: string
           enum: [pending, accepted, rejected, withdrawn]
+        counterPrice:
+          type: number
+        counterStatus:
+          type: string
+          enum: [pending, accepted, declined]
         createdAt:
           type: string
       required:
@@ -965,6 +1039,14 @@ components:
           type: string
       required:
         - amount
+
+    CounterBidBody:
+      type: object
+      properties:
+        counterPrice:
+          type: number
+      required:
+        - counterPrice
 
     BidListResponse:
       type: object
