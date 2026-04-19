@@ -11,7 +11,7 @@ async function ensureSavedDriversTable() {
     try {
           await db.execute(sql`
                 CREATE TABLE IF NOT EXISTS saved_drivers (
-                        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+                        id TEXT PRIMARY KEY,
                                 shipper_id TEXT NOT NULL,
                                         driver_id TEXT NOT NULL,
                                                 note TEXT,
