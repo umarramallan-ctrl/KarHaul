@@ -592,8 +592,9 @@ export default function BookingDetail() {
   const { data: booking, isLoading, isError, refetch } = useGetBooking(bookingId, { query: { enabled: !!bookingId } as any });
   const updateStatusMutation = useUpdateBookingStatus();
   const [notes, setNotes] = useState("");
-  const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
   const qc = useQueryClient();
+  const [saveDriverDismissed, setSaveDriverDismissed] = useState(false);
+  const [bolSignOpen, setBolSignOpen] = useState(false);
 
   const saveDriverMutation = useMutation({
     mutationFn: async (driverId: string) => {
@@ -608,7 +609,7 @@ export default function BookingDetail() {
       return res.json();
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["saved-drivers"] }); setSaveDriverDismissed(true); toast({ title: "Driver saved!", description: "Find them in Saved Drivers to rebook anytime." }); },
-    onError: () => { setSaveDriverDismissed(true); },
+    onError: () => { setSaveDriverDismissed(true); toast({ title: "Could not save driver", description: "Please try again.", variant: "destructive" }); },
   });
 
   const isDriver = profile?.id === (booking as any)?.driverId;
@@ -764,6 +765,11 @@ export default function BookingDetail() {
                 <Button variant="outline" size="sm" className="gap-2 text-sm" onClick={() => downloadBOL(b)}>
                   <FileText className="h-4 w-4" /> View / Download BOL
                 </Button>
+                {b.status === "delivered" && (
+                  <Button variant="outline" size="sm" className="gap-2 text-sm border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10" onClick={() => setBolSignOpen(true)}>
+                    <FileText className="h-4 w-4" /> Sign BOL
+                  </Button>
+                )}
                 <div className="bg-background px-5 py-3 rounded-xl border shadow-sm space-y-1 text-right">
                 <div className="flex items-center justify-between gap-8">
                   <span className="text-xs text-muted-foreground">Transport price</span>
@@ -1143,6 +1149,77 @@ export default function BookingDetail() {
         </div>
       </MainLayout>
     </AuthGuard>
+      {/* BOL Signature Modal - for Driver and Shipper on completed bookings */}
+      {bolSignOpen && b && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setBolSignOpen(false)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <FileText className="h-5 w-5 text-emerald-400" /> Sign Bill of Lading
+              </h2>
+              <button onClick={() => setBolSignOpen(false)} className="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <p className="text-sm font-semibold text-slate-300 mb-1">Booking #{b.id?.split("-")[0].toUpperCase()} &mdash; {isDriver ? "Carrier / Driver" : "Shipper"} Signature</p>
+            <p className="text-xs text-slate-500 mb-4">By signing below, you confirm receipt and condition of the vehicle as documented in this Bill of Lading.</p>
+            <div className="relative mb-4">
+              <canvas
+                id="bol-sig-canvas"
+                width={480}
+                height={160}
+                className="w-full rounded-lg border border-slate-600 bg-slate-800 cursor-crosshair touch-none select-none"
+                style={{ touchAction: "none" }}
+                onPointerDown={(e) => {
+                  const canvas = e.currentTarget;
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) return;
+                  canvas.setPointerCapture(e.pointerId);
+                  ctx.strokeStyle = "#10b981";
+                  ctx.lineWidth = 2.5;
+                  ctx.lineCap = "round";
+                  ctx.lineJoin = "round";
+                  const rect = canvas.getBoundingClientRect();
+                  const scaleX = canvas.width / rect.width;
+                  const scaleY = canvas.height / rect.height;
+                  ctx.beginPath();
+                  ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+                  const handleMove = (ev: PointerEvent) => {
+                    ctx.lineTo((ev.clientX - rect.left) * scaleX, (ev.clientY - rect.top) * scaleY);
+                    ctx.stroke();
+                  };
+                  const handleUp = () => {
+                    canvas.removeEventListener("pointermove", handleMove);
+                    canvas.removeEventListener("pointerup", handleUp);
+                  };
+                  canvas.addEventListener("pointermove", handleMove as unknown as EventListener);
+                  canvas.addEventListener("pointerup", handleUp);
+                }}
+              />
+              <span className="absolute bottom-2 left-0 right-0 text-center text-xs text-slate-500 pointer-events-none select-none">Draw your signature above</span>
+            </div>
+            <div className="flex gap-3">
+              <Button size="sm" variant="outline" className="flex-1 border-slate-600 text-slate-400 hover:text-white"
+                onClick={() => {
+                  const c = document.getElementById("bol-sig-canvas") as HTMLCanvasElement;
+                  c?.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+                }}>
+                Clear
+              </Button>
+              <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-500 border-0 text-white font-semibold"
+                onClick={() => {
+                  const canvas = document.getElementById("bol-sig-canvas") as HTMLCanvasElement;
+                  if (!canvas) return;
+                  try {
+                    localStorage.setItem(`bol-sig-${bookingId}-${isDriver ? "driver" : "shipper"}`, canvas.toDataURL("image/png"));
+                  } catch (err) {}
+                  setBolSignOpen(false);
+                  toast({ title: "BOL Signed ✓", description: "Your signature has been saved for this booking." });
+                }}>
+                Confirm Signature
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </BookingErrorBoundary>
   );
 }
