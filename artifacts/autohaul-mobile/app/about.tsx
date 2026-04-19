@@ -94,12 +94,8 @@ export default function AboutScreen() {
         {/* Company */}
         <Section title="About EvoPoint LLC">
           <View style={styles.companyCard}>
-            <View style={styles.companyRow}>
-              <Feather name="map-pin" size={16} color={C.primary} />
-              <Text style={[styles.companyMeta, { color: C.textSecondary }]}>Woodstock, Georgia · EvoPoint LLC</Text>
-            </View>
             <Text style={[styles.companyBody, { color: C.textSecondary }]}>
-              KarHaul is a product of EvoPoint LLC, a technology company based in Woodstock, Georgia. We build software that removes friction from industries that have historically relied on inefficient intermediaries.
+              KarHaul is a product of <Text style={{ fontFamily: "Inter_600SemiBold", color: C.text }}>EvoPoint LLC</Text>, a technology company focused on removing friction from industries that have historically relied on inefficient intermediaries.
             </Text>
             <Text style={[styles.companyBody, { color: C.textSecondary, marginTop: 10 }]}>
               Our team has first-hand experience with the pain points on both sides of the auto transport equation — and we built KarHaul to fix them.
@@ -216,8 +212,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
   },
-  companyRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  companyMeta: { fontFamily: "Inter_500Medium", fontSize: 13 },
   companyBody: { fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21 },
   ctaBtn: {
     flexDirection: "row",

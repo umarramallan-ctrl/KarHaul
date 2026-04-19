@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link } from "wouter";
-import { Truck, Users, ShieldCheck, DollarSign, ArrowRight, MapPin } from "lucide-react";
+import { Truck, Users, ShieldCheck, DollarSign, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function About() {
@@ -83,22 +83,13 @@ export default function About() {
         {/* Company */}
         <section className="space-y-6">
           <h2 className="text-2xl font-display font-bold tracking-tight">About EvoPoint LLC</h2>
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 flex flex-col md:flex-row gap-6">
-            <div className="md:w-64 shrink-0 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <span>Woodstock, Georgia</span>
-              </div>
-              <p className="text-xs text-muted-foreground">EvoPoint LLC</p>
-            </div>
-            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p>
-                KarHaul is a product of <strong className="text-foreground">EvoPoint LLC</strong>, a technology company based in Woodstock, Georgia. We build software that removes friction from industries that have historically relied on inefficient intermediaries.
-              </p>
-              <p>
-                Our team has first-hand experience with the pain points on both sides of the auto transport equation — and we built KarHaul to fix them. We believe that when technology connects people directly, everyone wins.
-              </p>
-            </div>
+          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              KarHaul is a product of <strong className="text-foreground">EvoPoint LLC</strong>, a technology company focused on removing friction from industries that have historically relied on inefficient intermediaries.
+            </p>
+            <p>
+              Our team has first-hand experience with the pain points on both sides of the auto transport equation — and we built KarHaul to fix them. We believe that when technology connects people directly, everyone wins.
+            </p>
           </div>
         </section>
 
