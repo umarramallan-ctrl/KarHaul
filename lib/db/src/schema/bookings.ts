@@ -21,7 +21,7 @@ export const bookingsTable = pgTable("bookings", {
   driverEscrowStatus: text("driver_escrow_status").default("none"), // none | held | captured | returned
   // Cancellation policy
   acceptedAt: timestamp("accepted_at"),
-  cancellationDeadline: timestamp("cancellation_deadline"), // acceptedAt + 1 hour
+  cancellationDeadline: timestamp("cancellation_deadline"), // acceptedAt + 2 hours
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

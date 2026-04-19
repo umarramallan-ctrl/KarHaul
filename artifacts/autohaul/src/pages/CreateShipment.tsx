@@ -617,7 +617,7 @@ export default function CreateShipment() {
                         <p className="text-xs font-bold text-blue-300 uppercase tracking-widest">How KarHaul Fees Work</p>
                         <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
                           <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Your fee:</span><span>5% of your budget is held in escrow when you post. Released to KarHaul after delivery.</span></div>
-                          <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">Cancellation:</span><span>Both parties have a 1-hour window to cancel penalty-free. After that, the cancelling party forfeits their escrow fee.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">Cancellation:</span><span>Both parties have a 2-hour window to cancel penalty-free. After that, the cancelling party forfeits their escrow fee.</span></div>
                           <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">No-show:</span><span>If the driver no-shows, they forfeit their escrow and yours is returned. If you no-show, yours is forfeited and theirs is returned.</span></div>
                           <div className="flex items-start gap-2 pt-1 border-t border-blue-500/20"><span className="text-slate-400 font-bold shrink-0">Payments:</span><span>KarHaul does NOT process transport payments. You pay the driver directly — cash, Zelle, Venmo, etc. The escrow above is the platform fee only.</span></div>
                         </div>
@@ -662,7 +662,7 @@ export default function CreateShipment() {
         fees={pendingBudgetMax > 0 ? [
           { label: "Your platform fee (5% of max budget)", amount: shipperFee },
         ] : []}
-        commitmentText="Once a driver's bid is accepted, you have 1 hour to cancel penalty-free. After that, cancelling forfeits your escrow fee. If the driver no-shows, your escrow is returned."
+        commitmentText="Once a driver's bid is accepted, you have 2 hours to cancel penalty-free. After that, cancelling forfeits your escrow fee. If the driver no-shows, your escrow is returned."
         confirmLabel="Post Load"
         onConfirm={confirmPost}
         isLoading={createMutation.isPending}

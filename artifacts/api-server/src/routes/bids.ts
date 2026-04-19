@@ -165,19 +165,19 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     linkPath: `/bookings/${bookingId}`,
   });
 
-  // Notify both parties the cancellation window is open (1 hour to cancel penalty-free)
-  const windowNotifBody = "You have 1 hour to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
+  // Notify both parties the cancellation window is open (2 hours to cancel penalty-free)
+  const windowNotifBody = "You have 2 hours to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
   await createNotification({
     userId: shipment.shipperId,
     type: "cancellation_window_open",
-    title: "1-hour cancellation window open",
+    title: "2-hour cancellation window open",
     body: windowNotifBody,
     linkPath: `/bookings/${bookingId}`,
   });
   await createNotification({
     userId: bid.driverId,
     type: "cancellation_window_open",
-    title: "1-hour cancellation window open",
+    title: "2-hour cancellation window open",
     body: windowNotifBody,
     linkPath: `/bookings/${bookingId}`,
   });
@@ -299,9 +299,9 @@ router.post("/bids/:bidId/counter-accept", async (req, res) => {
     linkPath: `/bookings/${bookingId}`,
   });
 
-  const windowNotifBody = "You have 1 hour to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
-  await createNotification({ userId: shipment.shipperId, type: "cancellation_window_open", title: "1-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
-  await createNotification({ userId: bid.driverId, type: "cancellation_window_open", title: "1-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
+  const windowNotifBody = "You have 2 hours to cancel this booking penalty-free. After that, the cancelling party forfeits their escrow.";
+  await createNotification({ userId: shipment.shipperId, type: "cancellation_window_open", title: "2-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
+  await createNotification({ userId: bid.driverId, type: "cancellation_window_open", title: "2-hour cancellation window open", body: windowNotifBody, linkPath: `/bookings/${bookingId}` });
 
   for (const rejected of pendingBids) {
     if (rejected.driverId !== bid.driverId) {

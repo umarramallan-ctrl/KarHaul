@@ -736,7 +736,7 @@ export default function BookingDetail() {
                     <p className="text-sm text-slate-300">
                       A 5% platform fee ({b.shipment?.shipperEscrowAmount ? `$${Number(b.shipment.shipperEscrowAmount).toFixed(2)}` : "—"}) is held in escrow and released upon delivery confirmation.
                     </p>
-                    <p className="text-xs text-slate-500 mt-2">Cancellations within 1 hour of booking incur no penalty. After that, the escrow fee is forfeited.</p>
+                    <p className="text-xs text-slate-500 mt-2">Cancellations within 2 hours of booking incur no penalty. After that, the escrow fee is forfeited.</p>
                   </div>
                 </div>
                 <div className="mt-4 rounded-xl bg-slate-900/50 border border-slate-700/60 p-4">

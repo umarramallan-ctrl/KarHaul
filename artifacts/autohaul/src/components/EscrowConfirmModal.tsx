@@ -72,7 +72,7 @@ export function EscrowConfirmModal({
           <div className="flex items-start gap-2">
             <Clock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
             <div className="text-xs text-blue-300 leading-relaxed">
-              <strong>Cancellation policy:</strong> You have 1 hour after mutual acceptance to cancel penalty-free. After that, the cancelling party forfeits their escrow.
+              <strong>Cancellation policy:</strong> You have 2 hours after mutual acceptance to cancel penalty-free. After that, the cancelling party forfeits their escrow.
             </div>
           </div>
         </div>

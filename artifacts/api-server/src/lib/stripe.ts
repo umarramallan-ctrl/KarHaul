@@ -11,7 +11,7 @@ export const stripe = new Stripe(stripeKey ?? "sk_test_placeholder", {
 
 export const SHIPPER_FEE_PERCENT = 0.05; // 5% of budgetMax
 export const DRIVER_FEE_PERCENT = 0.03;  // 3% of budgetMax
-export const CANCELLATION_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+export const CANCELLATION_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 /**
  * Compute escrow amounts in cents (Stripe uses smallest currency unit).

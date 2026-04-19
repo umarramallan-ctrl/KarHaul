@@ -239,18 +239,18 @@ router.post("/bookings/:bookingId/cancel", async (req, res) => {
   if (withinWindow) {
     // Both parties get escrow returned
     await releaseEscrow(shipment, booking, "return", "return");
-    const notifBody = "Both parties' escrow has been returned — cancellation within 1-hour window.";
+    const notifBody = "Both parties' escrow has been returned — cancellation within 2-hour window.";
     await createNotification({ userId: booking.shipperId, type: "escrow_returned" as any, title: "Booking cancelled", body: notifBody, linkPath: `/bookings/${booking.id}` });
     await createNotification({ userId: booking.driverId, type: "escrow_returned" as any, title: "Booking cancelled", body: notifBody, linkPath: `/bookings/${booking.id}` });
   } else if (isShipper) {
     // Shipper cancels after window — forfeits their escrow
     await releaseEscrow(shipment, booking, "capture", "return");
-    await createNotification({ userId: booking.shipperId, type: "escrow_forfeited", title: "Escrow forfeited", body: "You cancelled after the 1-hour window. Your escrow fee was forfeited.", linkPath: `/bookings/${booking.id}` });
+    await createNotification({ userId: booking.shipperId, type: "escrow_forfeited", title: "Escrow forfeited", body: "You cancelled after the 2-hour window. Your escrow fee was forfeited.", linkPath: `/bookings/${booking.id}` });
     await createNotification({ userId: booking.driverId, type: "escrow_released", title: "Escrow returned", body: "The shipper cancelled. Your escrow fee has been returned.", linkPath: `/bookings/${booking.id}` });
   } else {
     // Driver cancels after window — forfeits their escrow
     await releaseEscrow(shipment, booking, "return", "capture");
-    await createNotification({ userId: booking.driverId, type: "escrow_forfeited", title: "Escrow forfeited", body: "You cancelled after the 1-hour window. Your escrow fee was forfeited.", linkPath: `/bookings/${booking.id}` });
+    await createNotification({ userId: booking.driverId, type: "escrow_forfeited", title: "Escrow forfeited", body: "You cancelled after the 2-hour window. Your escrow fee was forfeited.", linkPath: `/bookings/${booking.id}` });
     await createNotification({ userId: booking.shipperId, type: "escrow_released", title: "Escrow returned", body: "The driver cancelled. Your escrow fee has been returned.", linkPath: `/bookings/${booking.id}` });
   }
 

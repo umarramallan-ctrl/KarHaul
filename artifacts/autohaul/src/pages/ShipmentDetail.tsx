@@ -285,7 +285,7 @@ export default function ShipmentDetail() {
     const bid = bidsData?.bids?.find((b: any) => b.id === pendingAcceptBidId);
     acceptBidMutation.mutate({ bidId: pendingAcceptBidId }, {
       onSuccess: (booking: any) => {
-        toast({ title: "Bid Accepted!", description: "Booking created. 1-hour cancellation window is now open." });
+        toast({ title: "Bid Accepted!", description: "Booking created. 2-hour cancellation window is now open." });
         setAcceptConfirmOpen(false);
         setJustAcceptedBookingId(booking.id);
         setJustAcceptedDriver({
@@ -802,7 +802,7 @@ export default function ShipmentDetail() {
                             <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
                               <p><strong>Your fee:</strong> If accepted, a <strong>3% platform fee</strong> on your accepted bid is held in escrow and released to KarHaul on delivery.</p>
                               <p><strong>Payment:</strong> You are paid directly by the shipper — KarHaul does not process transport payments.</p>
-                              <p><strong>Cancellation:</strong> You have 1 hour after acceptance to cancel penalty-free. After that, cancelling forfeits your escrow.</p>
+                              <p><strong>Cancellation:</strong> You have 2 hours after acceptance to cancel penalty-free. After that, cancelling forfeits your escrow.</p>
                             </div>
                           </div>
 
@@ -970,7 +970,7 @@ export default function ShipmentDetail() {
         fees={budgetMax > 0 ? [
           { label: "Your platform fee (3% of max budget)", amount: driverFee },
         ] : []}
-        commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. You have 1 hour after acceptance to cancel penalty-free. Cancelling after that forfeits your escrow."
+        commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. You have 2 hours after acceptance to cancel penalty-free. Cancelling after that forfeits your escrow."
         confirmLabel="Submit Bid"
         onConfirm={confirmPlaceBid}
         isLoading={placeBidMutation.isPending}
@@ -985,7 +985,7 @@ export default function ShipmentDetail() {
         fees={budgetMax > 0 ? [
           { label: "Your platform fee (5% of max budget)", amount: shipperFee },
         ] : []}
-        commitmentText="You have 1 hour to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
+        commitmentText="You have 2 hours to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
         confirmLabel="Accept Bid"
         onConfirm={confirmAcceptBid}
         isLoading={acceptBidMutation.isPending}
