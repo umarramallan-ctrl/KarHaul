@@ -85,7 +85,7 @@ router.post("/saved-drivers", async (req: Request, res: Response) => {
           res.status(201).json(saved);
     } catch (err) {
           console.error("[saved-drivers POST] error:", err);
-          res.status(500).json({ error: "Failed to save driver" });
+          res.status(500).json({ error: "Failed to save driver", detail: String(err) });
     }
 });
 
@@ -134,7 +134,7 @@ router.post("/users/saved-drivers/:driverId", async (req: Request, res: Response
           res.status(201).json(saved);
     } catch (err) {
           console.error("[users/saved-drivers POST] error:", err);
-          res.status(500).json({ error: "Failed to save driver" });
+          res.status(500).json({ error: "Failed to save driver", detail: String(err) });
     }
 });
 
