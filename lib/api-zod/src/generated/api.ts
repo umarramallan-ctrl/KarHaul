@@ -531,6 +531,91 @@ export const GetMyShipmentsResponse = zod.object({
 });
 
 /**
+ * @summary Update budgetMax on an open load (shipper only)
+ */
+export const UpdateShipmentBudgetParams = zod.object({
+  shipmentId: zod.coerce.string(),
+});
+
+export const UpdateShipmentBudgetBody = zod.object({
+  budgetMax: zod.number(),
+});
+
+export const UpdateShipmentBudgetResponse = zod.object({
+  id: zod.string(),
+  shipperId: zod.string(),
+  shipper: zod
+    .object({
+      id: zod.string(),
+      authId: zod.string().optional(),
+      email: zod.string().optional(),
+      firstName: zod.string().optional(),
+      lastName: zod.string().optional(),
+      phone: zod.string().optional(),
+      role: zod.enum(["shipper", "driver", "both", "admin"]),
+      profileImageUrl: zod.string().optional(),
+      bio: zod.string().optional(),
+      dotNumber: zod.string().optional(),
+      mcNumber: zod.string().optional(),
+      insuranceProvider: zod.string().optional(),
+      insurancePolicyNumber: zod.string().optional(),
+      truckType: zod.string().optional(),
+      truckCapacity: zod.number().optional(),
+      isVerified: zod.boolean().optional(),
+      isSuspended: zod.boolean().optional(),
+      averageRating: zod.number().optional(),
+      totalReviews: zod.number().optional(),
+      completedJobs: zod.number().optional(),
+      termsAccepted: zod.boolean().optional(),
+      termsAcceptedAt: zod.string().optional(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+  title: zod.string().optional(),
+  vehicleYear: zod.number(),
+  vehicleMake: zod.string(),
+  vehicleModel: zod.string(),
+  vehicleType: zod.enum([
+    "sedan",
+    "suv",
+    "truck",
+    "van",
+    "motorcycle",
+    "rv",
+    "exotic",
+    "other",
+  ]),
+  vehicleCondition: zod.enum(["running", "non_running"]),
+  vin: zod.string().optional(),
+  transportType: zod.enum(["open", "enclosed"]),
+  serviceType: zod.enum(["door_to_door", "door_to_port"]).optional(),
+  originAddress: zod.string().optional(),
+  originCity: zod.string(),
+  originState: zod.string(),
+  originZip: zod.string().optional(),
+  destinationAddress: zod.string().optional(),
+  destinationCity: zod.string(),
+  destinationState: zod.string(),
+  destinationZip: zod.string().optional(),
+  pickupDateFrom: zod.string().optional(),
+  pickupDateTo: zod.string().optional(),
+  budgetMin: zod.number().optional(),
+  budgetMax: zod.number().optional(),
+  notes: zod.string().optional(),
+  status: zod.enum([
+    "open",
+    "assigned",
+    "in_transit",
+    "delivered",
+    "cancelled",
+  ]),
+  bidCount: zod.number().optional(),
+  assignedDriverId: zod.string().optional(),
+  createdAt: zod.string().optional(),
+  updatedAt: zod.string().optional(),
+});
+
+/**
  * @summary Get all bids for a shipment
  */
 export const GetShipmentBidsParams = zod.object({

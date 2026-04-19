@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetShipment, useGetShipmentBids, usePlaceBid, useAcceptBid, useGetMyProfile, useCounterBid, useAcceptCounterBid, useDeclineCounterBid } from "@workspace/api-client-react";
+import { useGetShipment, useGetShipmentBids, usePlaceBid, useAcceptBid, useGetMyProfile, useCounterBid, useAcceptCounterBid, useDeclineCounterBid, useUpdateShipmentBudget } from "@workspace/api-client-react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -188,6 +188,7 @@ export default function ShipmentDetail() {
   const counterBidMutation = useCounterBid();
   const acceptCounterBidMutation = useAcceptCounterBid();
   const declineCounterBidMutation = useDeclineCounterBid();
+  const updateBudgetMutation = useUpdateShipmentBudget();
 
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
   const [bidConfirmOpen, setBidConfirmOpen] = useState(false);
@@ -199,6 +200,8 @@ export default function ShipmentDetail() {
   const [justAcceptedDriver, setJustAcceptedDriver] = useState<{ id: string; name: string } | null>(null);
   const [counterDialogBidId, setCounterDialogBidId] = useState<string | null>(null);
   const [counterPriceInput, setCounterPriceInput] = useState("");
+  const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false);
+  const [budgetInput, setBudgetInput] = useState("");
 
   const qc = useQueryClient();
   const saveDriverMutation = useMutation({
@@ -691,7 +694,19 @@ export default function ShipmentDetail() {
           <div className="space-y-6">
             <Card className="shadow-lg border-primary/20 shadow-primary/5">
               <CardHeader className="bg-primary/5 pb-4">
-                <CardTitle>Maximum Budget</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Maximum Budget</CardTitle>
+                  {isOwner && shipment.status === 'open' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => { setBudgetInput(shipment.budgetMax ? String(shipment.budgetMax) : ""); setIsEditBudgetOpen(true); }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <div className="text-3xl font-display font-bold mt-2">
                   {shipment.budgetMax ? formatCurrency(shipment.budgetMax) : 'Open for Bids'}
                 </div>
@@ -1001,6 +1016,47 @@ export default function ShipmentDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Edit Budget dialog */}
+      <Dialog open={isEditBudgetOpen} onOpenChange={open => { if (!open) setIsEditBudgetOpen(false); }}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <DialogTitle>Edit Maximum Budget</DialogTitle>
+            <DialogDescription>Update the max budget for this load. Active bids are not affected.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Maximum Budget ($)</label>
+            <Input
+              type="number"
+              placeholder="e.g. 1200"
+              value={budgetInput}
+              onChange={e => setBudgetInput(e.target.value)}
+              className="text-lg font-semibold h-12"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditBudgetOpen(false)}>Cancel</Button>
+            <Button
+              disabled={updateBudgetMutation.isPending || !budgetInput}
+              onClick={() => {
+                const val = parseFloat(budgetInput);
+                if (!val || val <= 0) { toast({ title: "Enter a valid amount", variant: "destructive" }); return; }
+                updateBudgetMutation.mutate({ shipmentId, data: { budgetMax: val } }, {
+                  onSuccess: () => {
+                    toast({ title: "Budget updated" });
+                    setIsEditBudgetOpen(false);
+                    refetchShipment();
+                  },
+                  onError: () => toast({ title: "Failed to update budget", variant: "destructive" }),
+                });
+              }}
+            >
+              {updateBudgetMutation.isPending ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Counter-offer dialog */}
       <Dialog open={!!counterDialogBidId} onOpenChange={open => { if (!open) setCounterDialogBidId(null); }}>
         <DialogContent className="sm:max-w-[400px]">

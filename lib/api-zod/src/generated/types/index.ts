@@ -54,6 +54,7 @@ export * from "./shipmentVehicleCondition";
 export * from "./shipmentVehicleType";
 export * from "./updateBookingStatusBody";
 export * from "./updateBookingStatusBodyStatus";
+export * from "./updateBudgetBody";
 export * from "./updateProfileBody";
 export * from "./updateProfileBodyRole";
 export * from "./updateShipmentBody";

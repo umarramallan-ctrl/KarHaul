@@ -47,6 +47,7 @@ import type {
   Shipment,
   ShipmentListResponse,
   UpdateBookingStatusBody,
+  UpdateBudgetBody,
   UpdateProfileBody,
   UpdateShipmentBody,
   UserProfile,
@@ -971,6 +972,93 @@ export function useGetMyShipments<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update budgetMax on an open load (shipper only)
+ */
+export const getUpdateShipmentBudgetUrl = (shipmentId: string) => {
+  return `/api/shipments/${shipmentId}/budget`;
+};
+
+export const updateShipmentBudget = async (
+  shipmentId: string,
+  updateBudgetBody: UpdateBudgetBody,
+  options?: RequestInit,
+): Promise<Shipment> => {
+  return customFetch<Shipment>(getUpdateShipmentBudgetUrl(shipmentId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateBudgetBody),
+  });
+};
+
+export const getUpdateShipmentBudgetMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateShipmentBudget>>,
+    TError,
+    { shipmentId: string; data: BodyType<UpdateBudgetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateShipmentBudget>>,
+  TError,
+  { shipmentId: string; data: BodyType<UpdateBudgetBody> },
+  TContext
+> => {
+  const mutationKey = ["updateShipmentBudget"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateShipmentBudget>>,
+    { shipmentId: string; data: BodyType<UpdateBudgetBody> }
+  > = (props) => {
+    const { shipmentId, data } = props ?? {};
+
+    return updateShipmentBudget(shipmentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateShipmentBudgetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateShipmentBudget>>
+>;
+export type UpdateShipmentBudgetMutationBody = BodyType<UpdateBudgetBody>;
+export type UpdateShipmentBudgetMutationError = ErrorType<void>;
+
+/**
+ * @summary Update budgetMax on an open load (shipper only)
+ */
+export const useUpdateShipmentBudget = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateShipmentBudget>>,
+    TError,
+    { shipmentId: string; data: BodyType<UpdateBudgetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateShipmentBudget>>,
+  TError,
+  { shipmentId: string; data: BodyType<UpdateBudgetBody> },
+  TContext
+> => {
+  return useMutation(getUpdateShipmentBudgetMutationOptions(options));
+};
 
 /**
  * @summary Get all bids for a shipment

@@ -7,7 +7,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getShipment, getShipmentBids, placeBid, acceptBid, getMyProfile, counterBid, acceptCounterBid, declineCounterBid } from "@workspace/api-client-react";
+import { getShipment, getShipmentBids, placeBid, acceptBid, getMyProfile, counterBid, acceptCounterBid, declineCounterBid, updateShipmentBudget } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
 
@@ -33,6 +33,8 @@ export default function ShipmentDetailScreen() {
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [counterBidId, setCounterBidId] = useState<string | null>(null);
   const [counterPriceInput, setCounterPriceInput] = useState("");
+  const [showEditBudgetModal, setShowEditBudgetModal] = useState(false);
+  const [budgetInput, setBudgetInput] = useState("");
 
   const { data: shipment, isLoading } = useQuery({ queryKey: ["shipment", id], queryFn: () => getShipment(id!) });
   const { data: bidsData } = useQuery({ queryKey: ["shipment-bids", id], queryFn: () => getShipmentBids(id!) });
@@ -89,6 +91,17 @@ export default function ShipmentDetailScreen() {
       Alert.alert("Counter-Offer Declined", "The shipper has been notified.");
     },
     onError: () => Alert.alert("Error", "Could not decline counter-offer."),
+  });
+
+  const editBudgetMutation = useMutation({
+    mutationFn: (budgetMax: number) => updateShipmentBudget(id!, { budgetMax }),
+    onSuccess: () => {
+      setShowEditBudgetModal(false);
+      setBudgetInput("");
+      qc.invalidateQueries({ queryKey: ["shipment", id] });
+      Alert.alert("Budget Updated", "The maximum budget has been updated.");
+    },
+    onError: () => Alert.alert("Error", "Could not update budget. Please try again."),
   });
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
@@ -156,7 +169,18 @@ export default function ShipmentDetailScreen() {
         </View>
 
         <View style={[styles.card, styles.section]}>
-          <Text style={[styles.sectionHeader, { color: C.text }]}>Shipment Info</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <Text style={[styles.sectionHeader, { color: C.text, marginBottom: 0 }]}>Shipment Info</Text>
+            {isMyShipment && (shipment as any).status === "open" && (
+              <Pressable
+                style={[styles.editBudgetBtn, { borderColor: C.primary }]}
+                onPress={() => { setBudgetInput((shipment as any).budgetMax ? String((shipment as any).budgetMax) : ""); setShowEditBudgetModal(true); }}
+              >
+                <Feather name="edit-2" size={12} color={C.primary} />
+                <Text style={[styles.editBudgetBtnText, { color: C.primary }]}>Edit Budget</Text>
+              </Pressable>
+            )}
+          </View>
           {(shipment as any).pickupDateFrom && <InfoRow label="Earliest Pickup" value={(shipment as any).pickupDateFrom} />}
           {(shipment as any).pickupDateTo && <InfoRow label="Latest Pickup" value={(shipment as any).pickupDateTo} />}
           {(shipment as any).budgetMin && <InfoRow label="Min Budget" value={`$${(shipment as any).budgetMin?.toLocaleString()}`} />}
@@ -270,6 +294,46 @@ export default function ShipmentDetailScreen() {
           </Pressable>
         </View>
       )}
+
+      <Modal visible={showEditBudgetModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowEditBudgetModal(false)}>
+        <View style={[styles.modalContainer, { backgroundColor: C.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: C.border }]}>
+            <Text style={[styles.modalTitle, { color: C.text }]}>Edit Maximum Budget</Text>
+            <Pressable onPress={() => setShowEditBudgetModal(false)}>
+              <Feather name="x" size={22} color={C.textSecondary} />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.textSecondary }}>
+              Update the max budget for this load. Active bids are not affected.
+            </Text>
+            <View>
+              <Text style={[styles.fieldLabel, { color: C.text }]}>Maximum Budget ($) *</Text>
+              <TextInput
+                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: "#fff" }]}
+                value={budgetInput}
+                onChangeText={setBudgetInput}
+                placeholder="e.g. 1200"
+                placeholderTextColor={C.textMuted}
+                keyboardType="numeric"
+              />
+            </View>
+            <Pressable
+              style={[styles.submitBtn, { backgroundColor: C.primary, opacity: editBudgetMutation.isPending ? 0.7 : 1 }]}
+              onPress={() => {
+                const val = parseFloat(budgetInput);
+                if (!val || isNaN(val) || val <= 0) { Alert.alert("Invalid Amount", "Please enter a valid budget amount."); return; }
+                editBudgetMutation.mutate(val);
+              }}
+              disabled={editBudgetMutation.isPending}
+            >
+              {editBudgetMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : (
+                <Text style={styles.submitBtnText}>Save Budget – ${budgetInput || "0"}</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
 
       <Modal visible={showCounterModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowCounterModal(false)}>
         <View style={[styles.modalContainer, { backgroundColor: C.background }]}>
@@ -417,4 +481,6 @@ const styles = StyleSheet.create({
   disclaimerBox: { flexDirection: "row", gap: 10, padding: 12, borderRadius: 12, borderWidth: 1 },
   submitBtn: { paddingVertical: 16, borderRadius: 14, alignItems: "center" },
   submitBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
+  editBudgetBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
+  editBudgetBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 12 },
 });

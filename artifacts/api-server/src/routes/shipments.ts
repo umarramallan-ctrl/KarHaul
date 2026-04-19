@@ -209,6 +209,28 @@ router.delete("/shipments/:shipmentId", async (req, res) => {
   res.json({ success: true });
 });
 
+router.patch("/shipments/:shipmentId/budget", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  const { shipmentId } = req.params;
+  const { budgetMax } = req.body;
+
+  if (budgetMax == null || typeof budgetMax !== "number" || budgetMax <= 0) {
+    res.status(400).json({ error: "budgetMax must be a positive number." });
+    return;
+  }
+
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, shipmentId)).limit(1);
+  if (!shipment) { res.status(404).json({ error: "Not found" }); return; }
+  if (shipment.shipperId !== dbUser?.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (shipment.status !== "open") { res.status(400).json({ error: "Budget can only be edited on open loads." }); return; }
+
+  await db.update(shipmentsTable).set({ budgetMax, updatedAt: new Date() }).where(eq(shipmentsTable.id, shipmentId));
+  const [updated] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, shipmentId)).limit(1);
+  const [shipper] = await db.select().from(usersTable).where(eq(usersTable.id, updated!.shipperId)).limit(1);
+  res.json({ ...updated, shipper: shipper || null });
+});
+
 // Invite saved drivers for a 2-hour exclusive first-look window
 router.post("/shipments/:shipmentId/invite-drivers", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }

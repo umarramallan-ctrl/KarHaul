@@ -226,6 +226,10 @@ export interface CreateShipmentBody {
   notes?: string;
 }
 
+export interface UpdateBudgetBody {
+  budgetMax: number;
+}
+
 export type UpdateShipmentBodyStatus =
   (typeof UpdateShipmentBodyStatus)[keyof typeof UpdateShipmentBodyStatus];
 
