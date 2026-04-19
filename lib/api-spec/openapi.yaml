@@ -306,6 +306,34 @@ paths:
         "401":
           description: Unauthorized
 
+  /bids/{bidId}:
+    delete:
+      operationId: deleteBid
+      tags: [bids]
+      summary: Revoke a pending bid (driver only)
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bid revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "400":
+          description: Bid is not pending
+
   /bids/{bidId}/counter:
     post:
       operationId: counterBid

@@ -26,7 +26,8 @@ export type NotificationType =
   | "user_suspended"          // admin: account auto-suspended
   | "counter_offer_received"  // driver: shipper sent counter
   | "counter_offer_accepted"  // shipper: driver accepted counter
-  | "counter_offer_declined"; // shipper: driver declined counter
+  | "counter_offer_declined"  // shipper: driver declined counter
+  | "bid_withdrawn";          // shipper: driver revoked their bid
 
 export async function createNotification(params: {
   userId: string;

@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetMyBids, useListBookings } from "@workspace/api-client-react";
+import { useGetMyBids, useListBookings, useDeleteBid } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,18 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelative, getStatusColor, formatVehicleName } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, MapPin, ArrowRight, DollarSign, Clock, Star, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function DriverDashboard() {
-  const { data: bidsData, isLoading: loadingBids } = useGetMyBids();
+  const { data: bidsData, isLoading: loadingBids, refetch: refetchBids } = useGetMyBids();
   const { data: bookingsData, isLoading: loadingBookings } = useListBookings();
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const deleteBidMutation = useDeleteBid();
+  const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
 
   const pendingBids = bidsData?.bids?.filter(b => b.status === 'pending') || [];
   const activeBookings = bookingsData?.bookings?.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
@@ -182,9 +190,18 @@ export default function DriverDashboard() {
                         <div className="flex items-center text-sm text-muted-foreground mb-4">
                           <Clock className="h-4 w-4 mr-1" /> Placed {formatRelative(bid.createdAt)}
                         </div>
-                        <Button variant="secondary" className="w-full" asChild>
-                           <Link href={`/shipments/${bid.shipmentId}`}>View Shipment</Link>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="secondary" className="flex-1" asChild>
+                            <Link href={`/shipments/${bid.shipmentId}`}>View Shipment</Link>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                            onClick={() => setRevokeConfirmId(bid.id)}
+                          >
+                            Revoke Bid
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -193,6 +210,36 @@ export default function DriverDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      <AlertDialog open={!!revokeConfirmId} onOpenChange={open => { if (!open) setRevokeConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke this bid?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will withdraw your bid. The shipment owner will be notified. You can place a new bid on this load afterwards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (!revokeConfirmId) return;
+                deleteBidMutation.mutate({ bidId: revokeConfirmId }, {
+                  onSuccess: () => {
+                    toast({ title: "Bid revoked", description: "Your bid has been withdrawn." });
+                    setRevokeConfirmId(null);
+                    refetchBids();
+                    qc.invalidateQueries({ queryKey: ["/api/bids/my"] });
+                  },
+                  onError: () => toast({ title: "Failed to revoke bid", variant: "destructive" }),
+                });
+              }}
+            >
+              {deleteBidMutation.isPending ? "Revoking…" : "Yes, Revoke"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

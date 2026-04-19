@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from "react";
 import {
-  View, Text, StyleSheet, FlatList, RefreshControl, Pressable, Platform, ActivityIndicator
+  View, Text, StyleSheet, FlatList, RefreshControl, Pressable, Platform, ActivityIndicator, Alert
 } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { listBookings, getMyBids } from "@workspace/api-client-react";
+import { listBookings, getMyBids, deleteBid } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
 
@@ -57,6 +57,8 @@ export default function MyJobsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<"bookings" | "bids">("bookings");
 
+  const qc = useQueryClient();
+
   const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ["my-bookings"],
     queryFn: listBookings,
@@ -67,6 +69,27 @@ export default function MyJobsScreen() {
     queryFn: getMyBids,
     enabled: isAuthenticated,
   });
+
+  const revokeBidMutation = useMutation({
+    mutationFn: (bidId: string) => deleteBid(bidId),
+    onSuccess: () => {
+      refetchBids();
+      qc.invalidateQueries({ queryKey: ["my-bids"] });
+      Alert.alert("Bid Revoked", "Your bid has been withdrawn. The shipment owner has been notified.");
+    },
+    onError: () => Alert.alert("Error", "Could not revoke bid. Please try again."),
+  });
+
+  function confirmRevoke(bidId: string, amount: number) {
+    Alert.alert(
+      "Revoke Bid",
+      `Are you sure you want to withdraw your $${amount.toLocaleString()} bid? The shipment owner will be notified.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Revoke", style: "destructive", onPress: () => revokeBidMutation.mutate(bidId) },
+      ]
+    );
+  }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -182,6 +205,16 @@ export default function MyJobsScreen() {
                     <Text style={[styles.price, { color: Colors.light.success }]}>${(item as any).amount?.toLocaleString()}</Text>
                     <Text style={[styles.priceLabel, { color: Colors.light.textMuted }]}>your bid</Text>
                   </View>
+                  {(item as any).status === "pending" && (
+                    <Pressable
+                      style={[styles.revokeBtn, revokeBidMutation.isPending ? { opacity: 0.5 } : {}]}
+                      onPress={() => confirmRevoke((item as any).id, (item as any).amount)}
+                      disabled={revokeBidMutation.isPending}
+                    >
+                      <Feather name="trash-2" size={14} color="#EF4444" />
+                      <Text style={styles.revokeBtnText}>Revoke Bid</Text>
+                    </Pressable>
+                  )}
                 </Pressable>
               );
             }}
@@ -218,4 +251,6 @@ const styles = StyleSheet.create({
   emptyText: { fontFamily: "Inter_400Regular", fontSize: 14, textAlign: "center" },
   ctaBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, marginTop: 8 },
   ctaBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#fff" },
+  revokeBtn: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" },
+  revokeBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#EF4444" },
 });

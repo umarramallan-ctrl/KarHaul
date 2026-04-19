@@ -363,6 +363,19 @@ router.delete("/bids/:bidId", async (req, res) => {
     .set({ bidCount: remainingBids.length })
     .where(eq(shipmentsTable.id, bid.shipmentId));
 
+  // Notify the shipment owner
+  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
+  if (shipment) {
+    const driverName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "A driver";
+    await createNotification({
+      userId: shipment.shipperId,
+      type: "bid_withdrawn",
+      title: "Bid withdrawn",
+      body: `${driverName} withdrew their $${bid.amount} bid on your shipment.`,
+      linkPath: `/shipments/${bid.shipmentId}`,
+    });
+  }
+
   res.json({ success: true });
 });
 

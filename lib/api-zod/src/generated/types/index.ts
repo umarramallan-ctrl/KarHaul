@@ -29,6 +29,7 @@ export * from "./createShipmentBodyServiceType";
 export * from "./createShipmentBodyTransportType";
 export * from "./createShipmentBodyVehicleCondition";
 export * from "./createShipmentBodyVehicleType";
+export * from "./deleteBid200";
 export * from "./exchangeMobileAuthorizationCodeBody";
 export * from "./exchangeMobileAuthorizationCodeResponse";
 export * from "./feedbackResponse";

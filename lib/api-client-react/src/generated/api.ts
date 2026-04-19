@@ -30,6 +30,7 @@ import type {
   CreateFeedbackBody,
   CreateReviewBody,
   CreateShipmentBody,
+  DeleteBid200,
   ExchangeMobileAuthorizationCodeBody,
   ExchangeMobileAuthorizationCodeResponse,
   FeedbackResponse,
@@ -1228,6 +1229,90 @@ export const useAcceptBid = <
   TContext
 > => {
   return useMutation(getAcceptBidMutationOptions(options));
+};
+
+/**
+ * @summary Revoke a pending bid (driver only)
+ */
+export const getDeleteBidUrl = (bidId: string) => {
+  return `/api/bids/${bidId}`;
+};
+
+export const deleteBid = async (
+  bidId: string,
+  options?: RequestInit,
+): Promise<DeleteBid200> => {
+  return customFetch<DeleteBid200>(getDeleteBidUrl(bidId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBidMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteBid"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBid>>,
+    { bidId: string }
+  > = (props) => {
+    const { bidId } = props ?? {};
+
+    return deleteBid(bidId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBidMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBid>>
+>;
+
+export type DeleteBidMutationError = ErrorType<void>;
+
+/**
+ * @summary Revoke a pending bid (driver only)
+ */
+export const useDeleteBid = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBid>>,
+    TError,
+    { bidId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBid>>,
+  TError,
+  { bidId: string },
+  TContext
+> => {
+  return useMutation(getDeleteBidMutationOptions(options));
 };
 
 /**

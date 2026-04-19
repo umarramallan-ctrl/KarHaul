@@ -496,6 +496,10 @@ export const ListShipmentsTransportType = {
   enclosed: "enclosed",
 } as const;
 
+export type DeleteBid200 = {
+  success?: boolean;
+};
+
 export type AdminListUsersParams = {
   role?: string;
   page?: number;

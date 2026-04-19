@@ -755,6 +755,17 @@ export const AcceptBidResponse = zod.object({
 });
 
 /**
+ * @summary Revoke a pending bid (driver only)
+ */
+export const DeleteBidParams = zod.object({
+  bidId: zod.coerce.string(),
+});
+
+export const DeleteBidResponse = zod.object({
+  success: zod.boolean().optional(),
+});
+
+/**
  * @summary Shipper sends a counter-offer price to a driver
  */
 export const CounterBidParams = zod.object({
