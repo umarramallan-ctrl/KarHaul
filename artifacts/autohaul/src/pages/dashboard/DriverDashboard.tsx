@@ -1,5 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetMyBids, useListBookings, useDeleteBid, useGetMyReviews } from "@workspace/api-client-react";
+import { useGetMyBids, useListBookings, useDeleteBid } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +21,14 @@ export default function DriverDashboard() {
   const { toast } = useToast();
   const deleteBidMutation = useDeleteBid();
   const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
-  const { data: myReviewsData } = useGetMyReviews();
+  const { data: myReviewsData } = useQuery({
+    queryKey: ["my-reviews"],
+    queryFn: async () => {
+      const headers = await clerkAuthHeaders();
+      const res = await fetch(`${apiBase}/reviews/my`, { credentials: "include", headers });
+      return res.json() as Promise<{ reviewedBookingIds: string[] }>;
+    },
+  });
   const reviewedBookingIds = new Set(myReviewsData?.reviewedBookingIds ?? []);
 
   const pendingBids = bidsData?.bids?.filter(b => b.status === 'pending') || [];

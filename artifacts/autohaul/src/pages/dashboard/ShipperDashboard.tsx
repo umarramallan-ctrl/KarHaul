@@ -1,5 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetMyShipments, useListBookings, useGetMyReviews } from "@workspace/api-client-react";
+import { useGetMyShipments, useListBookings } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiBase, clerkAuthHeaders } from "@/lib/api";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +14,14 @@ export default function ShipperDashboard() {
   const { data: shipmentsData, isLoading: loadingShipments } = useGetMyShipments();
   const { data: bookingsData, isLoading: loadingBookings } = useListBookings();
 
-  const { data: myReviewsData } = useGetMyReviews();
+  const { data: myReviewsData } = useQuery({
+    queryKey: ["my-reviews"],
+    queryFn: async () => {
+      const headers = await clerkAuthHeaders();
+      const res = await fetch(`${apiBase}/reviews/my`, { credentials: "include", headers });
+      return res.json() as Promise<{ reviewedBookingIds: string[] }>;
+    },
+  });
   const reviewedBookingIds = new Set(myReviewsData?.reviewedBookingIds ?? []);
 
   const openShipments = shipmentsData?.shipments?.filter(s => s.status === 'open') || [];
