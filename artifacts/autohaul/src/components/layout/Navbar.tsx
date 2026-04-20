@@ -95,9 +95,11 @@ export function Navbar() {
 
   const NavLinks = () => (
     <>
-      <Link href="/shipments" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/shipments' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
-        Browse Loads
-      </Link>
+      {(!isAuthenticated || role !== 'shipper') && (
+        <Link href="/shipments" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/shipments' ? 'text-primary' : 'text-muted-foreground'}`} onClick={closeMenu}>
+          Browse Loads
+        </Link>
+      )}
       <Link href="/backhaul" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/backhaul' ? 'text-primary' : 'text-muted-foreground'} flex items-center gap-1`} onClick={closeMenu}>
         <Route className="h-3.5 w-3.5" />Backhaul Board
       </Link>

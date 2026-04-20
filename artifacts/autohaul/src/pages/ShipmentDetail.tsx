@@ -987,7 +987,7 @@ export default function ShipmentDetail() {
         fees={pendingAcceptBidAmount > 0 ? [
           { label: "Your platform fee (5% of agreed price)", amount: shipperFee },
         ] : []}
-        commitmentText="You have 2 hours to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
+        commitmentText="By accepting, you agree to pay the driver directly upon delivery. If the driver no-shows or fails to deliver, your escrow is returned."
         confirmLabel="Accept Bid"
         onConfirm={confirmAcceptBid}
         isLoading={acceptBidMutation.isPending}
