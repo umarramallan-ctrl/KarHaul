@@ -777,7 +777,7 @@ export default function BookingDetail() {
                 </div>
                 {platformFee > 0 && (
                   <div className="flex items-center justify-between gap-8">
-                    <span className="text-xs text-muted-foreground">Platform fee ({isDriver ? "3% of bid" : "5% of budget"})</span>
+                    <span className="text-xs text-muted-foreground">Platform fee ({isDriver ? "3% of agreed price" : "5% of agreed price"})</span>
                     <span className="text-sm text-amber-600">+{formatCurrency(platformFee)}</span>
                   </div>
                 )}
@@ -1012,7 +1012,7 @@ export default function BookingDetail() {
                         <div>
                           <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee Breakdown</p>
                           <div className="text-xs text-amber-700 dark:text-amber-400 mt-1 space-y-1">
-                            {(isShipper || (!isShipper && !isDriver)) && <p><strong>Shipper fee:</strong> 5% of the budget held in escrow when the load was posted — released to KarHaul on delivery.</p>}
+                            {(isShipper || (!isShipper && !isDriver)) && <p><strong>Shipper fee:</strong> 5% of the agreed price held in escrow when the bid was accepted — released to KarHaul on delivery.</p>}
                             {isDriver && <p><strong>Your fee:</strong> 3% of your accepted bid held in escrow when you accepted — released to KarHaul on delivery.</p>}
                             <p className="pt-1 border-t border-amber-300/30"><strong>Transport payment:</strong> KarHaul does not process payments between shipper and driver. You pay each other directly.</p>
                           </div>

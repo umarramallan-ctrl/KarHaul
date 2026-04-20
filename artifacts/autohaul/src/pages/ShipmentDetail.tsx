@@ -301,9 +301,11 @@ export default function ShipmentDetail() {
   }
 
   const budgetMax = shipment?.budgetMax ?? 0;
-  const driverFee = parseFloat((budgetMax * 0.03).toFixed(2));
-  const shipperFee = parseFloat((budgetMax * 0.05).toFixed(2));
   const pendingBidAmount = pendingBidValues?.amount ?? 0;
+  const pendingAcceptBid = bidsData?.bids?.find((b: any) => b.id === pendingAcceptBidId);
+  const pendingAcceptBidAmount = pendingAcceptBid?.amount ?? 0;
+  const driverFee = parseFloat((pendingBidAmount * 0.03).toFixed(2));
+  const shipperFee = parseFloat((pendingAcceptBidAmount * 0.05).toFixed(2));
 
   const acceptedBid = bidsData?.bids?.find((b: any) => b.status === 'accepted');
 
@@ -967,8 +969,8 @@ export default function ShipmentDetail() {
         onOpenChange={setBidConfirmOpen}
         title="Confirm Bid Submission"
         description={`You're submitting a $${pendingBidValues?.amount?.toFixed(2) ?? "0.00"} bid. If accepted, a 3% platform fee (held in escrow) is charged to you. You are paid directly by the shipper — KarHaul does not process transport payments.`}
-        fees={budgetMax > 0 ? [
-          { label: "Your platform fee (3% of max budget)", amount: driverFee },
+        fees={pendingBidAmount > 0 ? [
+          { label: "Your platform fee (3% of bid amount)", amount: driverFee },
         ] : []}
         commitmentText="By confirming, you commit to transporting this vehicle if your bid is accepted. You have 2 hours after acceptance to cancel penalty-free. Cancelling after that forfeits your escrow."
         confirmLabel="Submit Bid"
@@ -982,8 +984,8 @@ export default function ShipmentDetail() {
         onOpenChange={setAcceptConfirmOpen}
         title="Accept Bid & Create Booking"
         description={`Accepting creates a binding booking. A 5% platform fee is held in escrow from you now and released to KarHaul on delivery. You pay the driver directly — KarHaul does not process transport payments.`}
-        fees={budgetMax > 0 ? [
-          { label: "Your platform fee (5% of max budget)", amount: shipperFee },
+        fees={pendingAcceptBidAmount > 0 ? [
+          { label: "Your platform fee (5% of agreed price)", amount: shipperFee },
         ] : []}
         commitmentText="You have 2 hours to cancel penalty-free. After that, cancelling forfeits your escrow. If the driver no-shows, you get your escrow back."
         confirmLabel="Accept Bid"

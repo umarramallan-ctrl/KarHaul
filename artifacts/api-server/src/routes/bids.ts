@@ -200,35 +200,47 @@ router.post("/bids/:bidId/accept", async (req, res) => {
 
 router.post("/bids/:bidId/counter", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const dbUser = await getDbUser((req.user as any).id);
-  const { bidId } = req.params;
-  const { counterPrice } = req.body;
+  try {
+    const dbUser = await getDbUser((req.user as any).id);
+    if (!dbUser) { res.status(401).json({ error: "User profile not found" }); return; }
 
-  if (!counterPrice || typeof counterPrice !== "number" || counterPrice <= 0) {
-    res.status(400).json({ error: "Invalid counter price." });
-    return;
+    const { bidId } = req.params;
+    const { counterPrice } = req.body;
+
+    if (counterPrice == null || typeof counterPrice !== "number" || counterPrice <= 0) {
+      res.status(400).json({ error: "Invalid counter price." });
+      return;
+    }
+
+    const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+    if (!bid) { res.status(404).json({ error: "Bid not found" }); return; }
+
+    const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
+    if (!shipment) { res.status(404).json({ error: "Shipment not found" }); return; }
+    if (shipment.shipperId !== dbUser.id) {
+      console.error(`[POST /bids/:bidId/counter] forbidden: shipperId=${shipment.shipperId} dbUser.id=${dbUser.id}`);
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    if (bid.status !== "pending") { res.status(400).json({ error: "Can only counter a pending bid." }); return; }
+
+    await db.update(bidsTable).set({ counterPrice, counterStatus: "pending", updatedAt: new Date() }).where(eq(bidsTable.id, bidId));
+
+    const shipperName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "The shipper";
+    await createNotification({
+      userId: bid.driverId,
+      type: "counter_offer_received",
+      title: "Counter-offer received",
+      body: `${shipperName} sent a counter-offer of $${counterPrice} on your bid.`,
+      linkPath: `/shipments/${bid.shipmentId}`,
+    });
+
+    const [updated] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
+    res.json(updated);
+  } catch (err) {
+    console.error("[POST /bids/:bidId/counter] error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
-  if (!bid) { res.status(404).json({ error: "Bid not found" }); return; }
-
-  const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, bid.shipmentId)).limit(1);
-  if (!shipment || shipment.shipperId !== dbUser?.id) { res.status(403).json({ error: "Forbidden" }); return; }
-  if (bid.status !== "pending") { res.status(400).json({ error: "Can only counter a pending bid." }); return; }
-
-  await db.update(bidsTable).set({ counterPrice, counterStatus: "pending", updatedAt: new Date() }).where(eq(bidsTable.id, bidId));
-
-  const shipperName = `${dbUser.firstName || ""} ${dbUser.lastName || ""}`.trim() || "The shipper";
-  await createNotification({
-    userId: bid.driverId,
-    type: "counter_offer_received",
-    title: "Counter-offer received",
-    body: `${shipperName} sent a counter-offer of $${counterPrice} on your bid.`,
-    linkPath: `/shipments/${bid.shipmentId}`,
-  });
-
-  const [updated] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
-  res.json(updated);
 });
 
 router.post("/bids/:bidId/counter-accept", async (req, res) => {
