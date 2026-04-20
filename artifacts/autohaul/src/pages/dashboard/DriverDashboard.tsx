@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useGetMyBids, useListBookings, useDeleteBid } from "@workspace/api-client-react";
+import { useGetMyBids, useListBookings, useDeleteBid, useGetMyReviews } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,8 @@ export default function DriverDashboard() {
   const { toast } = useToast();
   const deleteBidMutation = useDeleteBid();
   const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
+  const { data: myReviewsData } = useGetMyReviews();
+  const reviewedBookingIds = new Set(myReviewsData?.reviewedBookingIds ?? []);
 
   const pendingBids = bidsData?.bids?.filter(b => b.status === 'pending') || [];
   const activeBookings = bookingsData?.bookings?.filter(b => ['confirmed', 'picked_up', 'in_transit'].includes(b.status)) || [];
@@ -155,15 +157,22 @@ export default function DriverDashboard() {
                         )}
                         <div className="text-sm font-semibold text-primary mt-1">{formatCurrency(booking.agreedPrice)}</div>
                       </div>
-                      <div className="bg-amber-50 dark:bg-amber-900/20 border-t md:border-t-0 md:border-l border-amber-200 dark:border-amber-800 p-6 flex flex-col justify-center items-center gap-3 shrink-0 w-full md:w-56">
-                        <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-sm font-semibold">
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                          Rate your shipper
+                      {reviewedBookingIds.has(booking.id) ? (
+                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-t md:border-t-0 md:border-l border-emerald-200 dark:border-emerald-800 p-6 flex flex-col justify-center items-center gap-3 shrink-0 w-full md:w-56">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Review Submitted</span>
                         </div>
-                        <Button className="w-full" size="sm" asChild>
-                          <Link href={`/bookings/${booking.id}`}>Leave a Review</Link>
-                        </Button>
-                      </div>
+                      ) : (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border-t md:border-t-0 md:border-l border-amber-200 dark:border-amber-800 p-6 flex flex-col justify-center items-center gap-3 shrink-0 w-full md:w-56">
+                          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-sm font-semibold">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            Rate your shipper
+                          </div>
+                          <Button className="w-full" size="sm" asChild>
+                            <Link href={`/bookings/${booking.id}`}>Leave a Review</Link>
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

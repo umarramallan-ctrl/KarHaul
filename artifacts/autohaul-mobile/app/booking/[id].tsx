@@ -4,7 +4,8 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getBooking, updateBookingStatus, getMyProfile } from "@workspace/api-client-react";
+import { getBooking, updateBookingStatus, getMyProfile, getMyReviews, createReview } from "@workspace/api-client-react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/lib/auth";
 import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
@@ -73,7 +74,14 @@ export default function BookingDetailScreen() {
   const [calling, setCalling] = useState<string | null>(null);
   const [uploadPhase, setUploadPhase] = useState<"pickup" | "delivery">("pickup");
   const [uploading, setUploading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [bolSigned, setBolSigned] = useState(false);
   const { getToken } = useClerkAuth();
+
+  useEffect(() => {
+    if (id) AsyncStorage.getItem(`bol-signed-${id}`).then(v => setBolSigned(!!v));
+  }, [id]);
 
   const { data: booking, isLoading } = useQuery({ queryKey: ["booking", id], queryFn: () => getBooking(id!) });
   const { data: myProfile } = useQuery({ queryKey: ["my-profile"], queryFn: getMyProfile, enabled: isAuthenticated });
@@ -94,6 +102,22 @@ export default function BookingDetailScreen() {
     },
     enabled: !!id,
     refetchInterval: 30000,
+  });
+
+  const { data: myReviewsData, refetch: refetchMyReviews } = useQuery({
+    queryKey: ["my-reviews"],
+    queryFn: getMyReviews,
+    enabled: isAuthenticated,
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof createReview>[0]) => createReview(payload),
+    onSuccess: () => {
+      refetchMyReviews();
+      qc.invalidateQueries({ queryKey: ["my-reviews"] });
+      Alert.alert("Review submitted", "Thank you for your feedback!");
+    },
+    onError: (e: any) => Alert.alert("Error", e.message),
   });
 
   const statusMutation = useMutation({
@@ -124,6 +148,7 @@ export default function BookingDetailScreen() {
 
   const isDriver = myProfile && (myProfile as any).id === (booking as any).driverId;
   const isShipper = myProfile && (myProfile as any).id === (booking as any).shipperId;
+  const alreadyReviewed = (myReviewsData?.reviewedBookingIds ?? []).includes(id!);
   const currentStepIdx = STATUS_STEPS.indexOf((booking as any).status);
   const shipment = (booking as any).shipment;
   const driver = (booking as any).driver;
@@ -323,6 +348,29 @@ export default function BookingDetailScreen() {
                 <Feather name="file-text" size={13} color={C.primary} />
                 <Text style={[styles.bolLink, { color: C.primary }]}>Bill of Lading auto-generated on booking confirmation</Text>
               </View>
+              {(booking as any).status === "delivered" && (isDriver || isShipper) && (
+                bolSigned ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 }}>
+                    <Feather name="check-circle" size={14} color="#16A34A" />
+                    <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#16A34A" }}>BOL Signed ✓</Text>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#BBF7D0", borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginTop: 10, alignSelf: "flex-start" }}
+                    onPress={() => Alert.alert(
+                      "Sign Bill of Lading",
+                      "By confirming, you acknowledge receipt and condition of the vehicle as documented in this Bill of Lading.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Sign BOL", onPress: async () => { await AsyncStorage.setItem(`bol-signed-${id}`, "1"); setBolSigned(true); } },
+                      ]
+                    )}
+                  >
+                    <Feather name="file-text" size={14} color="#16A34A" />
+                    <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#16A34A" }}>Sign BOL</Text>
+                  </Pressable>
+                )
+              )}
             </View>
           </View>
         )}
@@ -454,6 +502,57 @@ export default function BookingDetailScreen() {
               : "Booking ended. Use the flag icon to report any issues."}
           </Text>
         </View>
+
+        {/* Review section — only for delivered bookings */}
+        {(booking as any).status === "delivered" && (isDriver || isShipper) && (
+          <View style={[styles.section, { marginBottom: 24 }]}>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>
+              {alreadyReviewed ? "Review Submitted" : `Rate ${isDriver ? "Shipper" : "Driver"}`}
+            </Text>
+            {alreadyReviewed ? (
+              <View style={[styles.card, { backgroundColor: "#F0FDF4", flexDirection: "row", gap: 8, alignItems: "center" }]}>
+                <Feather name="check-circle" size={18} color="#16A34A" />
+                <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: "#16A34A", flex: 1 }}>
+                  You've already submitted a review for this booking.
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.card, { backgroundColor: "#fff" }]}>
+                <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Overall Rating *</Text>
+                <View style={{ flexDirection: "row", gap: 6, marginBottom: 14 }}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Pressable key={s} onPress={() => setReviewRating(s)} hitSlop={8}>
+                      <Text style={{ fontSize: 30, color: s <= reviewRating ? "#F59E0B" : "#D1D5DB" }}>★</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Text style={[styles.formLabel, { color: C.textMuted }]}>Comment (optional)</Text>
+                <TextInput
+                  value={reviewComment}
+                  onChangeText={setReviewComment}
+                  placeholder="Share details about your experience..."
+                  placeholderTextColor={C.textMuted}
+                  multiline
+                  numberOfLines={3}
+                  style={{ borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 12, fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 14, minHeight: 72, textAlignVertical: "top", color: C.text }}
+                />
+                <Pressable
+                  style={[styles.submitBtn, { backgroundColor: reviewMutation.isPending || !reviewRating ? "#94A3B8" : C.primary }]}
+                  onPress={() => {
+                    if (!reviewRating) { Alert.alert("Rating required", "Please select a rating."); return; }
+                    const revieweeId = isDriver ? (booking as any).shipperId : (booking as any).driverId;
+                    reviewMutation.mutate({ bookingId: id!, revieweeId, rating: reviewRating, comment: reviewComment || undefined });
+                  }}
+                  disabled={reviewMutation.isPending || !reviewRating}
+                >
+                  <Text style={styles.submitBtnText}>
+                    {reviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {isDriver && nextSt && (booking as any).status !== "delivered" && (
