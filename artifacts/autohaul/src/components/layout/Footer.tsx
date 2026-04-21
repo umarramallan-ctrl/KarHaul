@@ -51,7 +51,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p>© {new Date().getFullYear()} KarHaul. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} KarHaul, operated by EvoPoint LLC. All rights reserved.</p>
           <p className="text-xs max-w-xl text-center md:text-right">
             KarHaul is a technology platform, not a motor carrier or freight broker.
             All transport liability remains strictly between the shipper and the contracted carrier.
