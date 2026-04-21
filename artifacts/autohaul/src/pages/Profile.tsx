@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { ShieldCheck, Truck, User, Lock, Key, Map, CreditCard, ArrowLeft } from "lucide-react";
 import { PasskeyManager } from "@/components/passkeys/PasskeyManager";
 import { TwoFASettings } from "@/components/security/TwoFASettings";
@@ -48,6 +49,7 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
 
 function ProfileContent() {
   const { toast } = useToast();
+  const { user } = useUser();
   const { data: profile, isLoading } = useGetMyProfile();
   const updateMutation = useUpdateMyProfile();
 
@@ -57,15 +59,20 @@ function ProfileContent() {
   });
 
   useEffect(() => {
+    const clerkFirst = user?.firstName || "";
+    const clerkLast = user?.lastName || "";
     if (profile) {
       form.reset({
-        firstName: profile.firstName || "", lastName: profile.lastName || "", phone: profile.phone || "",
+        firstName: profile.firstName || clerkFirst, lastName: profile.lastName || clerkLast, phone: profile.phone || "",
         role: profile.role || "shipper", dotNumber: profile.dotNumber || "", mcNumber: profile.mcNumber || "",
         insuranceProvider: profile.insuranceProvider || "", insurancePolicyNumber: profile.insurancePolicyNumber || "",
         truckType: profile.truckType || "", termsAccepted: profile.termsAccepted || false,
       });
+    } else if (user) {
+      form.setValue("firstName", clerkFirst);
+      form.setValue("lastName", clerkLast);
     }
-  }, [profile, form]);
+  }, [profile, user]);
 
   function onSubmit(values: z.infer<typeof profileSchema>) {
     const validRole = (values.role === "admin" ? "both" : values.role) as UpdateProfileBodyRole;
@@ -136,6 +143,12 @@ function ProfileContent() {
                       ))}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Email</label>
+                        <Input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className="bg-slate-800/60 border-slate-700 text-slate-400 h-11 cursor-not-allowed" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <FormField control={form.control} name="phone" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Phone Number</FormLabel>
@@ -156,7 +169,6 @@ function ProfileContent() {
                             <SelectContent>
                               <SelectItem value="shipper">Shipper (I want to ship a car)</SelectItem>
                               <SelectItem value="driver">Carrier (I haul cars)</SelectItem>
-                              <SelectItem value="both">Both</SelectItem>
                             </SelectContent>
                           </Select>
                           {profile?.isVerified && <FormDescription className="text-xs text-slate-600">Role locked while verified.</FormDescription>}
@@ -252,6 +264,7 @@ function ProfileContent() {
                         <FormDescription className="text-red-400/60 text-xs leading-relaxed">
                           I understand that KarHaul is strictly a software platform connecting independent shippers and carriers. KarHaul assumes ZERO liability for vehicle damage, delays, driver actions, or payment disputes.
                         </FormDescription>
+                        <FormMessage />
                       </div>
                     </FormItem>
                   )} />

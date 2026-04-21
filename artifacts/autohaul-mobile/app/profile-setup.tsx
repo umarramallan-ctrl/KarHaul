@@ -9,18 +9,19 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMyProfile, updateMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { useUser } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
 
 const ROLES = [
   { value: "shipper", label: "Shipper", desc: "I need vehicles transported" },
   { value: "driver", label: "Driver", desc: "I transport vehicles" },
-  { value: "both", label: "Both", desc: "I do both" },
 ];
 
 export default function ProfileSetupScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { isAuthenticated } = useAuth();
+  const { user } = useUser();
   const qc = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
@@ -36,10 +37,12 @@ export default function ProfileSetupScreen() {
   });
 
   useEffect(() => {
+    const clerkFirst = user?.firstName || "";
+    const clerkLast = user?.lastName || "";
     if (profile) {
       setForm({
-        firstName: (profile as any).firstName || "",
-        lastName: (profile as any).lastName || "",
+        firstName: (profile as any).firstName || clerkFirst,
+        lastName: (profile as any).lastName || clerkLast,
         phone: (profile as any).phone || "",
         role: (profile as any).role || "shipper",
         bio: (profile as any).bio || "",
@@ -50,8 +53,10 @@ export default function ProfileSetupScreen() {
         truckType: (profile as any).truckType || "",
         termsAccepted: (profile as any).termsAccepted || false,
       });
+    } else if (user) {
+      setForm(f => ({ ...f, firstName: clerkFirst, lastName: clerkLast }));
     }
-  }, [profile]);
+  }, [profile, user]);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => updateMyProfile(data),
@@ -78,7 +83,13 @@ export default function ProfileSetupScreen() {
       <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
         <Pressable onPress={() => router.back()}><Feather name="x" size={22} color={C.textSecondary} /></Pressable>
         <Text style={[styles.title, { color: C.text }]}>Edit Profile</Text>
-        <Pressable onPress={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
+        <Pressable onPress={() => {
+          if (!(profile as any)?.termsAccepted && !form.termsAccepted) {
+            Alert.alert("Terms Required", "Please accept the Terms of Service before saving.");
+            return;
+          }
+          updateMutation.mutate(form);
+        }} disabled={updateMutation.isPending}>
           {updateMutation.isPending ? <ActivityIndicator color={C.primary} size="small" /> : <Text style={[styles.saveBtn, { color: C.primary }]}>Save</Text>}
         </Pressable>
       </View>
@@ -88,6 +99,7 @@ export default function ProfileSetupScreen() {
           <Text style={[styles.sectionTitle, { color: C.textMuted }]}>BASIC INFO</Text>
           <Field label="First Name" value={form.firstName} onChangeText={v => set("firstName", v)} placeholder="John" />
           <Field label="Last Name" value={form.lastName} onChangeText={v => set("lastName", v)} placeholder="Smith" />
+          <Field label="Email" value={user?.primaryEmailAddress?.emailAddress || ""} onChangeText={() => {}} placeholder="" editable={false} />
           <Field label="Phone" value={form.phone} onChangeText={v => set("phone", v)} placeholder="+1 (555) 000-0000" keyboardType="phone-pad" />
         </View>
 
@@ -139,18 +151,19 @@ export default function ProfileSetupScreen() {
   );
 }
 
-function Field({ label, value, onChangeText, placeholder, keyboardType }: { label: string; value: string; onChangeText: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions }) {
+function Field({ label, value, onChangeText, placeholder, keyboardType, editable = true }: { label: string; value: string; onChangeText: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions; editable?: boolean }) {
   const C = Colors.light;
   return (
     <View style={fStyles.field}>
       <Text style={[fStyles.label, { color: C.textMuted }]}>{label}</Text>
       <TextInput
-        style={[fStyles.input, { color: C.text, borderBottomColor: C.borderLight }]}
+        style={[fStyles.input, { color: editable ? C.text : C.textMuted, borderBottomColor: C.borderLight }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={C.textMuted}
         keyboardType={keyboardType}
+        editable={editable}
       />
     </View>
   );
