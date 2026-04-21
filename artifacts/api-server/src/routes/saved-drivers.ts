@@ -30,7 +30,7 @@ async function getDbUser(authId: string) {
 }
 
 async function resolveUser(req: Request) {
-    const authId = req.user?.id || getAuth(req).userId;
+    const authId = getAuth(req).userId ?? req.user?.id;
     if (!authId) return null;
     return getDbUser(authId);
 }
