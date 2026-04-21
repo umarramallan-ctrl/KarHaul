@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 
 /** General API limit: 300 requests per minute per IP */
 export const generalLimiter = rateLimit({
