@@ -1,4 +1,5 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
+import { getAuth } from "@clerk/express";
 import { db } from "@workspace/db";
 import { bidsTable, shipmentsTable, bookingsTable, usersTable, lanePreferencesTable, conversationsTable } from "@workspace/db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -12,6 +13,10 @@ const router: IRouter = Router();
 async function getDbUser(authId: string) {
   const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
   return users[0] || null;
+}
+
+function getAuthId(req: Request): string | null {
+  return getAuth(req).userId ?? (req.user as any)?.id ?? null;
 }
 
 router.get("/shipments/:shipmentId/bids", async (req, res) => {
@@ -29,7 +34,7 @@ router.post("/shipments/:shipmentId/bids", bidLimiter, async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   if (!dbUser) {
     res.status(400).json({ error: "Profile not found" });
     return;
@@ -95,7 +100,7 @@ router.post("/bids/:bidId/accept", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   const { bidId } = req.params;
   const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
   if (!bid) {
@@ -201,7 +206,7 @@ router.post("/bids/:bidId/accept", async (req, res) => {
 router.post("/bids/:bidId/counter", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   try {
-    const dbUser = await getDbUser((req.user as any).id);
+    const dbUser = await getDbUser(getAuthId(req)!);
     if (!dbUser) { res.status(401).json({ error: "User profile not found" }); return; }
 
     const { bidId } = req.params;
@@ -245,7 +250,7 @@ router.post("/bids/:bidId/counter", async (req, res) => {
 
 router.post("/bids/:bidId/counter-accept", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   const { bidId } = req.params;
 
   const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
@@ -327,7 +332,7 @@ router.post("/bids/:bidId/counter-accept", async (req, res) => {
 
 router.post("/bids/:bidId/counter-decline", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   const { bidId } = req.params;
 
   const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
@@ -355,7 +360,7 @@ router.post("/bids/:bidId/counter-decline", async (req, res) => {
 
 router.delete("/bids/:bidId", async (req, res) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   const { bidId } = req.params;
 
   const [bid] = await db.select().from(bidsTable).where(eq(bidsTable.id, bidId)).limit(1);
@@ -396,7 +401,7 @@ router.get("/bids/my", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const dbUser = await getDbUser((req.user as any).id);
+  const dbUser = await getDbUser(getAuthId(req)!);
   if (!dbUser) {
     res.json({ bids: [], total: 0 });
     return;
