@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
+import { Appearance, useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -24,6 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.getItem("@karhaul_theme").then((stored) => {
       if (stored === "light" || stored === "dark" || stored === "system") {
         setThemeState(stored);
+        Appearance.setColorScheme(stored === "system" ? null : stored);
       }
     });
   }, []);
@@ -31,6 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = (mode: ThemeMode) => {
     setThemeState(mode);
     AsyncStorage.setItem("@karhaul_theme", mode);
+    Appearance.setColorScheme(mode === "system" ? null : mode);
   };
 
   const colorScheme: "light" | "dark" =

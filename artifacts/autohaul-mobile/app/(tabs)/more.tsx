@@ -18,15 +18,15 @@ import { API_URL } from "@/lib/api";
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const C = Colors.light;
+  const { theme, setTheme, colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const options: { value: ThemeMode; icon: string; label: string }[] = [
     { value: "light", icon: "sun", label: "Light" },
     { value: "dark", icon: "moon", label: "Dark" },
     { value: "system", icon: "smartphone", label: "System" },
   ];
   return (
-    <View style={styles.menuItem}>
+    <View style={[styles.menuItem, { borderTopColor: C.borderLight }]}>
       <View style={[styles.menuIcon, { backgroundColor: "#EFF6FF" }]}>
         <Feather name="sun" size={18} color={C.primary} />
       </View>
@@ -39,6 +39,7 @@ function ThemeToggle() {
               onPress={() => setTheme(opt.value)}
               style={[
                 styles.themeBtn,
+                { borderColor: C.border },
                 theme === opt.value && { backgroundColor: C.primary, borderColor: C.primary },
               ]}
             >
@@ -73,10 +74,11 @@ function MenuItem({
   danger?: boolean;
   external?: boolean;
 }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <Pressable
-      style={({ pressed }) => [styles.menuItem, { opacity: pressed ? 0.85 : 1 }]}
+      style={({ pressed }) => [styles.menuItem, { opacity: pressed ? 0.85 : 1, borderTopColor: C.borderLight }]}
       onPress={onPress}
     >
       <View style={[styles.menuIcon, { backgroundColor: danger ? "#FEE2E2" : "#EFF6FF" }]}>
@@ -101,7 +103,8 @@ function MenuItem({
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated, logout } = useAuth();
   const { getToken } = useClerkAuth();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -166,7 +169,7 @@ export default function MoreScreen() {
       contentContainerStyle={{ paddingBottom: bottomPadding + 100 }}
     >
       <View style={[styles.header, { paddingTop: topPadding + 12 }]}>
-        <Text style={[styles.headerTitle, { color: C.text }]}>More</Text>
+        <Text style={[styles.headerTitle, { color: C.text }]}>Account</Text>
       </View>
 
       {/* ── ACCOUNT ─────────────────────────────────────────────────────────── */}
@@ -251,7 +254,7 @@ export default function MoreScreen() {
             </View>
           )}
 
-          <View style={[styles.section, { backgroundColor: "#fff" }]}>
+          <View style={[styles.section, { backgroundColor: C.surface }]}>
             <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
             <MenuItem
               icon="user"
@@ -286,7 +289,7 @@ export default function MoreScreen() {
             <ThemeToggle />
           </View>
 
-          <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
             <MenuItem icon="log-out" label="Sign Out" onPress={handleLogout} danger />
           </View>
 
@@ -308,7 +311,7 @@ export default function MoreScreen() {
         </>
       ) : (
         /* Not signed in */
-        <View style={[styles.section, { backgroundColor: "#fff" }]}>
+        <View style={[styles.section, { backgroundColor: C.surface }]}>
           <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
           <View style={styles.signInPrompt}>
             <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF" }]}>
@@ -329,7 +332,7 @@ export default function MoreScreen() {
       )}
 
       {/* ── SUPPORT ──────────────────────────────────────────────────────────── */}
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 20 }]}>
+      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 20 }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>SUPPORT</Text>
         <MenuItem
           icon="message-square"
@@ -352,7 +355,7 @@ export default function MoreScreen() {
       </View>
 
       {/* ── LEGAL ────────────────────────────────────────────────────────────── */}
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
         <MenuItem
           icon="file-text"
@@ -379,14 +382,14 @@ export default function MoreScreen() {
       {/* ── Delete Account Modal ─────────────────────────────────────────────── */}
       <Modal visible={deleteModalOpen} transparent animationType="fade">
         <View style={deleteStyles.overlay}>
-          <View style={deleteStyles.modal}>
+          <View style={[deleteStyles.modal, { backgroundColor: C.surface }]}>
             <View style={deleteStyles.iconRow}>
               <View style={deleteStyles.iconBg}>
                 <Feather name="alert-triangle" size={22} color="#DC2626" />
               </View>
-              <Text style={deleteStyles.title}>Delete Account</Text>
+              <Text style={[deleteStyles.title, { color: C.text }]}>Delete Account</Text>
             </View>
-            <Text style={deleteStyles.body}>
+            <Text style={[deleteStyles.body, { color: C.textSecondary }]}>
               Your account will be deactivated immediately. Personal data is purged after 30
               days. Transaction and BOL records are retained for compliance.
             </Text>
@@ -395,9 +398,9 @@ export default function MoreScreen() {
               <Text style={deleteStyles.warningText}>• Blocked if you have active bookings</Text>
               <Text style={deleteStyles.warningText}>• You'll be signed out immediately</Text>
             </View>
-            <Text style={deleteStyles.confirmLabel}>Type DELETE to confirm:</Text>
+            <Text style={[deleteStyles.confirmLabel, { color: C.textSecondary }]}>Type DELETE to confirm:</Text>
             <TextInput
-              style={deleteStyles.confirmInput}
+              style={[deleteStyles.confirmInput, { backgroundColor: C.inputBackground, borderColor: C.border, color: C.text }]}
               value={deleteConfirmText}
               onChangeText={setDeleteConfirmText}
               placeholder="DELETE"
@@ -405,10 +408,10 @@ export default function MoreScreen() {
             />
             <View style={deleteStyles.btnRow}>
               <Pressable
-                style={[deleteStyles.btn, { backgroundColor: "#F1F5F9" }]}
+                style={[deleteStyles.btn, { backgroundColor: C.borderLight }]}
                 onPress={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
               >
-                <Text style={[deleteStyles.btnText, { color: "#334155" }]}>Cancel</Text>
+                <Text style={[deleteStyles.btnText, { color: C.text }]}>Cancel</Text>
               </Pressable>
               <Pressable
                 style={[

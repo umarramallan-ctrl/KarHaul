@@ -5,12 +5,13 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, Text, Pressable, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { getMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 // ─── Role helpers ──────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ function NativeTabLayout({ isAuthenticated, isShipper, isDriver, noRole }: RoleP
       )}
       <NativeTabs.Trigger name="more">
         <Icon sf={{ default: "ellipsis.circle", selected: "ellipsis.circle.fill" }} />
-        <Label>More</Label>
+        <Label>Account</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -78,7 +79,8 @@ function ClassicTabLayout({ isAuthenticated, isShipper, isDriver, noRole }: Role
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
   const safeAreaInsets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
 
   // Visibility: `undefined` = shown, `null` = hidden
   const showBrowse = (isDriver || !isAuthenticated) && !noRole ? undefined : null;
@@ -97,7 +99,7 @@ function ClassicTabLayout({ isAuthenticated, isShipper, isDriver, noRole }: Role
         tabBarLabelStyle: { fontFamily: "Inter_500Medium", fontSize: 10 },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : "#fff",
+          backgroundColor: isIOS ? "transparent" : C.surface,
           borderTopWidth: isWeb ? 1 : 0,
           borderTopColor: C.border,
           elevation: 0,
@@ -106,9 +108,9 @@ function ClassicTabLayout({ isAuthenticated, isShipper, isDriver, noRole }: Role
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={100} tint={colorScheme === "dark" ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: "#fff" }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: C.surface }]} />
           ) : null,
       }}
     >
@@ -207,11 +209,11 @@ function ClassicTabLayout({ isAuthenticated, isShipper, isDriver, noRole }: Role
         }}
       />
 
-      {/* More — always visible */}
+      {/* Account — always visible */}
       <Tabs.Screen
         name="more"
         options={{
-          title: "More",
+          title: "Account",
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="ellipsis.circle" tintColor={color} size={24} />
