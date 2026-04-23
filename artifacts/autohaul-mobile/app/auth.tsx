@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, ActivityIndicator,
 } from "react-native";
@@ -6,49 +6,44 @@ import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
-import { useAuth } from "@clerk/clerk-expo";
+import * as Linking from "expo-linking";
+import { useOAuth, useAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
-import Constants from "expo-constants";
 
-const apiUrl: string =
-  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ?? "";
+WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
   const { isSignedIn } = useAuth();
+  // Clerk OAuth — strategy must match what is enabled in your Clerk dashboard
+  // (oauth_google, oauth_apple, etc.)
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const [loading, setLoading] = useState(false);
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
 
   useEffect(() => {
-    if (isSignedIn) {
-      router.replace("/(tabs)");
-    }
+    if (isSignedIn) router.replace("/(tabs)");
   }, [isSignedIn]);
 
-  const handleLogin = async () => {
-    if (!apiUrl) {
-      Alert.alert("Not available", "Authentication requires a configured API URL.");
-      return;
-    }
+  const handleLogin = useCallback(async () => {
     setLoading(true);
     try {
-      const authUrl = `${apiUrl}/api/login`;
-      const redirectUri = `karhaul://auth-callback`;
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri, {
-        showInRecents: true,
-      });
-      if (result.type === "success") {
+      // Linking.createURL picks up the `karhaul` scheme from app.json automatically
+      const redirectUrl = Linking.createURL("/auth-callback");
+      const { createdSessionId, setActive } = await startOAuthFlow({ redirectUrl });
+      if (createdSessionId) {
+        await setActive!({ session: createdSessionId });
         router.replace("/(tabs)");
       }
-    } catch (e) {
-      Alert.alert("Login Failed", "Please try again.");
+    } catch {
+      Alert.alert("Sign in failed", "Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [startOAuthFlow]);
 
   return (
     <ScrollView
@@ -63,7 +58,8 @@ export default function AuthScreen() {
         <View style={[styles.logoCircle, { backgroundColor: C.primary }]}>
           <Feather name="truck" size={40} color="#fff" />
         </View>
-        <Text style={[styles.title, { color: C.text }]}>KarHaul</Text>
+        <Text style={[styles.appName, { color: C.primary }]}>KarHaul</Text>
+        <Text style={[styles.title, { color: C.text }]}>Welcome back</Text>
         <Text style={[styles.subtitle, { color: C.textSecondary }]}>
           The direct marketplace for auto transport — no brokers, no middlemen.
         </Text>
@@ -75,7 +71,13 @@ export default function AuthScreen() {
             { icon: "shield", label: "Verified driver profiles with DOT & insurance" },
             { icon: "star", label: "Ratings and reviews after every delivery" },
           ].map((f, i) => (
-            <View key={i} style={[styles.featureItem, i > 0 && { borderTopWidth: 1, borderTopColor: C.borderLight }]}>
+            <View
+              key={i}
+              style={[
+                styles.featureItem,
+                i > 0 && { borderTopWidth: 1, borderTopColor: C.borderLight },
+              ]}
+            >
               <View style={[styles.featureIcon, { backgroundColor: "#EFF6FF" }]}>
                 <Feather name={f.icon as any} size={16} color={C.primary} />
               </View>
@@ -94,7 +96,7 @@ export default function AuthScreen() {
           ) : (
             <>
               <Feather name="log-in" size={18} color="#fff" />
-              <Text style={styles.loginBtnText}>Continue to Sign In</Text>
+              <Text style={styles.loginBtnText}>Continue with Google</Text>
             </>
           )}
         </Pressable>
@@ -102,7 +104,8 @@ export default function AuthScreen() {
         <View style={[styles.disclaimer, { backgroundColor: "#F8FAFC", borderColor: C.border }]}>
           <Feather name="info" size={14} color={C.textMuted} />
           <Text style={[styles.disclaimerText, { color: C.textMuted }]}>
-            By signing in you agree to our Terms of Service. KarHaul is a marketplace only — all transport is arranged directly between shippers and drivers.
+            By signing in you agree to our Terms of Service. KarHaul is a marketplace only — all
+            transport is arranged directly between shippers and drivers.
           </Text>
         </View>
       </View>
@@ -112,16 +115,26 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  backBtn: { position: "absolute", top: 16, right: 20, zIndex: 10, width: 36, height: 36, alignItems: "center", justifyContent: "center" },
-  content: { paddingHorizontal: 24, alignItems: "center", gap: 20 },
+  backBtn: {
+    position: "absolute", top: 16, right: 20, zIndex: 10,
+    width: 36, height: 36, alignItems: "center", justifyContent: "center",
+  },
+  content: { paddingHorizontal: 24, alignItems: "center", gap: 16 },
   logoCircle: { width: 80, height: 80, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  title: { fontFamily: "Inter_700Bold", fontSize: 28, textAlign: "center" },
-  subtitle: { fontFamily: "Inter_400Regular", fontSize: 16, textAlign: "center", lineHeight: 24, paddingHorizontal: 10 },
+  appName: { fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: 0.5 },
+  title: { fontFamily: "Inter_700Bold", fontSize: 26, textAlign: "center" },
+  subtitle: {
+    fontFamily: "Inter_400Regular", fontSize: 15, textAlign: "center",
+    lineHeight: 22, paddingHorizontal: 10,
+  },
   featureList: { width: "100%", borderRadius: 16, borderWidth: 1, overflow: "hidden" },
   featureItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   featureIcon: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   featureText: { fontFamily: "Inter_400Regular", fontSize: 14, flex: 1 },
-  loginBtn: { width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16, borderRadius: 14 },
+  loginBtn: {
+    width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 10, paddingVertical: 16, borderRadius: 14,
+  },
   loginBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
   disclaimer: { width: "100%", flexDirection: "row", gap: 10, padding: 14, borderRadius: 12, borderWidth: 1 },
   disclaimerText: { fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 18, flex: 1 },

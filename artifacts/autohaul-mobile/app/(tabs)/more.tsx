@@ -15,6 +15,8 @@ import Colors from "@/constants/colors";
 import { useTheme, ThemeMode } from "@/lib/ThemeContext";
 import { API_URL } from "@/lib/api";
 
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const C = Colors.light;
@@ -95,6 +97,8 @@ function MenuItem({
   );
 }
 
+// ─── Main screen ───────────────────────────────────────────────────────────────
+
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
@@ -103,6 +107,31 @@ export default function MoreScreen() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
+  });
+
+  const topPadding = Platform.OS === "web" ? 67 : insets.top;
+  const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
+
+  const role = profile?.role;
+  const noRole = isAuthenticated && profile !== undefined && profile !== null && !role;
+
+  const fullName = isAuthenticated
+    ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "User"
+    : null;
+  const roleLabel =
+    role === "both" ? "Shipper & Driver" : role === "driver" ? "Driver" : "Shipper";
+
+  const handleLogout = () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign Out", style: "destructive", onPress: logout },
+    ]);
+  };
 
   async function handleDeleteAccount() {
     if (deleteConfirmText !== "DELETE") return;
@@ -131,31 +160,6 @@ export default function MoreScreen() {
     }
   }
 
-  const { data: profile } = useQuery({
-    queryKey: ["my-profile"],
-    queryFn: getMyProfile,
-    enabled: isAuthenticated,
-  });
-
-  const topPadding = Platform.OS === "web" ? 67 : insets.top;
-  const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
-
-  const handleLogout = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: logout },
-    ]);
-  };
-
-  const fullName = isAuthenticated
-    ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "Driver"
-    : null;
-  const roleLabel = profile?.role === "both"
-    ? "Shipper & Driver"
-    : profile?.role === "driver"
-    ? "Driver"
-    : "Shipper";
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: C.background }]}
@@ -165,9 +169,30 @@ export default function MoreScreen() {
         <Text style={[styles.headerTitle, { color: C.text }]}>More</Text>
       </View>
 
-      {/* ── ACCOUNT ── */}
+      {/* ── ACCOUNT ─────────────────────────────────────────────────────────── */}
       {isAuthenticated ? (
         <>
+          {/* Complete-profile banner */}
+          {noRole && (
+            <View style={[styles.setupBanner, { borderColor: C.primary }]}>
+              <View style={[styles.setupIconBg, { backgroundColor: "#EFF6FF" }]}>
+                <Feather name="user-check" size={22} color={C.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.setupTitle, { color: C.text }]}>Complete your profile</Text>
+                <Text style={[styles.setupSub, { color: C.textSecondary }]}>
+                  Choose whether you're a shipper, driver, or both to unlock the full app.
+                </Text>
+              </View>
+              <Pressable
+                style={[styles.setupBtn, { backgroundColor: C.primary }]}
+                onPress={() => router.push("/profile-setup")}
+              >
+                <Text style={styles.setupBtnText}>Set up</Text>
+              </Pressable>
+            </View>
+          )}
+
           <LinearGradient
             colors={["#1A56DB", "#1E40AF"]}
             start={{ x: 0, y: 0 }}
@@ -189,7 +214,13 @@ export default function MoreScreen() {
                   </View>
                 )}
               </View>
-              <Text style={styles.profileRole}>{roleLabel}</Text>
+              {role ? (
+                <Text style={styles.profileRole}>{roleLabel}</Text>
+              ) : (
+                <Text style={[styles.profileRole, { color: "rgba(255,255,255,0.5)" }]}>
+                  No role set
+                </Text>
+              )}
               {!!profile?.averageRating && profile.averageRating > 0 && (
                 <View style={styles.ratingRow}>
                   <Feather name="star" size={13} color="#FCD34D" />
@@ -201,7 +232,7 @@ export default function MoreScreen() {
             </View>
           </LinearGradient>
 
-          {(profile?.role === "driver" || profile?.role === "both") && (
+          {(role === "driver" || role === "both") && (
             <View style={styles.statsRow}>
               <View style={[styles.statCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
                 <Text style={[styles.statNum, { color: C.primary }]}>{profile?.completedJobs || 0}</Text>
@@ -228,7 +259,7 @@ export default function MoreScreen() {
               subtitle="Update your info and preferences"
               onPress={() => router.push("/profile-setup")}
             />
-            {(profile?.role === "driver" || profile?.role === "both") && (
+            {(role === "driver" || role === "both") && (
               <MenuItem
                 icon="truck"
                 label="Driver Details"
@@ -236,7 +267,7 @@ export default function MoreScreen() {
                 onPress={() => router.push("/profile-setup")}
               />
             )}
-            {(profile?.role === "driver" || profile?.role === "both") && (
+            {(role === "driver" || role === "both") && (
               <MenuItem
                 icon="navigation"
                 label="Post My Route"
@@ -244,7 +275,7 @@ export default function MoreScreen() {
                 onPress={() => {}}
               />
             )}
-            {(profile?.role === "shipper" || profile?.role === "both") && (
+            {(role === "shipper" || role === "both") && (
               <MenuItem
                 icon="heart"
                 label="Saved Drivers"
@@ -276,6 +307,7 @@ export default function MoreScreen() {
           </View>
         </>
       ) : (
+        /* Not signed in */
         <View style={[styles.section, { backgroundColor: "#fff" }]}>
           <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
           <View style={styles.signInPrompt}>
@@ -296,33 +328,32 @@ export default function MoreScreen() {
         </View>
       )}
 
-      {/* ── MORE ── */}
-      <View style={[styles.divider, { marginTop: 24 }]} />
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
-        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>MORE</Text>
+      {/* ── SUPPORT ──────────────────────────────────────────────────────────── */}
+      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 20 }]}>
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>SUPPORT</Text>
         <MenuItem
           icon="message-square"
-          label="Support"
-          subtitle="Chat with our AI assistant"
+          label="Chat with Support"
+          subtitle="AI assistant — instant answers"
           onPress={() => router.push("/(tabs)/support")}
         />
-      </View>
-
-      {/* ── LEGAL ── */}
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
-        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
+        <MenuItem
+          icon="info"
+          label="About Us"
+          subtitle="Our story and how KarHaul works"
+          onPress={() => router.push("/about")}
+        />
         <MenuItem
           icon="mail"
           label="Contact Us"
           subtitle="Get in touch with our team"
           onPress={() => router.push("/contact")}
         />
-        <MenuItem
-          icon="info"
-          label="About Us"
-          subtitle="Our story and how it works"
-          onPress={() => router.push("/about")}
-        />
+      </View>
+
+      {/* ── LEGAL ────────────────────────────────────────────────────────────── */}
+      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
         <MenuItem
           icon="file-text"
           label="Terms of Service"
@@ -345,7 +376,7 @@ export default function MoreScreen() {
         />
       </View>
 
-      {/* Delete Account Modal */}
+      {/* ── Delete Account Modal ─────────────────────────────────────────────── */}
       <Modal visible={deleteModalOpen} transparent animationType="fade">
         <View style={deleteStyles.overlay}>
           <View style={deleteStyles.modal}>
@@ -375,10 +406,7 @@ export default function MoreScreen() {
             <View style={deleteStyles.btnRow}>
               <Pressable
                 style={[deleteStyles.btn, { backgroundColor: "#F1F5F9" }]}
-                onPress={() => {
-                  setDeleteModalOpen(false);
-                  setDeleteConfirmText("");
-                }}
+                onPress={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
               >
                 <Text style={[deleteStyles.btnText, { color: "#334155" }]}>Cancel</Text>
               </Pressable>
@@ -405,17 +433,30 @@ export default function MoreScreen() {
   );
 }
 
+// ─── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 16, paddingBottom: 12 },
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 28 },
-  divider: { height: 0 },
+
+  setupBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginBottom: 14,
+    padding: 14, borderRadius: 14, borderWidth: 1.5, backgroundColor: "#F0F7FF",
+  },
+  setupIconBg: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  setupTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  setupSub: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2, lineHeight: 18 },
+  setupBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  setupBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#fff" },
+
   signInPrompt: { paddingHorizontal: 16, paddingVertical: 20, alignItems: "center", gap: 10 },
   iconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
   signInTitle: { fontFamily: "Inter_700Bold", fontSize: 18, textAlign: "center" },
   signInSub: { fontFamily: "Inter_400Regular", fontSize: 14, textAlign: "center", lineHeight: 20 },
   signInBtn: { paddingHorizontal: 32, paddingVertical: 13, borderRadius: 12, marginTop: 4 },
   signInBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#fff" },
+
   profileCard: {
     flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingVertical: 20,
     marginHorizontal: 16, borderRadius: 20, marginBottom: 12,
@@ -437,6 +478,7 @@ const styles = StyleSheet.create({
   profileRole: { fontFamily: "Inter_500Medium", fontSize: 14, marginBottom: 4, color: "rgba(255,255,255,0.75)" },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   ratingText: { fontFamily: "Inter_400Regular", fontSize: 13, color: "rgba(255,255,255,0.85)" },
+
   statsRow: { flexDirection: "row", gap: 10, marginHorizontal: 16, marginBottom: 12 },
   statCard: {
     flex: 1, borderRadius: 14, padding: 14, alignItems: "center", borderWidth: 1,
@@ -445,6 +487,7 @@ const styles = StyleSheet.create({
   },
   statNum: { fontFamily: "Inter_700Bold", fontSize: 22 },
   statLabel: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2, textAlign: "center" },
+
   section: {
     marginHorizontal: 16, borderRadius: 16, overflow: "hidden",
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05,
@@ -469,7 +512,10 @@ const styles = StyleSheet.create({
 });
 
 const deleteStyles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", paddingHorizontal: 20 },
+  overlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center",
+    alignItems: "center", paddingHorizontal: 20,
+  },
   modal: { backgroundColor: "#fff", borderRadius: 20, padding: 24, width: "100%", maxWidth: 400, gap: 14 },
   iconRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center" },
@@ -480,8 +526,8 @@ const deleteStyles = StyleSheet.create({
   confirmLabel: { fontFamily: "Inter_500Medium", fontSize: 13, color: "#475569" },
   confirmInput: {
     fontFamily: "Inter_700Bold", fontSize: 15, borderWidth: 1, borderColor: "#E2E8F0",
-    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#F8FAFC",
-    color: "#1E293B", letterSpacing: 2,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    backgroundColor: "#F8FAFC", color: "#1E293B", letterSpacing: 2,
   },
   btnRow: { flexDirection: "row", gap: 10 },
   btn: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: "center", justifyContent: "center" },

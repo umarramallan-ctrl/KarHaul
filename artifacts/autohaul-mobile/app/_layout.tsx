@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
@@ -16,6 +17,7 @@ import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
 import * as WebBrowser from "expo-web-browser";
+import { Feather } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
 import { API_URL } from "@/lib/api";
@@ -69,6 +71,7 @@ function RootLayoutNav() {
       <Stack.Screen name="about" options={{ presentation: "card" }} />
       <Stack.Screen name="contact" options={{ presentation: "card" }} />
       <Stack.Screen name="terms" options={{ presentation: "card" }} />
+      <Stack.Screen name="saved-drivers" options={{ presentation: "card" }} />
     </Stack>
   );
 }
@@ -101,7 +104,15 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={splashStyles.container}>
+        <Feather name="truck" size={56} color="#fff" />
+        <Text style={splashStyles.name}>KarHaul</Text>
+        <Text style={splashStyles.tagline}>Direct auto transport marketplace</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -123,3 +134,12 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+const splashStyles = StyleSheet.create({
+  container: {
+    flex: 1, alignItems: "center", justifyContent: "center",
+    backgroundColor: "#1A56DB", gap: 12,
+  },
+  name: { fontSize: 34, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
+  tagline: { fontSize: 14, color: "rgba(255,255,255,0.7)" },
+});

@@ -56,6 +56,7 @@ export default function MyLoadsScreen() {
       <View style={[styles.header, { paddingTop: topPadding + 12 }]}>
         <View style={styles.headerRow}>
           <View>
+            <Text style={[styles.headerBrand, { color: C.primary }]}>KarHaul</Text>
             <Text style={[styles.headerTitle, { color: C.text }]}>My Loads</Text>
             <Text style={[styles.headerSub, { color: C.textSecondary }]}>Your posted shipments</Text>
           </View>
@@ -105,8 +106,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 16, paddingBottom: 12 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 28 },
-  headerSub: { fontFamily: "Inter_400Regular", fontSize: 14, marginTop: 2 },
+  headerBrand: { fontFamily: "Inter_700Bold", fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 },
+  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 26 },
+  headerSub: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 },
   postBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   postBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#fff" },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 40 },
