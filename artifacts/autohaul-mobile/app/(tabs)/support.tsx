@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
@@ -58,10 +59,13 @@ export default function SupportScreen() {
     >
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Feather name="arrow-left" size={20} color={C.text} />
+        </Pressable>
         <View style={styles.botAvatar}>
           <Feather name="message-square" size={20} color={C.primary} />
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: C.text }]}>KarHaul Support</Text>
           <Text style={[styles.headerSub, { color: C.textMuted }]}>AI assistant · Instant answers</Text>
         </View>
@@ -117,6 +121,7 @@ export default function SupportScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  backBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center", marginRight: 2 },
   botAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center" },
   headerTitle: { fontFamily: "Inter_600SemiBold", fontSize: 16 },
   headerSub: { fontFamily: "Inter_400Regular", fontSize: 12 },

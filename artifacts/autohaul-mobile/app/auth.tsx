@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, TextInput, Alert, ActivityIndicator
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
 import Constants from "expo-constants";
 
@@ -16,11 +16,17 @@ const apiUrl: string =
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const C = Colors.light;
-  const { setToken } = useAuth();
+  const { isSignedIn } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.replace("/(tabs)");
+    }
+  }, [isSignedIn]);
 
   const handleLogin = async () => {
     if (!apiUrl) {
@@ -35,7 +41,7 @@ export default function AuthScreen() {
         showInRecents: true,
       });
       if (result.type === "success") {
-        router.back();
+        router.replace("/(tabs)");
       }
     } catch (e) {
       Alert.alert("Login Failed", "Please try again.");

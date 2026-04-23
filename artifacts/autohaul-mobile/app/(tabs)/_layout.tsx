@@ -3,7 +3,7 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,13 +28,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "message", selected: "message.fill" }} />
         <Label>Messages</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="support">
-        <Icon sf={{ default: "questionmark.circle", selected: "questionmark.circle.fill" }} />
-        <Label>Support</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="account">
-        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
-        <Label>Account</Label>
+      <NativeTabs.Trigger name="more">
+        <Icon sf={{ default: "ellipsis.circle", selected: "ellipsis.circle.fill" }} />
+        <Label>More</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -121,29 +117,20 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="support"
+        name="more"
         options={{
-          title: "Support",
+          title: "More",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="questionmark.circle" tintColor={color} size={24} />
+              <SymbolView name="ellipsis.circle" tintColor={color} size={24} />
             ) : (
-              <Feather name="help-circle" size={22} color={color} />
+              <Feather name="more-horizontal" size={22} color={color} />
             ),
         }}
       />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "Account",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.circle" tintColor={color} size={24} />
-            ) : (
-              <Feather name="user" size={22} color={color} />
-            ),
-        }}
-      />
+      {/* Hidden tab screens — accessible via router.push but no tab bar button */}
+      <Tabs.Screen name="support" options={{ href: null }} />
+      <Tabs.Screen name="account" options={{ href: null }} />
     </Tabs>
   );
 }
