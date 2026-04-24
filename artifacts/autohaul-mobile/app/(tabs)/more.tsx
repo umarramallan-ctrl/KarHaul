@@ -172,7 +172,6 @@ export default function MoreScreen() {
         <Text style={[styles.headerTitle, { color: C.text }]}>Account</Text>
       </View>
 
-      {/* ── ACCOUNT ─────────────────────────────────────────────────────────── */}
       {isAuthenticated ? (
         <>
           {/* Complete-profile banner */}
@@ -196,6 +195,7 @@ export default function MoreScreen() {
             </View>
           )}
 
+          {/* Profile card */}
           <LinearGradient
             colors={["#1A56DB", "#1E40AF"]}
             start={{ x: 0, y: 0 }}
@@ -235,6 +235,7 @@ export default function MoreScreen() {
             </View>
           </LinearGradient>
 
+          {/* Driver stats */}
           {(role === "driver" || role === "both") && (
             <View style={styles.statsRow}>
               <View style={[styles.statCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
@@ -254,8 +255,9 @@ export default function MoreScreen() {
             </View>
           )}
 
+          {/* 1. Profile & Settings */}
           <View style={[styles.section, { backgroundColor: C.surface }]}>
-            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>PROFILE & SETTINGS</Text>
             <MenuItem
               icon="user"
               label="Edit Profile"
@@ -278,21 +280,111 @@ export default function MoreScreen() {
                 onPress={() => {}}
               />
             )}
-            {(role === "shipper" || role === "both") && (
+            <ThemeToggle />
+          </View>
+
+          {/* 2. Dashboard */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <MenuItem
+              icon="grid"
+              label="Dashboard"
+              subtitle="Your activity overview"
+              onPress={() => router.push("/")}
+            />
+          </View>
+
+          {/* 3. Messages */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <MenuItem
+              icon="message-circle"
+              label="Messages"
+              subtitle="Your conversations"
+              onPress={() => router.push("/(tabs)/messages-tab")}
+            />
+          </View>
+
+          {/* 4. Saved Drivers (shippers only) */}
+          {(role === "shipper" || role === "both") && (
+            <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
               <MenuItem
                 icon="heart"
                 label="Saved Drivers"
                 subtitle="Rebook trusted carriers directly"
                 onPress={() => router.push("/saved-drivers")}
               />
-            )}
-            <ThemeToggle />
+            </View>
+          )}
+
+          {/* 5. Safety & Insurance */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <MenuItem
+              icon="shield"
+              label="Safety & Insurance"
+              subtitle="Coverage, verification & platform protections"
+              onPress={() => router.push("/safety-insurance")}
+            />
           </View>
 
+          {/* 6. Support */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <MenuItem
+              icon="message-square"
+              label="Support"
+              subtitle="AI assistant — instant answers"
+              onPress={() => router.push("/(tabs)/support")}
+            />
+          </View>
+
+          {/* 7. Legal */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
+            <MenuItem
+              icon="info"
+              label="About Us"
+              subtitle="Our story and how KarHaul works"
+              onPress={() => router.push("/about")}
+            />
+            <MenuItem
+              icon="mail"
+              label="Contact Us"
+              subtitle="Get in touch with our team"
+              onPress={() => router.push("/contact")}
+            />
+            <MenuItem
+              icon="file-text"
+              label="Terms of Service"
+              subtitle="Platform rules and liability"
+              onPress={() => router.push("/terms")}
+            />
+            <MenuItem
+              icon="lock"
+              label="Privacy Policy"
+              subtitle="How we handle your data"
+              onPress={() => Linking.openURL("https://karhaul.com/privacy-policy")}
+              external
+            />
+            <MenuItem
+              icon="disc"
+              label="Cookie Policy"
+              subtitle="How we use cookies"
+              onPress={() => Linking.openURL("https://karhaul.com/cookie-policy")}
+              external
+            />
+            <MenuItem
+              icon="truck"
+              label="Carrier Requirements"
+              subtitle="DOT, insurance & compliance info"
+              onPress={() => Linking.openURL("https://karhaul.com/carrier-requirements")}
+              external
+            />
+          </View>
+
+          {/* Sign Out */}
           <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
             <MenuItem icon="log-out" label="Sign Out" onPress={handleLogout} danger />
           </View>
 
+          {/* 8. Account Deletion */}
           <View
             style={[
               styles.section,
@@ -311,75 +403,73 @@ export default function MoreScreen() {
         </>
       ) : (
         /* Not signed in */
-        <View style={[styles.section, { backgroundColor: C.surface }]}>
-          <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
-          <View style={styles.signInPrompt}>
-            <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF" }]}>
-              <Feather name="user" size={28} color={C.primary} />
+        <>
+          <View style={[styles.section, { backgroundColor: C.surface }]}>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
+            <View style={styles.signInPrompt}>
+              <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF" }]}>
+                <Feather name="user" size={28} color={C.primary} />
+              </View>
+              <Text style={[styles.signInTitle, { color: C.text }]}>Sign in to KarHaul</Text>
+              <Text style={[styles.signInSub, { color: C.textSecondary }]}>
+                Post loads, bid on jobs, and manage your profile.
+              </Text>
+              <Pressable
+                style={[styles.signInBtn, { backgroundColor: C.primary }]}
+                onPress={() => router.push("/auth")}
+              >
+                <Text style={styles.signInBtnText}>Get Started</Text>
+              </Pressable>
             </View>
-            <Text style={[styles.signInTitle, { color: C.text }]}>Sign in to KarHaul</Text>
-            <Text style={[styles.signInSub, { color: C.textSecondary }]}>
-              Post loads, bid on jobs, and manage your profile.
-            </Text>
-            <Pressable
-              style={[styles.signInBtn, { backgroundColor: C.primary }]}
-              onPress={() => router.push("/auth")}
-            >
-              <Text style={styles.signInBtnText}>Get Started</Text>
-            </Pressable>
           </View>
-        </View>
+
+          {/* Legal visible even when not signed in */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 20 }]}>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
+            <MenuItem
+              icon="info"
+              label="About Us"
+              subtitle="Our story and how KarHaul works"
+              onPress={() => router.push("/about")}
+            />
+            <MenuItem
+              icon="mail"
+              label="Contact Us"
+              subtitle="Get in touch with our team"
+              onPress={() => router.push("/contact")}
+            />
+            <MenuItem
+              icon="file-text"
+              label="Terms of Service"
+              subtitle="Platform rules and liability"
+              onPress={() => router.push("/terms")}
+            />
+            <MenuItem
+              icon="lock"
+              label="Privacy Policy"
+              subtitle="How we handle your data"
+              onPress={() => Linking.openURL("https://karhaul.com/privacy-policy")}
+              external
+            />
+            <MenuItem
+              icon="disc"
+              label="Cookie Policy"
+              subtitle="How we use cookies"
+              onPress={() => Linking.openURL("https://karhaul.com/cookie-policy")}
+              external
+            />
+            <MenuItem
+              icon="truck"
+              label="Carrier Requirements"
+              subtitle="DOT, insurance & compliance info"
+              onPress={() => Linking.openURL("https://karhaul.com/carrier-requirements")}
+              external
+            />
+          </View>
+        </>
       )}
 
-      {/* ── SUPPORT ──────────────────────────────────────────────────────────── */}
-      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 20 }]}>
-        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>SUPPORT</Text>
-        <MenuItem
-          icon="message-square"
-          label="Chat with Support"
-          subtitle="AI assistant — instant answers"
-          onPress={() => router.push("/(tabs)/support")}
-        />
-        <MenuItem
-          icon="info"
-          label="About Us"
-          subtitle="Our story and how KarHaul works"
-          onPress={() => router.push("/about")}
-        />
-        <MenuItem
-          icon="mail"
-          label="Contact Us"
-          subtitle="Get in touch with our team"
-          onPress={() => router.push("/contact")}
-        />
-      </View>
-
-      {/* ── LEGAL ────────────────────────────────────────────────────────────── */}
-      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
-        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
-        <MenuItem
-          icon="file-text"
-          label="Terms of Service"
-          subtitle="Platform rules and liability"
-          onPress={() => router.push("/terms")}
-        />
-        <MenuItem
-          icon="shield"
-          label="Privacy Policy"
-          subtitle="How we handle your data"
-          onPress={() => Linking.openURL("https://karhaul.com/privacy-policy")}
-          external
-        />
-        <MenuItem
-          icon="truck"
-          label="Carrier Requirements"
-          subtitle="DOT, insurance & compliance info"
-          onPress={() => Linking.openURL("https://karhaul.com/carrier-requirements")}
-          external
-        />
-      </View>
-
-      {/* ── Delete Account Modal ─────────────────────────────────────────────── */}
+      {/* Delete Account Modal */}
       <Modal visible={deleteModalOpen} transparent animationType="fade">
         <View style={deleteStyles.overlay}>
           <View style={[deleteStyles.modal, { backgroundColor: C.surface }]}>
