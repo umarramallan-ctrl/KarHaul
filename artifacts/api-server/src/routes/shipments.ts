@@ -148,8 +148,12 @@ router.post("/shipments", async (req, res) => {
 
     res.status(201).json(shipment);
   } catch (err) {
-    console.error("POST /shipments error:", err);
-    res.status(500).json({ error: "Failed to create shipment", detail: err instanceof Error ? err.message : String(err) });
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error("[POST /shipments] error.message:", message);
+    console.error("[POST /shipments] error.stack:", stack ?? "(no stack)");
+    console.error("[POST /shipments] full error:", err);
+    res.status(500).json({ error: "Failed to create shipment", detail: message });
   }
 });
 

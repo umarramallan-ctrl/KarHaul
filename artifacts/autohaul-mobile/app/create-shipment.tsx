@@ -452,7 +452,17 @@ export default function CreateShipmentScreen() {
 
       console.log("[PostLoad] Payload →", JSON.stringify(payload, null, 2));
 
-      return createShipment(payload as any);
+      let result;
+      try {
+        result = await createShipment(payload as any);
+      } catch (apiErr: any) {
+        console.error("[PostLoad] createShipment threw — status:", apiErr?.status, apiErr?.statusText);
+        console.error("[PostLoad] raw response body:", JSON.stringify(apiErr?.data, null, 2));
+        console.error("[PostLoad] error.message:", apiErr?.message);
+        throw apiErr;
+      }
+      console.log("[PostLoad] success response:", JSON.stringify(result, null, 2));
+      return result;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["my-shipments"] });
@@ -472,7 +482,7 @@ export default function CreateShipmentScreen() {
         url: err?.url,
         raw: err,
       });
-      const detail = err?.data?.error ?? err?.message ?? "Please check all fields and try again.";
+      const detail = err?.data?.detail ?? err?.data?.error ?? err?.message ?? "Please check all fields and try again.";
       Alert.alert("Post Failed", `${err?.status ? `[${err.status}] ` : ""}${detail}`);
     },
   });
