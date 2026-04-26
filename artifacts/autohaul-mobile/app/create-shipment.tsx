@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createShipment } from "@workspace/api-client-react";
+import { useAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
 import { useTheme } from "@/lib/ThemeContext";
 
@@ -381,6 +382,7 @@ export default function CreateShipmentScreen() {
   const { colorScheme } = useTheme();
   const C = Colors[colorScheme];
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   const [step, setStep] = useState(0);
 
   const today = new Date();
@@ -406,33 +408,53 @@ export default function CreateShipmentScreen() {
   const set = (key: string, value: any) => setForm(f => ({ ...f, [key]: value }));
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      createShipment({
+    mutationFn: async () => {
+      // ── Confirm auth token is present ──────────────────────────────────────
+      const token = await getToken();
+      console.log(
+        "[PostLoad] Authorization header:",
+        token ? `Bearer ${token.slice(0, 16)}…` : "⚠️  MISSING — request will be rejected with 401",
+      );
+
+      // ── Build and log the exact payload being sent ─────────────────────────
+      // Field names must match the Express handler (src/routes/shipments.ts):
+      //   body.vehicleYear, .vehicleMake, .vehicleModel, .vehicleType,
+      //   .vehicleCondition, .vin, .transportType, .serviceType,
+      //   .originAddress, .originCity, .originState, .originZip,
+      //   .destinationAddress, .destinationCity, .destinationState, .destinationZip,
+      //   .pickupDateFrom (YYYY-MM-DD), .pickupDateTo (YYYY-MM-DD),
+      //   .budgetMin, .budgetMax, .notes,
+      //   .pickupLocationType, .deliveryLocationType
+      const payload = {
         vehicleYear: parseInt(form.vehicleYear, 10),
         vehicleMake: form.vehicleMake,
         vehicleModel: form.vehicleModel,
-        vehicleType: form.vehicleType as any,
-        vehicleCondition: form.vehicleCondition as any,
-        vin: form.vin,
-        transportType: form.transportType as any,
-        serviceType: form.serviceType as any,
+        vehicleType: form.vehicleType,
+        vehicleCondition: form.vehicleCondition,
+        vin: form.vin || undefined,
+        transportType: form.transportType,
+        serviceType: form.serviceType,
         originAddress: form.originAddress || undefined,
         originCity: form.originCity,
         originState: form.originState,
         originZip: form.originZip,
+        pickupLocationType: form.pickupLocationType || undefined,
         destinationAddress: form.destinationAddress || undefined,
         destinationCity: form.destinationCity,
         destinationState: form.destinationState,
         destinationZip: form.destinationZip,
+        deliveryLocationType: form.deliveryLocationType || undefined,
         pickupDateFrom: form.pickupDateFrom ? toYMD(form.pickupDateFrom) : undefined,
         pickupDateTo: form.pickupDateTo ? toYMD(form.pickupDateTo) : undefined,
         budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : undefined,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : undefined,
         notes: form.notes || undefined,
-        // extra fields accepted by server (not in Zod spec)
-        ...(form.pickupLocationType ? { pickupLocationType: form.pickupLocationType } : {}),
-        ...(form.deliveryLocationType ? { deliveryLocationType: form.deliveryLocationType } : {}),
-      } as any),
+      };
+
+      console.log("[PostLoad] Payload →", JSON.stringify(payload, null, 2));
+
+      return createShipment(payload as any);
+    },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["my-shipments"] });
       qc.invalidateQueries({ queryKey: ["shipments"] });
@@ -441,7 +463,19 @@ export default function CreateShipmentScreen() {
         { text: "Done", onPress: () => router.back() },
       ]);
     },
-    onError: () => Alert.alert("Error", "Could not post shipment. Please check all fields and try again."),
+    onError: (err: any) => {
+      // Log full API error detail for debugging
+      console.error("[PostLoad] API error →", {
+        status: err?.status,
+        statusText: err?.statusText,
+        message: err?.message,
+        responseBody: err?.data,
+        url: err?.url,
+        raw: err,
+      });
+      const detail = err?.data?.error ?? err?.message ?? "Please check all fields and try again.";
+      Alert.alert("Post Failed", `${err?.status ? `[${err.status}] ` : ""}${detail}`);
+    },
   });
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;

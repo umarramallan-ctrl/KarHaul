@@ -12,7 +12,7 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { setBaseUrl } from "@workspace/api-client-react";
+import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
@@ -79,6 +79,17 @@ function RootLayoutNav() {
   );
 }
 
+// Keeps the API client's auth token getter in sync with Clerk's session.
+// Must live inside ClerkProvider so useAuth() works.
+function AuthTokenRegistrar() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+  return null;
+}
+
 function PushNotificationRegistrar() {
   const { isSignedIn, getToken } = useAuth();
   useEffect(() => {
@@ -127,6 +138,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <ThemeProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
+                <AuthTokenRegistrar />
                 <PushNotificationRegistrar />
                 <RootLayoutNav />
               </GestureHandlerRootView>
