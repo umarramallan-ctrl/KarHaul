@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable,
-  Platform, Alert, ActivityIndicator, type KeyboardTypeOptions,
+  Platform, Alert, ActivityIndicator, Modal,
+  type KeyboardTypeOptions,
 } from "react-native";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -11,8 +13,368 @@ import { createShipment } from "@workspace/api-client-react";
 import Colors from "@/constants/colors";
 import { useTheme } from "@/lib/ThemeContext";
 
-const VEHICLE_TYPES = ["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"];
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const US_STATES = [
+  { abbr: "AL", name: "Alabama" }, { abbr: "AK", name: "Alaska" },
+  { abbr: "AZ", name: "Arizona" }, { abbr: "AR", name: "Arkansas" },
+  { abbr: "CA", name: "California" }, { abbr: "CO", name: "Colorado" },
+  { abbr: "CT", name: "Connecticut" }, { abbr: "DC", name: "Washington DC" },
+  { abbr: "DE", name: "Delaware" }, { abbr: "FL", name: "Florida" },
+  { abbr: "GA", name: "Georgia" }, { abbr: "HI", name: "Hawaii" },
+  { abbr: "ID", name: "Idaho" }, { abbr: "IL", name: "Illinois" },
+  { abbr: "IN", name: "Indiana" }, { abbr: "IA", name: "Iowa" },
+  { abbr: "KS", name: "Kansas" }, { abbr: "KY", name: "Kentucky" },
+  { abbr: "LA", name: "Louisiana" }, { abbr: "ME", name: "Maine" },
+  { abbr: "MD", name: "Maryland" }, { abbr: "MA", name: "Massachusetts" },
+  { abbr: "MI", name: "Michigan" }, { abbr: "MN", name: "Minnesota" },
+  { abbr: "MS", name: "Mississippi" }, { abbr: "MO", name: "Missouri" },
+  { abbr: "MT", name: "Montana" }, { abbr: "NE", name: "Nebraska" },
+  { abbr: "NV", name: "Nevada" }, { abbr: "NH", name: "New Hampshire" },
+  { abbr: "NJ", name: "New Jersey" }, { abbr: "NM", name: "New Mexico" },
+  { abbr: "NY", name: "New York" }, { abbr: "NC", name: "North Carolina" },
+  { abbr: "ND", name: "North Dakota" }, { abbr: "OH", name: "Ohio" },
+  { abbr: "OK", name: "Oklahoma" }, { abbr: "OR", name: "Oregon" },
+  { abbr: "PA", name: "Pennsylvania" }, { abbr: "RI", name: "Rhode Island" },
+  { abbr: "SC", name: "South Carolina" }, { abbr: "SD", name: "South Dakota" },
+  { abbr: "TN", name: "Tennessee" }, { abbr: "TX", name: "Texas" },
+  { abbr: "UT", name: "Utah" }, { abbr: "VT", name: "Vermont" },
+  { abbr: "VA", name: "Virginia" }, { abbr: "WA", name: "Washington" },
+  { abbr: "WV", name: "West Virginia" }, { abbr: "WI", name: "Wisconsin" },
+  { abbr: "WY", name: "Wyoming" },
+];
+
+const STATE_ITEMS = US_STATES.map(s => ({ label: `${s.abbr} — ${s.name}`, value: s.abbr }));
+
+const CAR_MAKES = [
+  "Acura","Alfa Romeo","Aston Martin","Audi","Bentley","BMW","Buick",
+  "Cadillac","Chevrolet","Chrysler","Dodge","Ferrari","Fiat","Ford",
+  "Genesis","GMC","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia",
+  "Lamborghini","Land Rover","Lexus","Lincoln","Lucid","Maserati","Mazda",
+  "McLaren","Mercedes-Benz","MINI","Mitsubishi","Nissan","Porsche","Ram",
+  "Rivian","Rolls-Royce","Subaru","Tesla","Toyota","Volkswagen","Volvo",
+];
+
+const MAKE_ITEMS = CAR_MAKES.map(m => ({ label: m, value: m }));
+
+const VEHICLE_TYPES = [
+  { value: "sedan", label: "Sedan" },
+  { value: "suv", label: "SUV" },
+  { value: "truck", label: "Truck" },
+  { value: "van", label: "Van" },
+  { value: "motorcycle", label: "Motorcycle" },
+  { value: "rv", label: "RV" },
+  { value: "exotic", label: "Exotic" },
+  { value: "other", label: "Other" },
+];
+
+const CONDITIONS = [
+  { value: "running", label: "Runs & Drives" },
+  { value: "non_running", label: "Inoperable (INOP)" },
+];
+
+const TRANSPORT_TYPES = [
+  { value: "open", label: "Open Carrier", desc: "Standard. Exposed to elements. Most affordable." },
+  { value: "enclosed", label: "Enclosed Carrier", desc: "Fully covered. Classic/luxury vehicles. ~40% more." },
+];
+
+const SERVICE_TYPES = [
+  { value: "door_to_door", label: "Door to Door", desc: "Pickup & delivery at your addresses." },
+  { value: "door_to_port", label: "Door to Port", desc: "Pickup at address, delivery to a port terminal." },
+];
+
+const LOCATION_TYPES = [
+  { value: "residential", label: "Residential", icon: "home", warning: null },
+  { value: "dealer", label: "Auto Dealer", icon: "briefcase", warning: null },
+  { value: "auction", label: "Auction House", icon: "layers", warning: "Release paperwork required" },
+  { value: "port", label: "Port / Terminal", icon: "anchor", warning: "TWIC card required" },
+  { value: "military", label: "Military Base", icon: "shield", warning: "Gov. ID + escort required" },
+  { value: "storage", label: "Storage Facility", icon: "package", warning: null },
+  { value: "airport", label: "Airport", icon: "send", warning: "Access pre-approval needed" },
+  { value: "other", label: "Other", icon: "help-circle", warning: null },
+];
+
 const STEPS = ["Vehicle", "Route", "Details"];
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+const toYMD = (d: Date) => d.toISOString().split("T")[0];
+
+// ─── AutocompleteInput ───────────────────────────────────────────────────────
+
+interface SuggestItem { label: string; value: string }
+
+function SuggestInput({
+  label, value, onChange, placeholder, items, maxLength,
+  autoCapitalize = "words", keyboardType = "default",
+}: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+  items: SuggestItem[]; maxLength?: number;
+  autoCapitalize?: "none" | "words" | "sentences" | "characters";
+  keyboardType?: KeyboardTypeOptions;
+}) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  const [focused, setFocused] = useState(false);
+  const [inputText, setInputText] = useState(value);
+  const [suggestions, setSuggestions] = useState<SuggestItem[]>([]);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { setInputText(value); }, [value]);
+
+  const handleChange = (text: string) => {
+    const out = autoCapitalize === "characters"
+      ? text.toUpperCase().slice(0, maxLength ?? 99)
+      : text;
+    setInputText(out);
+    onChange(out);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const q = out.trim().toLowerCase();
+      setSuggestions(q.length > 0
+        ? items.filter(i => i.label.toLowerCase().includes(q)).slice(0, 6)
+        : []);
+    }, 180);
+  };
+
+  const select = (item: SuggestItem) => {
+    setInputText(item.value);
+    onChange(item.value);
+    setSuggestions([]);
+    setFocused(false);
+  };
+
+  const showSugg = focused && suggestions.length > 0;
+
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={[styles.fLabel, { color: C.textMuted }]}>{label}</Text>
+      <TextInput
+        style={[styles.fInput, { color: C.text, borderBottomColor: focused ? C.primary : C.borderLight }]}
+        value={inputText}
+        onChangeText={handleChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 160)}
+        placeholder={placeholder}
+        placeholderTextColor={C.textMuted}
+        maxLength={maxLength}
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
+        autoCorrect={false}
+        autoComplete="off"
+      />
+      {showSugg && (
+        <View style={[styles.suggBox, { backgroundColor: C.surface, borderColor: C.border, shadowColor: C.text }]}>
+          {suggestions.map((item, i) => (
+            <Pressable
+              key={item.value + i}
+              style={[styles.suggItem, { borderTopColor: C.borderLight }, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth }]}
+              onPress={() => select(item)}
+            >
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.text }}>{item.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── DateField ───────────────────────────────────────────────────────────────
+
+function DateField({
+  label, value, onChange, minimumDate,
+}: {
+  label: string; value: Date | null; onChange: (d: Date | null) => void; minimumDate?: Date;
+}) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDate = minimumDate ?? today;
+
+  const [show, setShow] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(value ?? today);
+
+  const handlePickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === "android") {
+      setShow(false);
+      if (event.type === "set" && selected) onChange(selected);
+    } else {
+      if (selected) setTempDate(selected);
+    }
+  };
+
+  const open = () => { setTempDate(value ?? today); setShow(true); };
+
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={[styles.fLabel, { color: C.textMuted }]}>{label}</Text>
+      <Pressable
+        style={[styles.dateBtn, { backgroundColor: C.inputBackground, borderColor: value ? C.primary : C.border }]}
+        onPress={open}
+      >
+        <Feather name="calendar" size={16} color={value ? C.primary : C.textMuted} />
+        <Text style={{ fontFamily: "Inter_400Regular", fontSize: 15, flex: 1, color: value ? C.text : C.textMuted }}>
+          {value ? fmtDate(value) : "Select date"}
+        </Text>
+        {value && (
+          <Pressable hitSlop={10} onPress={() => onChange(null)}>
+            <Feather name="x" size={14} color={C.textMuted} />
+          </Pressable>
+        )}
+      </Pressable>
+
+      {/* Android — native dialog */}
+      {Platform.OS === "android" && show && (
+        <DateTimePicker
+          value={tempDate}
+          mode="date"
+          display="default"
+          minimumDate={minDate}
+          onChange={handlePickerChange}
+        />
+      )}
+
+      {/* iOS — bottom sheet modal */}
+      {Platform.OS === "ios" && (
+        <Modal transparent visible={show} animationType="slide" onRequestClose={() => setShow(false)}>
+          <Pressable style={styles.dateOverlay} onPress={() => setShow(false)}>
+            <Pressable style={[styles.dateCard, { backgroundColor: C.surface }]} onPress={() => {}}>
+              <View style={[styles.dateHeader, { borderBottomColor: C.borderLight }]}>
+                <Pressable onPress={() => setShow(false)}>
+                  <Text style={[styles.dateHeaderBtn, { color: C.textSecondary }]}>Cancel</Text>
+                </Pressable>
+                <Text style={[styles.dateHeaderTitle, { color: C.text }]}>{label}</Text>
+                <Pressable onPress={() => { onChange(tempDate); setShow(false); }}>
+                  <Text style={[styles.dateHeaderBtn, { color: C.primary, fontFamily: "Inter_600SemiBold" }]}>Done</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                minimumDate={minDate}
+                onChange={handlePickerChange}
+                style={{ width: "100%" }}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+// ─── LocationTypePicker ──────────────────────────────────────────────────────
+
+function LocationTypePicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  const selected = LOCATION_TYPES.find(lt => lt.value === value);
+
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={[styles.fLabel, { color: C.textMuted }]}>{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+        {LOCATION_TYPES.map(lt => {
+          const active = value === lt.value;
+          return (
+            <Pressable
+              key={lt.value}
+              style={[styles.locChip, { borderColor: active ? C.primary : C.border, backgroundColor: active ? C.primary : C.surface }]}
+              onPress={() => onChange(lt.value)}
+            >
+              <Feather name={lt.icon as any} size={13} color={active ? "#fff" : C.textSecondary} />
+              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12, color: active ? "#fff" : C.textSecondary }}>
+                {lt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {selected?.warning && (
+        <View style={[styles.locWarning, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A" }]}>
+          <Feather name="alert-triangle" size={12} color="#A16207" />
+          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: "#A16207", flex: 1 }}>
+            {selected.warning}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── Simple labelled text field ───────────────────────────────────────────────
+
+function F({ label, value, onChange, placeholder, keyboardType, maxLength, autoCapitalize = "sentences" }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+  keyboardType?: KeyboardTypeOptions; maxLength?: number;
+  autoCapitalize?: "none" | "words" | "sentences" | "characters";
+}) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={[styles.fLabel, { color: C.textMuted }]}>{label}</Text>
+      <TextInput
+        style={[styles.fInput, { color: C.text, borderBottomColor: focused ? C.primary : C.borderLight }]}
+        value={value}
+        onChangeText={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        placeholderTextColor={C.textMuted}
+        keyboardType={keyboardType}
+        maxLength={maxLength}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+      />
+    </View>
+  );
+}
+
+// ─── Option cards (transport / service type) ─────────────────────────────────
+
+function OptionCards({ value, onChange, options }: {
+  value: string; onChange: (v: string) => void;
+  options: { value: string; label: string; desc: string }[];
+}) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  return (
+    <View style={{ flexDirection: "row", gap: 10 }}>
+      {options.map(opt => {
+        const active = value === opt.value;
+        return (
+          <Pressable
+            key={opt.value}
+            style={[styles.optCard, { flex: 1, borderColor: active ? C.primary : C.border, backgroundColor: active ? "#EFF6FF" : C.surface }]}
+            onPress={() => onChange(opt.value)}
+          >
+            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: active ? C.primary : C.text, marginBottom: 2 }}>{opt.label}</Text>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, lineHeight: 15 }}>{opt.desc}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+// ─── Section header ──────────────────────────────────────────────────────────
+
+function SectionHead({ label, icon, color }: { label: string; icon: string; color: string }) {
+  return (
+    <View style={styles.sectionHead}>
+      <Feather name={icon as any} size={14} color={color} />
+      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color }}>{label}</Text>
+    </View>
+  );
+}
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function CreateShipmentScreen() {
   const insets = useSafeAreaInsets();
@@ -21,26 +383,31 @@ export default function CreateShipmentScreen() {
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const [form, setForm] = useState({
+    // Step 0 — Vehicle
     vehicleYear: "", vehicleMake: "", vehicleModel: "",
     vehicleType: "sedan", vehicleCondition: "running", vin: "",
+    // Step 1 — Route
+    originAddress: "", originCity: "", originState: "", originZip: "",
+    pickupLocationType: "residential",
+    destinationAddress: "", destinationCity: "", destinationState: "", destinationZip: "",
+    deliveryLocationType: "residential",
+    // Step 2 — Details
     transportType: "open", serviceType: "door_to_door",
-    originCity: "", originState: "", originZip: "",
-    destinationCity: "", destinationState: "", destinationZip: "",
-    pickupDateFrom: "", pickupDateTo: "",
+    pickupDateFrom: null as Date | null,
+    pickupDateTo: null as Date | null,
     budgetMin: "", budgetMax: "", notes: "",
+    agreeToTerms: false,
   });
 
-  const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
+  const set = (key: string, value: any) => setForm(f => ({ ...f, [key]: value }));
 
   const createMutation = useMutation({
-    mutationFn: () => {
-      const fmt = (d: Date) => d.toISOString().split("T")[0];
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      return createShipment({
+    mutationFn: () =>
+      createShipment({
         vehicleYear: parseInt(form.vehicleYear, 10),
         vehicleMake: form.vehicleMake,
         vehicleModel: form.vehicleModel,
@@ -48,59 +415,66 @@ export default function CreateShipmentScreen() {
         vehicleCondition: form.vehicleCondition as any,
         vin: form.vin,
         transportType: form.transportType as any,
-        serviceType: (form.serviceType as any) || "door_to_door",
+        serviceType: form.serviceType as any,
+        originAddress: form.originAddress || undefined,
         originCity: form.originCity,
         originState: form.originState,
         originZip: form.originZip,
+        destinationAddress: form.destinationAddress || undefined,
         destinationCity: form.destinationCity,
         destinationState: form.destinationState,
         destinationZip: form.destinationZip,
-        pickupDateFrom: form.pickupDateFrom || fmt(today),
-        pickupDateTo: form.pickupDateTo || fmt(tomorrow),
+        pickupDateFrom: form.pickupDateFrom ? toYMD(form.pickupDateFrom) : undefined,
+        pickupDateTo: form.pickupDateTo ? toYMD(form.pickupDateTo) : undefined,
         budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : undefined,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : undefined,
         notes: form.notes || undefined,
-      });
-    },
+        // extra fields accepted by server (not in Zod spec)
+        ...(form.pickupLocationType ? { pickupLocationType: form.pickupLocationType } : {}),
+        ...(form.deliveryLocationType ? { deliveryLocationType: form.deliveryLocationType } : {}),
+      } as any),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["my-shipments"] });
       qc.invalidateQueries({ queryKey: ["shipments"] });
-      Alert.alert("Load Posted!", "Your shipment has been listed. Drivers can now bid on it.", [
+      Alert.alert("Load Posted!", "Your shipment is live. Drivers can now bid on it.", [
         { text: "View Load", onPress: () => { router.back(); router.push({ pathname: "/shipment/[id]", params: { id: (data as any).id } }); } },
         { text: "Done", onPress: () => router.back() },
       ]);
     },
-    onError: () => Alert.alert("Error", "Could not post shipment. Please check all fields."),
+    onError: () => Alert.alert("Error", "Could not post shipment. Please check all fields and try again."),
   });
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const validate = () => {
+  const validate = (): boolean => {
     if (step === 0) {
-      if (!form.vehicleYear) {
-        Alert.alert("Year is required", "Please enter the vehicle year."); return false;
-      }
-      if (!form.vehicleMake || !form.vehicleModel) {
-        Alert.alert("Missing Info", "Please fill in make and model."); return false;
-      }
-      if (!form.vin || form.vin.trim().length === 0) {
-        Alert.alert("VIN Required", "Please enter the 17-character VIN."); return false;
-      }
-      if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(form.vin.trim())) {
-        Alert.alert("Invalid VIN", "VIN must be exactly 17 alphanumeric characters (no I, O, Q)."); return false;
-      }
       const yr = parseInt(form.vehicleYear, 10);
-      if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) {
-        Alert.alert("Invalid Year", "Please enter a valid 4-digit year."); return false;
+      if (!form.vehicleYear || isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) {
+        Alert.alert("Invalid Year", "Please enter a valid 4-digit vehicle year."); return false;
+      }
+      if (!form.vehicleMake.trim()) { Alert.alert("Make Required", "Please enter the vehicle make."); return false; }
+      if (!form.vehicleModel.trim()) { Alert.alert("Model Required", "Please enter the vehicle model."); return false; }
+      if (!form.vin.trim()) { Alert.alert("VIN Required", "Please enter the 17-character VIN."); return false; }
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(form.vin.trim())) {
+        Alert.alert("Invalid VIN", "VIN must be exactly 17 alphanumeric characters (no I, O, or Q)."); return false;
       }
     }
     if (step === 1) {
-      if (!form.originCity || !form.originState || !form.originZip) {
-        Alert.alert("Missing Info", "Please fill in the origin city, state, and zip."); return false;
+      if (!form.originAddress.trim()) { Alert.alert("Missing Info", "Please enter the pickup street address."); return false; }
+      if (!form.originCity.trim() || !form.originState.trim() || !form.originZip.trim()) {
+        Alert.alert("Missing Info", "Please complete the pickup city, state, and ZIP."); return false;
       }
-      if (!form.destinationCity || !form.destinationState || !form.destinationZip) {
-        Alert.alert("Missing Info", "Please fill in the destination city, state, and zip."); return false;
+      if (form.originState.trim().length !== 2) { Alert.alert("Invalid State", "Please use the 2-letter state abbreviation (e.g. TX)."); return false; }
+      if (!form.destinationAddress.trim()) { Alert.alert("Missing Info", "Please enter the delivery street address."); return false; }
+      if (!form.destinationCity.trim() || !form.destinationState.trim() || !form.destinationZip.trim()) {
+        Alert.alert("Missing Info", "Please complete the delivery city, state, and ZIP."); return false;
+      }
+      if (form.destinationState.trim().length !== 2) { Alert.alert("Invalid State", "Please use the 2-letter state abbreviation (e.g. CA)."); return false; }
+    }
+    if (step === 2) {
+      if (!form.agreeToTerms) {
+        Alert.alert("Agreement Required", "Please acknowledge the liability disclaimer to post your load."); return false;
       }
     }
     return true;
@@ -109,151 +483,345 @@ export default function CreateShipmentScreen() {
   const next = () => { if (validate()) setStep(s => Math.min(s + 1, STEPS.length - 1)); };
   const prev = () => setStep(s => Math.max(s - 1, 0));
 
+  const submit = () => {
+    if (!validate()) return;
+    createMutation.mutate();
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
-      <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
-        <Pressable onPress={() => router.back()}><Feather name="x" size={22} color={C.textSecondary} /></Pressable>
-        <Text style={[styles.title, { color: C.text }]}>Post a Load</Text>
-        <Text style={[styles.stepLabel, { color: C.textMuted }]}>{step + 1}/{STEPS.length}</Text>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: topPadding + 8, backgroundColor: C.background, borderBottomColor: C.borderLight }]}>
+        <Pressable hitSlop={10} onPress={() => router.back()}>
+          <Feather name="x" size={22} color={C.textSecondary} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: C.text }]}>Post a Load</Text>
+        <Text style={[styles.headerStep, { color: C.textMuted }]}>{step + 1} / {STEPS.length}</Text>
       </View>
 
+      {/* Progress bar */}
       <View style={styles.progressRow}>
         {STEPS.map((s, i) => (
-          <View key={s} style={[styles.progressStep, { backgroundColor: i <= step ? C.primary : C.border }]} />
+          <View key={s} style={[styles.progressSeg, { backgroundColor: i <= step ? C.primary : C.border }]} />
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: bottomPadding + 100, paddingTop: 8 }}>
+      {/* Body */}
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: bottomPadding + 100, paddingTop: 4 }}
+      >
         <Text style={[styles.stepTitle, { color: C.text }]}>{STEPS[step]}</Text>
 
+        {/* ── Step 0 — Vehicle ── */}
         {step === 0 && (
           <View style={{ gap: 14 }}>
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <F label="Year *" value={form.vehicleYear} onChange={v => set("vehicleYear", v)} placeholder="e.g. 2019" keyboardType="numeric" />
-              <F label="Make *" value={form.vehicleMake} onChange={v => set("vehicleMake", v)} placeholder="e.g. Toyota" />
-              <F label="Model *" value={form.vehicleModel} onChange={v => set("vehicleModel", v)} placeholder="e.g. Camry" />
-              <F label="VIN *" value={form.vin} onChange={v => set("vin", v)} placeholder="17-character VIN" />
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <F
+                    label="Year *"
+                    value={form.vehicleYear}
+                    onChange={v => set("vehicleYear", v)}
+                    placeholder="2020"
+                    keyboardType="numeric"
+                    maxLength={4}
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+              <SuggestInput
+                label="Make *"
+                value={form.vehicleMake}
+                onChange={v => set("vehicleMake", v)}
+                placeholder="e.g. Ford, Toyota…"
+                items={MAKE_ITEMS}
+              />
+              <F
+                label="Model *"
+                value={form.vehicleModel}
+                onChange={v => set("vehicleModel", v)}
+                placeholder="e.g. F-150, Camry…"
+              />
+              <F
+                label="VIN * (17 characters)"
+                value={form.vin}
+                onChange={v => set("vin", v.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/gi, ""))}
+                placeholder="e.g. 1HGBH41JXMN109186"
+                maxLength={17}
+                autoCapitalize="characters"
+              />
             </View>
 
             <View>
-              <Text style={[styles.fieldLabel, { color: C.text }]}>Vehicle Type</Text>
+              <Text style={[styles.sectionLabel, { color: C.text }]}>Vehicle Type</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
-                {VEHICLE_TYPES.map(t => (
-                  <Pressable
-                    key={t}
-                    style={[styles.chip, { borderColor: form.vehicleType === t ? C.primary : C.border, backgroundColor: form.vehicleType === t ? C.primary : C.surface }]}
-                    onPress={() => set("vehicleType", t)}
-                  >
-                    <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: form.vehicleType === t ? "#fff" : C.textSecondary }}>{t}</Text>
-                  </Pressable>
-                ))}
+                {VEHICLE_TYPES.map(t => {
+                  const active = form.vehicleType === t.value;
+                  return (
+                    <Pressable
+                      key={t.value}
+                      style={[styles.chip, { borderColor: active ? C.primary : C.border, backgroundColor: active ? C.primary : C.surface }]}
+                      onPress={() => set("vehicleType", t.value)}
+                    >
+                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: active ? "#fff" : C.textSecondary }}>
+                        {t.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </ScrollView>
             </View>
 
             <View>
-              <Text style={[styles.fieldLabel, { color: C.text }]}>Vehicle Condition</Text>
+              <Text style={[styles.sectionLabel, { color: C.text }]}>Condition</Text>
               <View style={{ flexDirection: "row", gap: 10 }}>
-                {[{ v: "running", l: "Running" }, { v: "non_running", l: "Non-Running" }].map(({ v, l }) => (
-                  <Pressable
-                    key={v}
-                    style={[styles.conditionBtn, { flex: 1, borderColor: form.vehicleCondition === v ? C.primary : C.border, backgroundColor: form.vehicleCondition === v ? "#EFF6FF" : C.surface }]}
-                    onPress={() => set("vehicleCondition", v)}
-                  >
-                    <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: form.vehicleCondition === v ? C.primary : C.textSecondary }}>{l}</Text>
-                  </Pressable>
-                ))}
+                {CONDITIONS.map(c => {
+                  const active = form.vehicleCondition === c.value;
+                  return (
+                    <Pressable
+                      key={c.value}
+                      style={[styles.condBtn, { flex: 1, borderColor: active ? C.primary : C.border, backgroundColor: active ? "#EFF6FF" : C.surface }]}
+                      onPress={() => set("vehicleCondition", c.value)}
+                    >
+                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: active ? C.primary : C.textSecondary, textAlign: "center" }}>
+                        {c.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-            </View>
-
-            <View>
-              <Text style={[styles.fieldLabel, { color: C.text }]}>Transport Type</Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                {[{ v: "open", l: "Open Carrier", desc: "Standard, lower cost" }, { v: "enclosed", l: "Enclosed Carrier", desc: "Protected, higher cost" }].map(({ v, l, desc }) => (
-                  <Pressable
-                    key={v}
-                    style={[styles.transportCard, { flex: 1, borderColor: form.transportType === v ? C.primary : C.border, backgroundColor: form.transportType === v ? "#EFF6FF" : C.surface }]}
-                    onPress={() => set("transportType", v)}
-                  >
-                    <Feather name="truck" size={20} color={form.transportType === v ? C.primary : C.textMuted} />
-                    <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: form.transportType === v ? C.primary : C.text }}>{l}</Text>
-                    <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, textAlign: "center" }}>{desc}</Text>
-                  </Pressable>
-                ))}
-              </View>
+              {form.vehicleCondition === "non_running" && (
+                <View style={[styles.infoBox, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A", marginTop: 8 }]}>
+                  <Feather name="alert-triangle" size={13} color="#A16207" />
+                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#A16207", flex: 1 }}>
+                    INOP vehicles require special equipment and typically cost more to transport.
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         )}
 
+        {/* ── Step 1 — Route ── */}
         {step === 1 && (
           <View style={{ gap: 14 }}>
+            {/* Origin */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <Text style={[styles.routeHeader, { color: C.primary }]}>Origin (Pickup)</Text>
-              <F label="City *" value={form.originCity} onChange={v => set("originCity", v)} placeholder="e.g. Dallas" />
-              <F label="State *" value={form.originState} onChange={v => set("originState", v)} placeholder="e.g. TX" />
-              <F label="Zip Code *" value={form.originZip} onChange={v => set("originZip", v)} placeholder="e.g. 75201" keyboardType="numeric" />
+              <SectionHead label="Pickup Location" icon="map-pin" color={C.primary} />
+              <F
+                label="Street Address *"
+                value={form.originAddress}
+                onChange={v => set("originAddress", v)}
+                placeholder="123 Main St"
+              />
+              <F
+                label="City *"
+                value={form.originCity}
+                onChange={v => set("originCity", v)}
+                placeholder="e.g. Dallas"
+              />
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <SuggestInput
+                    label="State *"
+                    value={form.originState}
+                    onChange={v => set("originState", v)}
+                    placeholder="TX"
+                    items={STATE_ITEMS}
+                    maxLength={2}
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <F
+                    label="ZIP *"
+                    value={form.originZip}
+                    onChange={v => set("originZip", v)}
+                    placeholder="75201"
+                    keyboardType="numeric"
+                    maxLength={5}
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+              <LocationTypePicker
+                label="Location Type"
+                value={form.pickupLocationType}
+                onChange={v => set("pickupLocationType", v)}
+              />
             </View>
+
+            {/* Divider */}
+            <View style={styles.routeDivider}>
+              <View style={[styles.routeDividerLine, { backgroundColor: C.borderLight }]} />
+              <View style={[styles.routeDividerIcon, { backgroundColor: C.border }]}>
+                <Feather name="arrow-down" size={16} color={C.textMuted} />
+              </View>
+              <View style={[styles.routeDividerLine, { backgroundColor: C.borderLight }]} />
+            </View>
+
+            {/* Destination */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <Text style={[styles.routeHeader, { color: C.danger }]}>Destination (Delivery)</Text>
-              <F label="City *" value={form.destinationCity} onChange={v => set("destinationCity", v)} placeholder="e.g. Houston" />
-              <F label="State *" value={form.destinationState} onChange={v => set("destinationState", v)} placeholder="e.g. TX" />
-              <F label="Zip Code *" value={form.destinationZip} onChange={v => set("destinationZip", v)} placeholder="e.g. 77001" keyboardType="numeric" />
+              <SectionHead label="Delivery Location" icon="flag" color="#F59E0B" />
+              <F
+                label="Street Address *"
+                value={form.destinationAddress}
+                onChange={v => set("destinationAddress", v)}
+                placeholder="456 Oak Ave"
+              />
+              <F
+                label="City *"
+                value={form.destinationCity}
+                onChange={v => set("destinationCity", v)}
+                placeholder="e.g. Houston"
+              />
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <SuggestInput
+                    label="State *"
+                    value={form.destinationState}
+                    onChange={v => set("destinationState", v)}
+                    placeholder="TX"
+                    items={STATE_ITEMS}
+                    maxLength={2}
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <F
+                    label="ZIP *"
+                    value={form.destinationZip}
+                    onChange={v => set("destinationZip", v)}
+                    placeholder="77001"
+                    keyboardType="numeric"
+                    maxLength={5}
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+              <LocationTypePicker
+                label="Location Type"
+                value={form.deliveryLocationType}
+                onChange={v => set("deliveryLocationType", v)}
+              />
             </View>
           </View>
         )}
 
+        {/* ── Step 2 — Details ── */}
         {step === 2 && (
           <View style={{ gap: 14 }}>
+            {/* Transport type */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <Text style={[styles.routeHeader, { color: C.text }]}>Pickup Window</Text>
-              <F label="Earliest Date" value={form.pickupDateFrom} onChange={v => set("pickupDateFrom", v)} placeholder="e.g. 2025-04-15" />
-              <F label="Latest Date" value={form.pickupDateTo} onChange={v => set("pickupDateTo", v)} placeholder="e.g. 2025-04-30" />
+              <SectionHead label="Trailer Type" icon="truck" color={C.text} />
+              <OptionCards value={form.transportType} onChange={v => set("transportType", v)} options={TRANSPORT_TYPES} />
             </View>
+
+            {/* Service type */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <Text style={[styles.routeHeader, { color: C.text }]}>Budget Range</Text>
-              <F label="Minimum ($)" value={form.budgetMin} onChange={v => set("budgetMin", v)} placeholder="e.g. 500" keyboardType="numeric" />
-              <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="e.g. 900" keyboardType="numeric" />
+              <SectionHead label="Service Type" icon="navigation" color={C.text} />
+              <OptionCards value={form.serviceType} onChange={v => set("serviceType", v)} options={SERVICE_TYPES} />
             </View>
+
+            {/* Pickup dates */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <Text style={[styles.routeHeader, { color: C.text }]}>Additional Notes</Text>
+              <SectionHead label="Pickup Window" icon="calendar" color={C.text} />
+              <DateField
+                label="Earliest Pickup Date"
+                value={form.pickupDateFrom}
+                onChange={d => { set("pickupDateFrom", d); if (form.pickupDateTo && d && d > form.pickupDateTo) set("pickupDateTo", null); }}
+                minimumDate={today}
+              />
+              <DateField
+                label="Latest Pickup Date"
+                value={form.pickupDateTo}
+                onChange={d => set("pickupDateTo", d)}
+                minimumDate={form.pickupDateFrom ?? today}
+              />
+            </View>
+
+            {/* Budget */}
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
+              <SectionHead label="Budget Range" icon="dollar-sign" color={C.text} />
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <F label="Minimum ($)" value={form.budgetMin} onChange={v => set("budgetMin", v)} placeholder="500" keyboardType="numeric" autoCapitalize="none" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="900" keyboardType="numeric" autoCapitalize="none" />
+                </View>
+              </View>
+            </View>
+
+            {/* Notes */}
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
+              <SectionHead label="Additional Instructions" icon="file-text" color={C.text} />
               <TextInput
-                style={[styles.textarea, { color: C.text, borderColor: C.borderLight }]}
+                style={[styles.textarea, { color: C.text, borderColor: C.borderLight, backgroundColor: C.inputBackground }]}
                 value={form.notes}
                 onChangeText={v => set("notes", v)}
-                placeholder="Special instructions, access details, contact preferences..."
+                placeholder="Gate codes, contact names, special requirements, vehicle modifications…"
                 placeholderTextColor={C.textMuted}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
             </View>
-            <View style={[styles.disclaimerBox, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A" }]}>
-              <Feather name="info" size={14} color="#A16207" />
-              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#A16207", flex: 1, lineHeight: 18 }}>
-                KarHaul connects you with drivers directly. Arrange payment terms directly with your driver. The platform assumes no liability for transport.
+
+            {/* Fee info */}
+            <View style={[styles.infoBox, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
+              <Feather name="info" size={14} color={C.primary} />
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: C.primary, flex: 1, lineHeight: 18 }}>
+                KarHaul is a marketplace only. Arrange payment directly with your driver. A 5% platform fee is held in escrow when your load is posted.
               </Text>
             </View>
+
+            {/* Agree to terms */}
+            <Pressable
+              style={[styles.termsRow, { backgroundColor: "#FFF7ED", borderColor: "#FED7AA" }]}
+              onPress={() => set("agreeToTerms", !form.agreeToTerms)}
+            >
+              <View style={[styles.checkbox, { borderColor: form.agreeToTerms ? C.primary : C.border, backgroundColor: form.agreeToTerms ? C.primary : "transparent" }]}>
+                {form.agreeToTerms && <Feather name="check" size={12} color="#fff" />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#C2410C", marginBottom: 2 }}>
+                  Legal Disclaimer & Liability Waiver
+                </Text>
+                <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#EA580C", lineHeight: 17 }}>
+                  I acknowledge that KarHaul assumes ZERO LIABILITY for vehicle damage, delays, or payment disputes. All contracts are between shipper and carrier.
+                </Text>
+              </View>
+            </Pressable>
           </View>
         )}
       </ScrollView>
 
+      {/* Bottom nav */}
       <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8, backgroundColor: C.surface, borderTopColor: C.borderLight }]}>
         {step > 0 && (
-          <Pressable style={[styles.backStepBtn, { borderColor: C.border }]} onPress={prev}>
+          <Pressable style={[styles.backBtn, { borderColor: C.border }]} onPress={prev}>
             <Feather name="arrow-left" size={18} color={C.text} />
           </Pressable>
         )}
         {step < STEPS.length - 1 ? (
-          <Pressable style={[styles.nextBtn, { backgroundColor: C.primary, flex: step > 0 ? 1 : undefined, width: step === 0 ? "100%" : undefined }]} onPress={next}>
+          <Pressable
+            style={[styles.nextBtn, { backgroundColor: C.primary, flex: step > 0 ? 1 : undefined, width: step === 0 ? "100%" : undefined }]}
+            onPress={next}
+          >
             <Text style={styles.nextBtnText}>Continue</Text>
             <Feather name="arrow-right" size={18} color="#fff" />
           </Pressable>
         ) : (
           <Pressable
             style={[styles.nextBtn, { backgroundColor: C.primary, flex: 1, opacity: createMutation.isPending ? 0.7 : 1 }]}
-            onPress={() => createMutation.mutate()}
+            onPress={submit}
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : (
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
               <>
                 <Feather name="check" size={18} color="#fff" />
                 <Text style={styles.nextBtnText}>Post Load</Text>
@@ -266,42 +834,127 @@ export default function CreateShipmentScreen() {
   );
 }
 
-function F({ label, value, onChange, placeholder, keyboardType }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions }) {
-  const { colorScheme } = useTheme();
-  const C = Colors[colorScheme];
-  return (
-    <View style={{ marginBottom: 12 }}>
-      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginBottom: 4 }}>{label}</Text>
-      <TextInput
-        style={{ fontFamily: "Inter_400Regular", fontSize: 15, color: C.text, borderBottomWidth: 1, borderBottomColor: C.borderLight, paddingVertical: 8 }}
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor={C.textMuted}
-        keyboardType={keyboardType}
-      />
-    </View>
-  );
-}
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 8 },
-  title: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
-  stepLabel: { fontFamily: "Inter_500Medium", fontSize: 14 },
-  progressRow: { flexDirection: "row", gap: 4, paddingHorizontal: 16, marginBottom: 16 },
-  progressStep: { flex: 1, height: 3, borderRadius: 2 },
+
+  header: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerTitle: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
+  headerStep: { fontFamily: "Inter_500Medium", fontSize: 14 },
+
+  progressRow: { flexDirection: "row", gap: 4, paddingHorizontal: 16, paddingVertical: 10 },
+  progressSeg: { flex: 1, height: 3, borderRadius: 2 },
+
   stepTitle: { fontFamily: "Inter_700Bold", fontSize: 22, marginBottom: 16 },
-  card: { borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  routeHeader: { fontFamily: "Inter_600SemiBold", fontSize: 14, marginBottom: 12 },
-  fieldLabel: { fontFamily: "Inter_500Medium", fontSize: 15, marginBottom: 10 },
+
+  card: {
+    borderRadius: 16, padding: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+
+  sectionLabel: { fontFamily: "Inter_500Medium", fontSize: 15, marginBottom: 10 },
+
+  sectionHead: {
+    flexDirection: "row", alignItems: "center", gap: 7,
+    marginBottom: 14,
+  },
+
+  // Field
+  fieldWrap: { marginBottom: 14 },
+  fLabel: { fontFamily: "Inter_400Regular", fontSize: 11, marginBottom: 5, letterSpacing: 0.3 },
+  fInput: {
+    fontFamily: "Inter_400Regular", fontSize: 15,
+    borderBottomWidth: 1, paddingVertical: 8,
+  },
+
+  // Suggestion dropdown
+  suggBox: {
+    marginTop: 2, borderRadius: 10, borderWidth: 1,
+    overflow: "hidden", zIndex: 100,
+    shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 8,
+  },
+  suggItem: { paddingHorizontal: 12, paddingVertical: 11 },
+
+  // Date picker
+  dateBtn: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    borderWidth: 1, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 12,
+  },
+  dateOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
+  dateCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" },
+  dateHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  dateHeaderBtn: { fontFamily: "Inter_500Medium", fontSize: 15 },
+  dateHeaderTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
+
+  // Location type chips
+  locChip: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1,
+  },
+  locWarning: {
+    flexDirection: "row", alignItems: "flex-start", gap: 6,
+    marginTop: 8, padding: 8, borderRadius: 8, borderWidth: 1,
+  },
+
+  // Option cards
+  optCard: { padding: 14, borderRadius: 14, borderWidth: 1.5 },
+
+  // Condition buttons
+  condBtn: { paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, alignItems: "center" },
+
+  // Chips (vehicle type)
   chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  conditionBtn: { paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, alignItems: "center" },
-  transportCard: { padding: 14, borderRadius: 14, borderWidth: 1.5, alignItems: "center", gap: 6 },
-  textarea: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontFamily: "Inter_400Regular", fontSize: 14, minHeight: 80 },
-  disclaimerBox: { flexDirection: "row", gap: 10, padding: 12, borderRadius: 12, borderWidth: 1 },
-  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1 },
-  backStepBtn: { width: 50, height: 50, borderRadius: 14, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
-  nextBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 14 },
+
+  // Info / warning boxes
+  infoBox: { flexDirection: "row", alignItems: "flex-start", gap: 8, padding: 12, borderRadius: 12, borderWidth: 1 },
+
+  // Terms checkbox
+  termsRow: {
+    flexDirection: "row", alignItems: "flex-start", gap: 12,
+    padding: 14, borderRadius: 14, borderWidth: 1,
+  },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 6, borderWidth: 2,
+    alignItems: "center", justifyContent: "center", marginTop: 1,
+  },
+
+  // Notes textarea
+  textarea: {
+    borderWidth: 1, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10,
+    fontFamily: "Inter_400Regular", fontSize: 14, minHeight: 90,
+  },
+
+  // Route step divider
+  routeDivider: { flexDirection: "row", alignItems: "center" },
+  routeDividerLine: { flex: 1, height: 1 },
+  routeDividerIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: "center", justifyContent: "center", marginHorizontal: 12,
+  },
+
+  // Bottom bar
+  bottomBar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    flexDirection: "row", gap: 12, paddingHorizontal: 16,
+    paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  backBtn: {
+    width: 50, height: 50, borderRadius: 14, borderWidth: 1.5,
+    alignItems: "center", justifyContent: "center",
+  },
+  nextBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 8, paddingVertical: 16, borderRadius: 14,
+  },
   nextBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
 });
