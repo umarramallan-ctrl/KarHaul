@@ -141,7 +141,7 @@ export default function RootLayout() {
 const splashStyles = StyleSheet.create({
   container: {
     flex: 1, alignItems: "center", justifyContent: "center",
-    backgroundColor: "#1A56DB", gap: 12,
+    backgroundColor: "#0F172A", gap: 12,
   },
   name: { fontSize: 34, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
   tagline: { fontSize: 14, color: "rgba(255,255,255,0.7)" },

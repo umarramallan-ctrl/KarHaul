@@ -18,8 +18,6 @@ export default function AuthScreen() {
   const { colorScheme } = useTheme();
   const C = Colors[colorScheme];
   const { isSignedIn } = useAuth();
-  // Clerk OAuth — strategy must match what is enabled in your Clerk dashboard
-  // (oauth_google, oauth_apple, etc.)
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +31,6 @@ export default function AuthScreen() {
   const handleLogin = useCallback(async () => {
     setLoading(true);
     try {
-      // Linking.createURL picks up the `karhaul` scheme from app.json automatically
       const redirectUrl = Linking.createURL("/auth-callback");
       const { createdSessionId, setActive } = await startOAuthFlow({ redirectUrl });
       if (createdSessionId) {
@@ -48,19 +45,24 @@ export default function AuthScreen() {
   }, [startOAuthFlow]);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: C.background }]}
-      contentContainerStyle={{ paddingBottom: bottomPadding + 24, paddingTop: topPadding + 16 }}
-    >
-      <Pressable style={styles.backBtn} onPress={() => router.back()}>
-        <Feather name="x" size={22} color={C.textSecondary} />
-      </Pressable>
-
-      <View style={styles.content}>
-        <View style={[styles.logoCircle, { backgroundColor: C.primary }]}>
-          <Feather name="truck" size={40} color="#fff" />
+    <View style={[styles.screen, { backgroundColor: C.background }]}>
+      {/* Dark navy hero — truck logo + brand name */}
+      <View style={[styles.hero, { paddingTop: topPadding + 20 }]}>
+        <Pressable style={styles.closeBtn} onPress={() => router.back()}>
+          <Feather name="x" size={22} color="rgba(255,255,255,0.6)" />
+        </Pressable>
+        <View style={styles.logoWrap}>
+          <Feather name="truck" size={52} color="#fff" />
         </View>
-        <Text style={[styles.appName, { color: C.primary }]}>KarHaul</Text>
+        <Text style={styles.heroName}>KarHaul</Text>
+        <Text style={styles.heroTagline}>Direct auto transport marketplace</Text>
+      </View>
+
+      {/* Scrollable sign-in content */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding + 24 }]}
+      >
         <Text style={[styles.title, { color: C.text }]}>Welcome back</Text>
         <Text style={[styles.subtitle, { color: C.textSecondary }]}>
           The direct marketplace for auto transport — no brokers, no middlemen.
@@ -110,34 +112,51 @@ export default function AuthScreen() {
             transport is arranged directly between shippers and drivers.
           </Text>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  backBtn: {
+  screen: { flex: 1 },
+  hero: {
+    backgroundColor: "#0F172A",
+    alignItems: "center",
+    paddingBottom: 32,
+    gap: 10,
+  },
+  closeBtn: {
     position: "absolute", top: 16, right: 20, zIndex: 10,
     width: 36, height: 36, alignItems: "center", justifyContent: "center",
   },
-  content: { paddingHorizontal: 24, alignItems: "center", gap: 16 },
-  logoCircle: { width: 80, height: 80, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  appName: { fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: 0.5 },
-  title: { fontFamily: "Inter_700Bold", fontSize: 26, textAlign: "center" },
+  logoWrap: {
+    width: 96, height: 96, borderRadius: 24,
+    backgroundColor: "rgba(26,86,219,0.25)",
+    borderWidth: 1.5, borderColor: "rgba(26,86,219,0.5)",
+    alignItems: "center", justifyContent: "center",
+    marginBottom: 4,
+  },
+  heroName: {
+    fontSize: 36, fontWeight: "700", color: "#fff", letterSpacing: 0.5,
+  },
+  heroTagline: {
+    fontSize: 14, color: "rgba(255,255,255,0.55)", letterSpacing: 0.2,
+  },
+  content: { paddingHorizontal: 24, paddingTop: 28, gap: 16 },
+  title: { fontFamily: "Inter_700Bold", fontSize: 24, textAlign: "center" },
   subtitle: {
     fontFamily: "Inter_400Regular", fontSize: 15, textAlign: "center",
     lineHeight: 22, paddingHorizontal: 10,
   },
-  featureList: { width: "100%", borderRadius: 16, borderWidth: 1, overflow: "hidden" },
+  featureList: { borderRadius: 16, borderWidth: 1, overflow: "hidden" },
   featureItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   featureIcon: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   featureText: { fontFamily: "Inter_400Regular", fontSize: 14, flex: 1 },
   loginBtn: {
-    width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center",
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 16, borderRadius: 14,
   },
   loginBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
-  disclaimer: { width: "100%", flexDirection: "row", gap: 10, padding: 14, borderRadius: 12, borderWidth: 1 },
+  disclaimer: { flexDirection: "row", gap: 10, padding: 14, borderRadius: 12, borderWidth: 1 },
   disclaimerText: { fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 18, flex: 1 },
 });
