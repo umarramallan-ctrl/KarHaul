@@ -143,9 +143,12 @@ function DriverRoutesPanel() {
   );
 }
 
+const THEME_CYCLE = { light: "dark", dark: "system", system: "light" } as const;
+const THEME_ICON  = { light: "sun",  dark: "moon",  system: "smartphone" } as const;
+
 export default function BrowseScreen() {
   const insets = useSafeAreaInsets();
-  const { colorScheme } = useTheme();
+  const { colorScheme, theme, setTheme } = useTheme();
   const C = Colors[colorScheme];
   const [activeTab, setActiveTab] = useState<"loads" | "routes">("loads");
   const [search, setSearch] = useState("");
@@ -192,11 +195,20 @@ export default function BrowseScreen() {
             <Text style={styles.headerBrand}>KarHaul</Text>
             <Text style={styles.headerTitle}>Load Board</Text>
           </View>
-          {activeTab === "loads" && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{filtered.length} open</Text>
-            </View>
-          )}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {activeTab === "loads" && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{filtered.length} open</Text>
+              </View>
+            )}
+            <Pressable
+              onPress={() => setTheme(THEME_CYCLE[theme])}
+              style={styles.themeToggleBtn}
+              hitSlop={8}
+            >
+              <Feather name={THEME_ICON[theme] as any} size={18} color="rgba(255,255,255,0.9)" />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.tabSwitcher}>
@@ -285,6 +297,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 26, color: "#fff" },
   countBadge: { backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   countBadgeText: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#fff" },
+  themeToggleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
   tabSwitcher: {
     flexDirection: "row", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.15)", padding: 4, marginBottom: 14, gap: 4,
   },
