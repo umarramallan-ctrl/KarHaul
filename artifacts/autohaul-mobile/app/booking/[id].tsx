@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/lib/auth";
 import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 import { getApiBaseUrl } from "@/lib/api";
 import * as ImagePicker from "expo-image-picker";
 
@@ -66,7 +67,8 @@ async function postCheckpoint(bookingId: string, data: Record<string, string>, t
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const qc = useQueryClient();
   const [showCheckpointForm, setShowCheckpointForm] = useState(false);
@@ -205,7 +207,7 @@ export default function BookingDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
-        <Pressable style={[styles.backBtn, { backgroundColor: "#fff" }]} onPress={() => router.back()}>
+        <Pressable style={[styles.backBtn, { backgroundColor: C.surface }]} onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color={C.text} />
         </Pressable>
         <Text style={[styles.title, { color: C.text }]}>Booking Details</Text>
@@ -286,7 +288,7 @@ export default function BookingDetailScreen() {
                   {MILESTONE_OPTIONS.map(opt => (
                     <Pressable
                       key={opt.key}
-                      style={[styles.milestoneChip, { borderColor: cpForm.milestone === opt.key ? C.primary : C.border, backgroundColor: cpForm.milestone === opt.key ? "#EFF6FF" : "#fff" }]}
+                      style={[styles.milestoneChip, { borderColor: cpForm.milestone === opt.key ? C.primary : C.border, backgroundColor: cpForm.milestone === opt.key ? "#EFF6FF" : C.surface }]}
                       onPress={() => setCpForm(f => ({ ...f, milestone: opt.key }))}
                     >
                       <Text style={{ fontSize: 11, color: cpForm.milestone === opt.key ? C.primary : C.textSecondary, fontFamily: "Inter_500Medium" }}>{MILESTONE_ICONS[opt.key]} {opt.label}</Text>
@@ -320,7 +322,7 @@ export default function BookingDetailScreen() {
               </Text>
             </View>
           ) : (
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               {checkpoints.map((cp: any, i: number) => (
                 <View key={cp.id} style={[styles.checkpointRow, i > 0 && { borderTopWidth: 1, borderTopColor: "#F1F5F9" }]}>
                   <Text style={styles.checkpointIcon}>{MILESTONE_ICONS[cp.milestone] || "💬"}</Text>
@@ -340,7 +342,7 @@ export default function BookingDetailScreen() {
         {shipment && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: C.text }]}>Vehicle</Text>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.vehicleName, { color: C.text }]}>{shipment.vehicleYear} {shipment.vehicleMake} {shipment.vehicleModel}</Text>
               <Text style={[styles.route, { color: C.textSecondary }]}>{shipment.originCity}, {shipment.originState} → {shipment.destinationCity}, {shipment.destinationState}</Text>
               {shipment.vin && <Text style={[styles.route, { color: C.textMuted, marginTop: 4 }]}>VIN: {shipment.vin}</Text>}
@@ -379,7 +381,7 @@ export default function BookingDetailScreen() {
         {photos.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: C.text }]}>Condition Photos ({photos.length})</Text>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               {pickupPhotos.length > 0 && (
                 <View style={{ marginBottom: 12 }}>
                   <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Pre-loading ({pickupPhotos.length})</Text>
@@ -412,12 +414,12 @@ export default function BookingDetailScreen() {
         {isDriver && !["delivered", "cancelled"].includes((booking as any).status) && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: C.text }]}>Upload Condition Photos</Text>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Phase</Text>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
                 {(["pickup", "delivery"] as const).map(ph => (
                   <Pressable key={ph} onPress={() => setUploadPhase(ph)}
-                    style={[styles.milestoneChip, { flex: 1, alignItems: "center", borderColor: uploadPhase === ph ? C.primary : C.border, backgroundColor: uploadPhase === ph ? "#EFF6FF" : "#fff" }]}>
+                    style={[styles.milestoneChip, { flex: 1, alignItems: "center", borderColor: uploadPhase === ph ? C.primary : C.border, backgroundColor: uploadPhase === ph ? "#EFF6FF" : C.surface }]}>
                     <Text style={{ fontSize: 13, color: uploadPhase === ph ? C.primary : C.textSecondary, fontFamily: "Inter_500Medium" }}>
                       {ph === "pickup" ? "Pre-loading" : "Post-delivery"}
                     </Text>
@@ -517,7 +519,7 @@ export default function BookingDetailScreen() {
                 </Text>
               </View>
             ) : (
-              <View style={[styles.card, { backgroundColor: "#fff" }]}>
+              <View style={[styles.card, { backgroundColor: C.surface }]}>
                 <Text style={[styles.formLabel, { color: C.textMuted, marginTop: 0 }]}>Overall Rating *</Text>
                 <View style={{ flexDirection: "row", gap: 6, marginBottom: 14 }}>
                   {[1, 2, 3, 4, 5].map(s => (
@@ -556,7 +558,7 @@ export default function BookingDetailScreen() {
       </ScrollView>
 
       {isDriver && nextSt && (booking as any).status !== "delivered" && (
-        <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
+        <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8, backgroundColor: C.surface, borderTopColor: C.borderLight }]}>
           <Pressable
             style={[styles.updateBtn, { backgroundColor: C.primary, opacity: statusMutation.isPending ? 0.7 : 1 }]}
             onPress={handleStatusUpdate}
@@ -622,7 +624,7 @@ const styles = StyleSheet.create({
   partyName: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
   contactBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   contactDisclaimer: { fontFamily: "Inter_400Regular", fontSize: 11, textAlign: "center", marginTop: 8 },
-  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1 },
   updateBtn: { paddingVertical: 16, borderRadius: 14, alignItems: "center" },
   updateBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
 });

@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMessages, sendMessage } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function MessagesScreen() {
   const { conversationId, name, recipientId, shipmentId, bookingActive } = useLocalSearchParams<{
@@ -17,7 +18,8 @@ export default function MessagesScreen() {
   }>();
   const commAllowed = bookingActive !== "false";
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const qc = useQueryClient();
   const [text, setText] = useState("");
@@ -60,7 +62,7 @@ export default function MessagesScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={0}
     >
-      <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
+      <View style={[styles.header, { paddingTop: topPadding + 8, borderBottomColor: C.borderLight, backgroundColor: C.surface }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={20} color={C.text} />
         </Pressable>
@@ -83,7 +85,7 @@ export default function MessagesScreen() {
             const isMe = (item as any).senderId !== (messages.find(m => m.id !== item.id)?.senderId || item.senderId);
             return (
               <View style={[styles.bubbleWrapper, isMe ? styles.myBubble : styles.theirBubble]}>
-                <View style={[styles.bubble, isMe ? { backgroundColor: C.primary } : { backgroundColor: "#fff", borderWidth: 1, borderColor: C.border }]}>
+                <View style={[styles.bubble, isMe ? { backgroundColor: C.primary } : { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }]}>
                   <Text style={[styles.bubbleText, { color: isMe ? "#fff" : C.text }]}>{item.content}</Text>
                 </View>
               </View>
@@ -98,9 +100,9 @@ export default function MessagesScreen() {
       )}
 
       {commAllowed ? (
-        <View style={[styles.inputBar, { paddingBottom: bottomPadding + 8, borderTopColor: C.border }]}>
+        <View style={[styles.inputBar, { paddingBottom: bottomPadding + 8, borderTopColor: C.border, backgroundColor: C.surface }]}>
           <TextInput
-            style={[styles.input, { backgroundColor: "#fff", borderColor: C.border, color: C.text }]}
+            style={[styles.input, { backgroundColor: C.inputBackground, borderColor: C.border, color: C.text }]}
             value={text}
             onChangeText={setText}
             placeholder="Type a message..."
@@ -128,7 +130,7 @@ export default function MessagesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", backgroundColor: "#fff" },
+  header: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1 },
   backBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   headerAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   headerAvatarText: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#fff" },
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontFamily: "Inter_400Regular", fontSize: 15, lineHeight: 22 },
   emptyMsg: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60 },
   emptyText: { fontFamily: "Inter_400Regular", fontSize: 14 },
-  inputBar: { flexDirection: "row", alignItems: "flex-end", gap: 10, paddingHorizontal: 16, paddingTop: 10, backgroundColor: "#fff", borderTopWidth: 1 },
+  inputBar: { flexDirection: "row", alignItems: "flex-end", gap: 10, paddingHorizontal: 16, paddingTop: 10, borderTopWidth: 1 },
   input: { flex: 1, borderRadius: 20, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, fontFamily: "Inter_400Regular", fontSize: 15, maxHeight: 100 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
 });

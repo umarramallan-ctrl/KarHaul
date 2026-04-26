@@ -4,10 +4,11 @@ import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
-
-const C = Colors.light;
+import { useTheme } from "@/lib/ThemeContext";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <View style={styles.section}>
       <Text style={[styles.sectionTitle, { color: C.text }]}>{title}</Text>
@@ -17,11 +18,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Para({ children }: { children: React.ReactNode }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return <Text style={[styles.para, { color: C.textSecondary }]}>{children}</Text>;
 }
 
 export default function TermsScreen() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
   return (

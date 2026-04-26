@@ -10,10 +10,12 @@ import { getMyShipments } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import ShipmentCard from "@/components/ShipmentCard";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function MyLoadsScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 

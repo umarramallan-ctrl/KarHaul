@@ -9,10 +9,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { listConversations } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function MessagesTabScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -81,7 +83,7 @@ export default function MessagesTabScreen() {
           ItemSeparatorComponent={() => <View style={[styles.sep, { backgroundColor: C.borderLight }]} />}
           renderItem={({ item }) => (
             <Pressable
-              style={({ pressed }) => [styles.convRow, { opacity: pressed ? 0.88 : 1, backgroundColor: "#fff" }]}
+              style={({ pressed }) => [styles.convRow, { opacity: pressed ? 0.88 : 1, backgroundColor: C.surface }]}
               onPress={() => router.push({ pathname: "/messages/[conversationId]", params: { conversationId: item.id, name: item.otherUserName } })}
             >
               <View style={[styles.avatar, { backgroundColor: C.primary }]}>

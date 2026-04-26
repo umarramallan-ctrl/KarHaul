@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import { getApiBaseUrl } from "@/lib/api";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 type SavedDriver = {
   id: string;
@@ -46,7 +47,8 @@ async function removeSavedDriver(savedId: string, token: string | null): Promise
 }
 
 function DriverCard({ item, onRemove }: { item: SavedDriver; onRemove: () => void }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const driver = item.driver;
   const fullName = driver
     ? [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "Driver"
@@ -64,7 +66,7 @@ function DriverCard({ item, onRemove }: { item: SavedDriver; onRemove: () => voi
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: "#fff" }]}>
+    <View style={[styles.card, { backgroundColor: C.surface }]}>
       <View style={styles.cardMain}>
         <View style={[styles.avatar, { backgroundColor: "#EFF6FF" }]}>
           <Text style={[styles.avatarText, { color: C.primary }]}>
@@ -119,7 +121,8 @@ function DriverCard({ item, onRemove }: { item: SavedDriver; onRemove: () => voi
 
 export default function SavedDriversScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const { getToken } = useClerkAuth();
   const qc = useQueryClient();

@@ -9,13 +9,15 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createShipment } from "@workspace/api-client-react";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 const VEHICLE_TYPES = ["sedan", "suv", "truck", "van", "motorcycle", "rv", "exotic", "other"];
 const STEPS = ["Vehicle", "Route", "Details"];
 
 export default function CreateShipmentScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
 
@@ -126,7 +128,7 @@ export default function CreateShipmentScreen() {
 
         {step === 0 && (
           <View style={{ gap: 14 }}>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <F label="Year *" value={form.vehicleYear} onChange={v => set("vehicleYear", v)} placeholder="e.g. 2019" keyboardType="numeric" />
               <F label="Make *" value={form.vehicleMake} onChange={v => set("vehicleMake", v)} placeholder="e.g. Toyota" />
               <F label="Model *" value={form.vehicleModel} onChange={v => set("vehicleModel", v)} placeholder="e.g. Camry" />
@@ -139,7 +141,7 @@ export default function CreateShipmentScreen() {
                 {VEHICLE_TYPES.map(t => (
                   <Pressable
                     key={t}
-                    style={[styles.chip, { borderColor: form.vehicleType === t ? C.primary : C.border, backgroundColor: form.vehicleType === t ? C.primary : "#fff" }]}
+                    style={[styles.chip, { borderColor: form.vehicleType === t ? C.primary : C.border, backgroundColor: form.vehicleType === t ? C.primary : C.surface }]}
                     onPress={() => set("vehicleType", t)}
                   >
                     <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: form.vehicleType === t ? "#fff" : C.textSecondary }}>{t}</Text>
@@ -154,7 +156,7 @@ export default function CreateShipmentScreen() {
                 {[{ v: "running", l: "Running" }, { v: "non_running", l: "Non-Running" }].map(({ v, l }) => (
                   <Pressable
                     key={v}
-                    style={[styles.conditionBtn, { flex: 1, borderColor: form.vehicleCondition === v ? C.primary : C.border, backgroundColor: form.vehicleCondition === v ? "#EFF6FF" : "#fff" }]}
+                    style={[styles.conditionBtn, { flex: 1, borderColor: form.vehicleCondition === v ? C.primary : C.border, backgroundColor: form.vehicleCondition === v ? "#EFF6FF" : C.surface }]}
                     onPress={() => set("vehicleCondition", v)}
                   >
                     <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: form.vehicleCondition === v ? C.primary : C.textSecondary }}>{l}</Text>
@@ -169,7 +171,7 @@ export default function CreateShipmentScreen() {
                 {[{ v: "open", l: "Open Carrier", desc: "Standard, lower cost" }, { v: "enclosed", l: "Enclosed Carrier", desc: "Protected, higher cost" }].map(({ v, l, desc }) => (
                   <Pressable
                     key={v}
-                    style={[styles.transportCard, { flex: 1, borderColor: form.transportType === v ? C.primary : C.border, backgroundColor: form.transportType === v ? "#EFF6FF" : "#fff" }]}
+                    style={[styles.transportCard, { flex: 1, borderColor: form.transportType === v ? C.primary : C.border, backgroundColor: form.transportType === v ? "#EFF6FF" : C.surface }]}
                     onPress={() => set("transportType", v)}
                   >
                     <Feather name="truck" size={20} color={form.transportType === v ? C.primary : C.textMuted} />
@@ -184,13 +186,13 @@ export default function CreateShipmentScreen() {
 
         {step === 1 && (
           <View style={{ gap: 14 }}>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.routeHeader, { color: C.primary }]}>Origin (Pickup)</Text>
               <F label="City *" value={form.originCity} onChange={v => set("originCity", v)} placeholder="e.g. Dallas" />
               <F label="State *" value={form.originState} onChange={v => set("originState", v)} placeholder="e.g. TX" />
               <F label="Zip Code *" value={form.originZip} onChange={v => set("originZip", v)} placeholder="e.g. 75201" keyboardType="numeric" />
             </View>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.routeHeader, { color: C.danger }]}>Destination (Delivery)</Text>
               <F label="City *" value={form.destinationCity} onChange={v => set("destinationCity", v)} placeholder="e.g. Houston" />
               <F label="State *" value={form.destinationState} onChange={v => set("destinationState", v)} placeholder="e.g. TX" />
@@ -201,17 +203,17 @@ export default function CreateShipmentScreen() {
 
         {step === 2 && (
           <View style={{ gap: 14 }}>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.routeHeader, { color: C.text }]}>Pickup Window</Text>
               <F label="Earliest Date" value={form.pickupDateFrom} onChange={v => set("pickupDateFrom", v)} placeholder="e.g. 2025-04-15" />
               <F label="Latest Date" value={form.pickupDateTo} onChange={v => set("pickupDateTo", v)} placeholder="e.g. 2025-04-30" />
             </View>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.routeHeader, { color: C.text }]}>Budget Range</Text>
               <F label="Minimum ($)" value={form.budgetMin} onChange={v => set("budgetMin", v)} placeholder="e.g. 500" keyboardType="numeric" />
               <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="e.g. 900" keyboardType="numeric" />
             </View>
-            <View style={[styles.card, { backgroundColor: "#fff" }]}>
+            <View style={[styles.card, { backgroundColor: C.surface }]}>
               <Text style={[styles.routeHeader, { color: C.text }]}>Additional Notes</Text>
               <TextInput
                 style={[styles.textarea, { color: C.text, borderColor: C.borderLight }]}
@@ -234,7 +236,7 @@ export default function CreateShipmentScreen() {
         )}
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
+      <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8, backgroundColor: C.surface, borderTopColor: C.borderLight }]}>
         {step > 0 && (
           <Pressable style={[styles.backStepBtn, { borderColor: C.border }]} onPress={prev}>
             <Feather name="arrow-left" size={18} color={C.text} />
@@ -265,7 +267,8 @@ export default function CreateShipmentScreen() {
 }
 
 function F({ label, value, onChange, placeholder, keyboardType }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <View style={{ marginBottom: 12 }}>
       <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginBottom: 4 }}>{label}</Text>
@@ -297,7 +300,7 @@ const styles = StyleSheet.create({
   transportCard: { padding: 14, borderRadius: 14, borderWidth: 1.5, alignItems: "center", gap: 6 },
   textarea: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontFamily: "Inter_400Regular", fontSize: 14, minHeight: 80 },
   disclaimerBox: { flexDirection: "row", gap: 10, padding: 12, borderRadius: 12, borderWidth: 1 },
-  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1 },
   backStepBtn: { width: 50, height: 50, borderRadius: 14, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   nextBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 14 },
   nextBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },

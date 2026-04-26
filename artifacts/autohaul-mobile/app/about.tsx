@@ -11,33 +11,38 @@ import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
-
-const C = Colors.light;
+import { useTheme } from "@/lib/ThemeContext";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: C.text }]}>{title}</Text>
       {children}
     </View>
   );
 }
 
 function StepCard({ num, icon, title, body }: { num: string; icon: string; title: string; body: string }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
-    <View style={styles.stepCard}>
+    <View style={[styles.stepCard, { backgroundColor: C.surface, borderColor: C.border }]}>
       <View style={styles.stepIcon}>
         <Feather name={icon as any} size={20} color={C.primary} />
       </View>
-      <Text style={styles.stepNum}>Step {num}</Text>
-      <Text style={styles.stepTitle}>{title}</Text>
-      <Text style={styles.stepBody}>{body}</Text>
+      <Text style={[styles.stepNum, { color: C.textMuted }]}>Step {num}</Text>
+      <Text style={[styles.stepTitle, { color: C.text }]}>{title}</Text>
+      <Text style={[styles.stepBody, { color: C.textSecondary }]}>{body}</Text>
     </View>
   );
 }
 
 export default function AboutScreen() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
   return (
@@ -56,7 +61,7 @@ export default function AboutScreen() {
 
       {/* Hero */}
       <View style={styles.hero}>
-        <Text style={styles.heroTagline}>DIRECT AUTO TRANSPORT</Text>
+        <Text style={[styles.heroTagline, { color: C.primary }]}>DIRECT AUTO TRANSPORT</Text>
         <Text style={styles.heroTitle}>Zero brokers.{"\n"}Zero middlemen.</Text>
         <Text style={styles.heroBody}>
           KarHaul is a technology marketplace connecting vehicle shippers directly with licensed carriers — putting money back in the pockets of both drivers and customers.
@@ -93,7 +98,7 @@ export default function AboutScreen() {
 
         {/* Company */}
         <Section title="About EvoPoint LLC">
-          <View style={styles.companyCard}>
+          <View style={[styles.companyCard, { backgroundColor: C.surface, borderColor: C.border }]}>
             <Text style={[styles.companyBody, { color: C.textSecondary }]}>
               KarHaul is a product of <Text style={{ fontFamily: "Inter_600SemiBold", color: C.text }}>EvoPoint LLC</Text>, a technology company focused on removing friction from industries that have historically relied on inefficient intermediaries.
             </Text>
@@ -136,7 +141,6 @@ const styles = StyleSheet.create({
   heroTagline: {
     fontFamily: "Inter_700Bold",
     fontSize: 10,
-    color: C.primary,
     letterSpacing: 2,
     marginBottom: 10,
   },
@@ -158,7 +162,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: "Inter_700Bold",
     fontSize: 18,
-    color: C.text,
   },
   callout: {
     backgroundColor: "#FFFBEB",
@@ -174,10 +177,8 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   stepCard: {
-    backgroundColor: "#fff",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     padding: 16,
     gap: 4,
     shadowColor: "#000",
@@ -198,17 +199,14 @@ const styles = StyleSheet.create({
   stepNum: {
     fontFamily: "Inter_700Bold",
     fontSize: 10,
-    color: C.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
-  stepTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: C.text },
-  stepBody: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textSecondary, lineHeight: 19 },
+  stepTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  stepBody: { fontFamily: "Inter_400Regular", fontSize: 13, lineHeight: 19 },
   companyCard: {
-    backgroundColor: "#fff",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     padding: 16,
     gap: 8,
   },

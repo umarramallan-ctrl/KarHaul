@@ -11,6 +11,7 @@ import { getMyProfile, updateMyProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useUser } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 const ROLES = [
   { value: "shipper", label: "Shipper", desc: "I need vehicles transported" },
@@ -19,7 +20,8 @@ const ROLES = [
 
 export default function ProfileSetupScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const { user } = useUser();
   const qc = useQueryClient();
@@ -95,7 +97,7 @@ export default function ProfileSetupScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: bottomPadding + 24, gap: 16 }}>
-        <View style={[styles.section, { backgroundColor: "#fff" }]}>
+        <View style={[styles.section, { backgroundColor: C.surface }]}>
           <Text style={[styles.sectionTitle, { color: C.textMuted }]}>BASIC INFO</Text>
           <Field label="First Name" value={form.firstName} onChangeText={v => set("firstName", v)} placeholder="John" />
           <Field label="Last Name" value={form.lastName} onChangeText={v => set("lastName", v)} placeholder="Smith" />
@@ -108,7 +110,7 @@ export default function ProfileSetupScreen() {
           {ROLES.map(r => (
             <Pressable
               key={r.value}
-              style={[styles.roleCard, { borderColor: form.role === r.value ? C.primary : C.border, backgroundColor: form.role === r.value ? "#EFF6FF" : "#fff" }]}
+              style={[styles.roleCard, { borderColor: form.role === r.value ? C.primary : C.border, backgroundColor: form.role === r.value ? "#EFF6FF" : C.surface }]}
               onPress={() => set("role", r.value)}
             >
               <View style={[styles.radioOuter, { borderColor: form.role === r.value ? C.primary : C.border }]}>
@@ -123,7 +125,7 @@ export default function ProfileSetupScreen() {
         </View>
 
         {isDriver && (
-          <View style={[styles.section, { backgroundColor: "#fff" }]}>
+          <View style={[styles.section, { backgroundColor: C.surface }]}>
             <Text style={[styles.sectionTitle, { color: C.textMuted }]}>DRIVER CREDENTIALS</Text>
             <Field label="DOT Number" value={form.dotNumber} onChangeText={v => set("dotNumber", v)} placeholder="Required for interstate transport" />
             <Field label="MC Number" value={form.mcNumber} onChangeText={v => set("mcNumber", v)} placeholder="Motor Carrier number" />
@@ -135,7 +137,7 @@ export default function ProfileSetupScreen() {
 
         {!(profile as any)?.termsAccepted && (
           <Pressable
-            style={[styles.termsCard, { borderColor: form.termsAccepted ? C.primary : C.border, backgroundColor: "#fff" }]}
+            style={[styles.termsCard, { borderColor: form.termsAccepted ? C.primary : C.border, backgroundColor: C.surface }]}
             onPress={() => set("termsAccepted", !form.termsAccepted)}
           >
             <View style={[styles.checkbox, { borderColor: form.termsAccepted ? C.primary : C.border, backgroundColor: form.termsAccepted ? C.primary : "transparent" }]}>
@@ -152,7 +154,8 @@ export default function ProfileSetupScreen() {
 }
 
 function Field({ label, value, onChangeText, placeholder, keyboardType, editable = true }: { label: string; value: string; onChangeText: (v: string) => void; placeholder?: string; keyboardType?: KeyboardTypeOptions; editable?: boolean }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <View style={fStyles.field}>
       <Text style={[fStyles.label, { color: C.textMuted }]}>{label}</Text>

@@ -13,8 +13,8 @@ import { useTheme, ThemeMode } from "@/lib/ThemeContext";
 import { API_URL } from "@/lib/api";
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const C = Colors.light;
+  const { theme, setTheme, colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const options: { value: ThemeMode; icon: string; label: string }[] = [
     { value: "light", icon: "sun", label: "Light" },
     { value: "dark", icon: "moon", label: "Dark" },
@@ -59,7 +59,8 @@ function ThemeToggle() {
 }
 
 function MenuItem({ icon, label, subtitle, onPress, danger }: { icon: string; label: string; subtitle?: string; onPress: () => void; danger?: boolean }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <Pressable
       style={({ pressed }) => [styles.menuItem, { opacity: pressed ? 0.85 : 1 }]}
@@ -79,7 +80,8 @@ function MenuItem({ icon, label, subtitle, onPress, danger }: { icon: string; la
 
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated, logout } = useAuth();
   const { getToken } = useClerkAuth();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -207,7 +209,7 @@ export default function AccountScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.section, { backgroundColor: "#fff" }]}>
+      <View style={[styles.section, { backgroundColor: C.surface }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>ACCOUNT</Text>
         <MenuItem icon="user" label="Edit Profile" subtitle="Update your info and preferences" onPress={() => router.push("/profile-setup")} />
         {(profile?.role === "driver" || profile?.role === "both") && (
@@ -222,7 +224,7 @@ export default function AccountScreen() {
         <MenuItem icon="file-text" label="Terms of Service" subtitle="Platform rules and liability" onPress={() => {}} />
       </View>
 
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>SUPPORT</Text>
         <MenuItem icon="help-circle" label="Help & FAQ" subtitle="Common questions answered" onPress={() => {}} />
         <MenuItem icon="shield" label="Safety & Liability" subtitle="How we protect you" onPress={() => {}} />
@@ -230,12 +232,12 @@ export default function AccountScreen() {
         <MenuItem icon="mail" label="Contact Us" subtitle="Get in touch with our team" onPress={() => router.push("/contact")} />
       </View>
 
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>DISPLAY</Text>
         <ThemeToggle />
       </View>
 
-      <View style={[styles.section, { backgroundColor: "#fff", marginTop: 12 }]}>
+      <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
         <MenuItem icon="log-out" label="Sign Out" onPress={handleLogout} danger />
       </View>
 
@@ -278,7 +280,7 @@ export default function AccountScreen() {
             />
             <View style={deleteStyles.btnRow}>
               <Pressable
-                style={[deleteStyles.btn, { backgroundColor: "#F1F5F9" }]}
+                style={[deleteStyles.btn, { backgroundColor: C.borderLight }]}
                 onPress={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
               >
                 <Text style={[deleteStyles.btnText, { color: "#334155" }]}>Cancel</Text>

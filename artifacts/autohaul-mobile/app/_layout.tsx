@@ -21,7 +21,8 @@ import { Feather } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerForPushNotificationsAsync, savePushTokenToServer } from "@/lib/push-notifications";
 import { API_URL } from "@/lib/api";
-import { ThemeProvider } from "@/lib/ThemeContext";
+import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
+import Colors from "@/constants/colors";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -48,6 +49,8 @@ function RootLayoutNav() {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -58,7 +61,7 @@ function RootLayoutNav() {
   }, [isSignedIn, isLoaded, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.background } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="auth" />
       <Stack.Screen name="auth-callback" />

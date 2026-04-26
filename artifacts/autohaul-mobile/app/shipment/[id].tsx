@@ -10,9 +10,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getShipment, getShipmentBids, placeBid, acceptBid, getMyProfile, counterBid, acceptCounterBid, declineCounterBid, updateShipmentBudget } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <View style={styles.infoRow}>
       <Text style={[styles.infoLabel, { color: C.textMuted }]}>{label}</Text>
@@ -24,7 +26,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function ShipmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const qc = useQueryClient();
   const [showBidModal, setShowBidModal] = useState(false);
@@ -126,12 +129,12 @@ export default function ShipmentDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
       <View style={[styles.topBar, { paddingTop: topPadding + 8 }]}>
-        <Pressable style={[styles.backBtn, { backgroundColor: "#fff" }]} onPress={() => router.back()}>
+        <Pressable style={[styles.backBtn, { backgroundColor: C.surface }]} onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color={C.text} />
         </Pressable>
         <Text style={[styles.topTitle, { color: C.text }]} numberOfLines={1}>{vehicleTitle}</Text>
         <Pressable
-          style={[styles.backBtn, { backgroundColor: "#fff" }]}
+          style={[styles.backBtn, { backgroundColor: C.surface }]}
           onPress={() => shipper && router.push({ pathname: "/messages/[conversationId]", params: { conversationId: "new", recipientId: (shipment as any).shipperId, shipmentId: id } })}
         >
           <Feather name="message-circle" size={20} color={C.primary} />
@@ -140,7 +143,7 @@ export default function ShipmentDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: bottomPadding + 120 }}>
         <View style={[styles.section, { marginTop: 16 }]}>
-          <View style={styles.routeCard}>
+          <View style={[styles.routeCard, { backgroundColor: C.surface }]}>
             <View style={styles.routePoint}>
               <View style={[styles.routeDot, { backgroundColor: C.primary }]} />
               <View>
@@ -159,7 +162,7 @@ export default function ShipmentDetailScreen() {
           </View>
         </View>
 
-        <View style={[styles.card, styles.section]}>
+        <View style={[styles.card, styles.section, { backgroundColor: C.surface }]}>
           <Text style={[styles.sectionHeader, { color: C.text }]}>Vehicle Details</Text>
           <InfoRow label="Vehicle" value={vehicleTitle} />
           <InfoRow label="Type" value={shipment.vehicleType} />
@@ -168,7 +171,7 @@ export default function ShipmentDetailScreen() {
           {(shipment as any).vin && <InfoRow label="VIN" value={(shipment as any).vin} />}
         </View>
 
-        <View style={[styles.card, styles.section]}>
+        <View style={[styles.card, styles.section, { backgroundColor: C.surface }]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <Text style={[styles.sectionHeader, { color: C.text, marginBottom: 0 }]}>Shipment Info</Text>
             {isMyShipment && (shipment as any).status === "open" && (
@@ -189,7 +192,7 @@ export default function ShipmentDetailScreen() {
         </View>
 
         {shipper && (
-          <View style={[styles.card, styles.section]}>
+          <View style={[styles.card, styles.section, { backgroundColor: C.surface }]}>
             <Text style={[styles.sectionHeader, { color: C.text }]}>Shipper</Text>
             <View style={styles.shipperRow}>
               <View style={[styles.shipperAvatar, { backgroundColor: C.primary }]}>
@@ -218,7 +221,7 @@ export default function ShipmentDetailScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionHeader, { color: C.text, paddingHorizontal: 16 }]}>Bids ({bids.length})</Text>
             {bids.map((bid: any) => (
-              <View key={bid.id} style={[styles.bidCard, { backgroundColor: "#fff" }]}>
+              <View key={bid.id} style={[styles.bidCard, { backgroundColor: C.surface }]}>
                 <View style={styles.bidHeader}>
                   <View>
                     <Text style={[styles.bidAmount, { color: C.success }]}>${bid.amount?.toLocaleString()}</Text>
@@ -281,7 +284,7 @@ export default function ShipmentDetailScreen() {
       </ScrollView>
 
       {canBid && (
-        <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8 }]}>
+        <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 8, backgroundColor: C.surface, borderTopColor: C.borderLight }]}>
           <View>
             {(shipment as any).budgetMax && (
               <Text style={[styles.budgetHint, { color: C.textSecondary }]}>Budget: up to ${(shipment as any).budgetMax?.toLocaleString()}</Text>
@@ -310,7 +313,7 @@ export default function ShipmentDetailScreen() {
             <View>
               <Text style={[styles.fieldLabel, { color: C.text }]}>Maximum Budget ($) *</Text>
               <TextInput
-                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: "#fff" }]}
+                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: C.inputBackground }]}
                 value={budgetInput}
                 onChangeText={setBudgetInput}
                 placeholder="e.g. 1200"
@@ -350,7 +353,7 @@ export default function ShipmentDetailScreen() {
             <View>
               <Text style={[styles.fieldLabel, { color: C.text }]}>Counter Price ($) *</Text>
               <TextInput
-                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: "#fff" }]}
+                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: C.inputBackground }]}
                 value={counterPriceInput}
                 onChangeText={setCounterPriceInput}
                 placeholder="e.g. 750"
@@ -388,7 +391,7 @@ export default function ShipmentDetailScreen() {
             <View>
               <Text style={[styles.fieldLabel, { color: C.text }]}>Your Bid Amount ($) *</Text>
               <TextInput
-                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: "#fff" }]}
+                style={[styles.input, { borderColor: C.border, color: C.text, backgroundColor: C.inputBackground }]}
                 value={bidAmount}
                 onChangeText={setBidAmount}
                 placeholder="e.g. 850"
@@ -442,9 +445,9 @@ const styles = StyleSheet.create({
   backBtn: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   topTitle: { flex: 1, fontFamily: "Inter_600SemiBold", fontSize: 17, textAlign: "center" },
   section: { paddingHorizontal: 16, marginBottom: 12 },
-  card: { backgroundColor: "#fff", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  card: { borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   sectionHeader: { fontFamily: "Inter_600SemiBold", fontSize: 16, marginBottom: 12 },
-  routeCard: { backgroundColor: "#fff", borderRadius: 16, padding: 16, gap: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  routeCard: { borderRadius: 16, padding: 16, gap: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   routePoint: { flexDirection: "row", alignItems: "center", gap: 12 },
   routeDot: { width: 12, height: 12, borderRadius: 6 },
   routeCity: { fontFamily: "Inter_600SemiBold", fontSize: 16 },
@@ -467,7 +470,7 @@ const styles = StyleSheet.create({
   acceptBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
   acceptBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#fff" },
   bidNote: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 8, lineHeight: 20 },
-  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 16, borderTopWidth: 1 },
   budgetHint: { fontFamily: "Inter_500Medium", fontSize: 14 },
   bidsCount: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2 },
   bidBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 },

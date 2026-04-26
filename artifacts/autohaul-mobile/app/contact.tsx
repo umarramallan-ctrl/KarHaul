@@ -15,10 +15,11 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { API_URL } from "@/lib/api";
-
-const C = Colors.light;
+import { useTheme } from "@/lib/ThemeContext";
 
 function InfoRow({ icon, label, value, onPress }: { icon: string; label: string; value: string; onPress?: () => void }) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   return (
     <Pressable style={styles.infoRow} onPress={onPress}>
       <View style={styles.infoIcon}>
@@ -35,6 +36,8 @@ function InfoRow({ icon, label, value, onPress }: { icon: string; label: string;
 
 export default function ContactScreen() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
@@ -78,7 +81,7 @@ export default function ContactScreen() {
       <View style={styles.content}>
 
         {/* Contact info */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: C.surface }]}>
           <Text style={[styles.cardTitle, { color: C.text }]}>Get in touch</Text>
           <InfoRow
             icon="map-pin"
@@ -122,13 +125,13 @@ export default function ContactScreen() {
             </Pressable>
           </View>
         ) : (
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: C.surface }]}>
             <Text style={[styles.cardTitle, { color: C.text }]}>Send us a message</Text>
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: C.textSecondary }]}>Name *</Text>
               <TextInput
-                style={[styles.input, { color: C.text, borderColor: "#E2E8F0" }]}
+                style={[styles.input, { color: C.text, borderColor: C.border, backgroundColor: C.inputBackground }]}
                 placeholder="John Smith"
                 placeholderTextColor={C.textMuted}
                 value={form.name}
@@ -139,7 +142,7 @@ export default function ContactScreen() {
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: C.textSecondary }]}>Email *</Text>
               <TextInput
-                style={[styles.input, { color: C.text, borderColor: "#E2E8F0" }]}
+                style={[styles.input, { color: C.text, borderColor: C.border, backgroundColor: C.inputBackground }]}
                 placeholder="john@example.com"
                 placeholderTextColor={C.textMuted}
                 keyboardType="email-address"
@@ -152,7 +155,7 @@ export default function ContactScreen() {
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: C.textSecondary }]}>Subject</Text>
               <TextInput
-                style={[styles.input, { color: C.text, borderColor: "#E2E8F0" }]}
+                style={[styles.input, { color: C.text, borderColor: C.border, backgroundColor: C.inputBackground }]}
                 placeholder="How can we help?"
                 placeholderTextColor={C.textMuted}
                 value={form.subject}
@@ -163,7 +166,7 @@ export default function ContactScreen() {
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: C.textSecondary }]}>Message *</Text>
               <TextInput
-                style={[styles.input, styles.textarea, { color: C.text, borderColor: "#E2E8F0" }]}
+                style={[styles.input, styles.textarea, { color: C.text, borderColor: C.border, backgroundColor: C.inputBackground }]}
                 placeholder="Tell us what's on your mind…"
                 placeholderTextColor={C.textMuted}
                 multiline
@@ -202,7 +205,6 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 20 },
   content: { paddingHorizontal: 16, paddingTop: 8, gap: 16 },
   card: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -236,7 +238,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#F8FAFC",
   },
   textarea: { minHeight: 100, paddingTop: 10 },
   submitBtn: {

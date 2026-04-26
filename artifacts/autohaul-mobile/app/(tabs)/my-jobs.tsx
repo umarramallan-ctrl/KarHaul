@@ -9,9 +9,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { listBookings, getMyBids, deleteBid } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 function BookingCard({ booking, onPress }: { booking: any; onPress: () => void }) {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const statusColors: Record<string, { bg: string; text: string }> = {
     confirmed: { bg: "#DBEAFE", text: "#1D4ED8" },
     picked_up: { bg: "#FEF9C3", text: "#A16207" },
@@ -52,7 +54,8 @@ function BookingCard({ booking, onPress }: { booking: any; onPress: () => void }
 
 export default function MyJobsScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<"bookings" | "bids">("bookings");
@@ -127,7 +130,7 @@ export default function MyJobsScreen() {
           {(["bookings", "bids"] as const).map((t) => (
             <Pressable
               key={t}
-              style={[styles.tabBtn, tab === t && { backgroundColor: "#fff", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }]}
+              style={[styles.tabBtn, tab === t && { backgroundColor: C.surface, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }]}
               onPress={() => setTab(t)}
             >
               <Text style={[styles.tabBtnText, { color: tab === t ? C.text : C.textSecondary }]}>
@@ -188,7 +191,7 @@ export default function MyJobsScreen() {
                   onPress={() => shipment && router.push({ pathname: "/shipment/[id]", params: { id: shipment.id } })}
                 >
                   <View style={styles.cardHeader}>
-                    <Text style={[styles.vehicleName, { color: Colors.light.text }]} numberOfLines={1}>
+                    <Text style={[styles.vehicleName, { color: C.text }]} numberOfLines={1}>
                       {shipment ? `${shipment.vehicleYear} ${shipment.vehicleMake} ${shipment.vehicleModel}` : "Shipment"}
                     </Text>
                     <View style={[styles.badge, { backgroundColor: sc.bg }]}>
@@ -196,14 +199,14 @@ export default function MyJobsScreen() {
                     </View>
                   </View>
                   {shipment && (
-                    <Text style={[styles.routeText, { color: Colors.light.textSecondary }]}>
+                    <Text style={[styles.routeText, { color: C.textSecondary }]}>
                       {shipment.originCity}, {shipment.originState} → {shipment.destinationCity}, {shipment.destinationState}
                     </Text>
                   )}
                   <View style={styles.priceRow}>
-                    <Feather name="dollar-sign" size={14} color={Colors.light.success} />
-                    <Text style={[styles.price, { color: Colors.light.success }]}>${(item as any).amount?.toLocaleString()}</Text>
-                    <Text style={[styles.priceLabel, { color: Colors.light.textMuted }]}>your bid</Text>
+                    <Feather name="dollar-sign" size={14} color={C.success} />
+                    <Text style={[styles.price, { color: C.success }]}>${(item as any).amount?.toLocaleString()}</Text>
+                    <Text style={[styles.priceLabel, { color: C.textMuted }]}>your bid</Text>
                   </View>
                   {(item as any).status === "pending" && (
                     <Pressable

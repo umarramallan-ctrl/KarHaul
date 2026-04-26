@@ -6,6 +6,7 @@ import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
 import { useAuth } from "@clerk/clerk-expo";
+import { useTheme } from "@/lib/ThemeContext";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -16,7 +17,8 @@ const INITIAL_MESSAGE: Message = {
 
 export default function SupportScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { getToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
@@ -80,14 +82,14 @@ export default function SupportScreen() {
       >
         {messages.map((m, i) => (
           <View key={i} style={[styles.msgRow, m.role === "user" ? styles.msgRowUser : styles.msgRowAssistant]}>
-            <View style={[styles.bubble, m.role === "user" ? { backgroundColor: C.primary } : { backgroundColor: "#F1F5F9" }]}>
+            <View style={[styles.bubble, m.role === "user" ? { backgroundColor: C.primary } : { backgroundColor: C.borderLight }]}>
               <Text style={[styles.bubbleText, { color: m.role === "user" ? "#fff" : C.text }]}>{m.content}</Text>
             </View>
           </View>
         ))}
         {loading && (
           <View style={styles.msgRowAssistant}>
-            <View style={[styles.bubble, { backgroundColor: "#F1F5F9", paddingVertical: 12 }]}>
+            <View style={[styles.bubble, { backgroundColor: C.borderLight, paddingVertical: 12 }]}>
               <ActivityIndicator size="small" color={C.primary} />
             </View>
           </View>
@@ -95,7 +97,7 @@ export default function SupportScreen() {
       </ScrollView>
 
       {/* Input */}
-      <View style={[styles.inputRow, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.inputRow, { paddingBottom: insets.bottom + 12, borderTopColor: C.borderLight, backgroundColor: C.surface }]}>
         <TextInput
           style={[styles.input, { borderColor: C.border, color: C.text }]}
           value={input}
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   msgRowAssistant: { alignSelf: "flex-start" },
   bubble: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleText: { fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 20 },
-  inputRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F1F5F9", backgroundColor: "#fff" },
+  inputRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1 },
   input: { flex: 1, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontFamily: "Inter_400Regular", fontSize: 14, maxHeight: 100 },
   sendBtn: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", alignSelf: "flex-end" },
 });

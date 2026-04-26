@@ -9,12 +9,14 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { useOAuth, useAuth } from "@clerk/clerk-expo";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/lib/ThemeContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const { isSignedIn } = useAuth();
   // Clerk OAuth — strategy must match what is enabled in your Clerk dashboard
   // (oauth_google, oauth_apple, etc.)
@@ -64,7 +66,7 @@ export default function AuthScreen() {
           The direct marketplace for auto transport — no brokers, no middlemen.
         </Text>
 
-        <View style={[styles.featureList, { backgroundColor: "#fff", borderColor: C.border }]}>
+        <View style={[styles.featureList, { backgroundColor: C.surface, borderColor: C.border }]}>
           {[
             { icon: "truck", label: "Post loads or browse transport jobs" },
             { icon: "dollar-sign", label: "Negotiate directly with drivers or shippers" },

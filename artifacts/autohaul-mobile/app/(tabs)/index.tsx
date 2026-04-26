@@ -12,6 +12,7 @@ import { listShipments } from "@workspace/api-client-react";
 import ShipmentCard from "@/components/ShipmentCard";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
+import { useTheme } from "@/lib/ThemeContext";
 
 const TRANSPORT_TYPES = ["All", "open", "enclosed"];
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
@@ -23,7 +24,8 @@ async function fetchDriverRoutes(params: Record<string, string>) {
 }
 
 function DriverRoutesPanel() {
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const [transportFilter, setTransportFilter] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -143,7 +145,8 @@ function DriverRoutesPanel() {
 
 export default function BrowseScreen() {
   const insets = useSafeAreaInsets();
-  const C = Colors.light;
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
   const [activeTab, setActiveTab] = useState<"loads" | "routes">("loads");
   const [search, setSearch] = useState("");
   const [transportFilter, setTransportFilter] = useState("All");
@@ -289,7 +292,7 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 5, paddingVertical: 9, borderRadius: 9,
   },
-  tabBtnActive: { backgroundColor: "#fff" },
+  tabBtnActive: { backgroundColor: "rgba(255,255,255,0.95)" },
   tabBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
   searchBar: {
     flexDirection: "row", alignItems: "center", gap: 10,
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: "#fff" },
   filterList: { paddingVertical: 4, gap: 8, paddingRight: 4 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
-  filterChipActive: { backgroundColor: "#fff" },
+  filterChipActive: { backgroundColor: "rgba(255,255,255,0.95)" },
   filterChipInactive: { backgroundColor: "rgba(255,255,255,0.15)" },
   filterChipText: { fontFamily: "Inter_500Medium", fontSize: 13 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 40 },
