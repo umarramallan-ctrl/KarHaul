@@ -40,6 +40,7 @@ import type {
   LogoutMobileSessionResponse,
   Message,
   MessageListResponse,
+  MyReviewsResponse,
   PlaceBidBody,
   Review,
   ReviewListResponse,
@@ -2567,6 +2568,81 @@ export const useLogoutMobileSession = <
 > => {
   return useMutation(getLogoutMobileSessionMutationOptions(options));
 };
+
+/**
+ * @summary Get booking IDs the current user has already reviewed
+ */
+export const getGetMyReviewsUrl = () => {
+  return `/api/reviews/my`;
+};
+
+export const getMyReviews = async (
+  options?: RequestInit,
+): Promise<MyReviewsResponse> => {
+  return customFetch<MyReviewsResponse>(getGetMyReviewsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyReviewsQueryKey = () => {
+  return [`/api/reviews/my`] as const;
+};
+
+export const getGetMyReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyReviews>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyReviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyReviewsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyReviews>>> = ({
+    signal,
+  }) => getMyReviews({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyReviews>>
+>;
+export type GetMyReviewsQueryError = ErrorType<void>;
+
+/**
+ * @summary Get booking IDs the current user has already reviewed
+ */
+
+export function useGetMyReviews<
+  TData = Awaited<ReturnType<typeof getMyReviews>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyReviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyReviewsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get reviews for a specific booking

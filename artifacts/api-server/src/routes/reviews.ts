@@ -130,6 +130,17 @@ router.post("/reviews", async (req, res) => {
   res.status(201).json(review);
 });
 
+router.get("/reviews/my", async (req, res) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const dbUser = await getDbUser((req.user as any).id);
+  if (!dbUser) { res.json({ reviewedBookingIds: [] }); return; }
+  const reviews = await db
+    .select({ bookingId: reviewsTable.bookingId })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.reviewerId, dbUser.id));
+  res.json({ reviewedBookingIds: reviews.map(r => r.bookingId) });
+});
+
 router.get("/reviews/booking/:bookingId", async (req, res) => {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });

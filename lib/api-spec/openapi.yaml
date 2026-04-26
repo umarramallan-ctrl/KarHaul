@@ -625,6 +625,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/LogoutMobileSessionResponse"
 
+  /reviews/my:
+    get:
+      operationId: getMyReviews
+      tags: [reviews]
+      summary: Get booking IDs the current user has already reviewed
+      responses:
+        "200":
+          description: Reviewed booking IDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyReviewsResponse"
+        "401":
+          description: Unauthorized
+
   /reviews/booking/{bookingId}:
     get:
       operationId: getBookingReviews
@@ -1329,6 +1344,16 @@ components:
         - bookingId
         - revieweeId
         - rating
+
+    MyReviewsResponse:
+      type: object
+      properties:
+        reviewedBookingIds:
+          type: array
+          items:
+            type: string
+      required:
+        - reviewedBookingIds
 
     ReviewListResponse:
       type: object

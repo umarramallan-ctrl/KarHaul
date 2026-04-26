@@ -328,17 +328,6 @@ export default function MoreScreen() {
           {/* 6. Support */}
           <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
             <MenuItem
-              icon="message-square"
-              label="Support"
-              subtitle="AI assistant — instant answers"
-              onPress={() => router.push("/(tabs)/support")}
-            />
-          </View>
-
-          {/* 7. Legal */}
-          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
-            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
-            <MenuItem
               icon="info"
               label="About Us"
               subtitle="Our story and how KarHaul works"
@@ -350,6 +339,17 @@ export default function MoreScreen() {
               subtitle="Get in touch with our team"
               onPress={() => router.push("/contact")}
             />
+            <MenuItem
+              icon="message-square"
+              label="Support"
+              subtitle="AI assistant — instant answers"
+              onPress={() => router.push("/(tabs)/support")}
+            />
+          </View>
+
+          {/* 7. Legal */}
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
             <MenuItem
               icon="file-text"
               label="Terms of Service"
@@ -423,9 +423,8 @@ export default function MoreScreen() {
             </View>
           </View>
 
-          {/* Legal visible even when not signed in */}
+          {/* Support & Legal visible even when not signed in */}
           <View style={[styles.section, { backgroundColor: C.surface, marginTop: 20 }]}>
-            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
             <MenuItem
               icon="info"
               label="About Us"
@@ -438,6 +437,10 @@ export default function MoreScreen() {
               subtitle="Get in touch with our team"
               onPress={() => router.push("/contact")}
             />
+          </View>
+
+          <View style={[styles.section, { backgroundColor: C.surface, marginTop: 12 }]}>
+            <Text style={[styles.sectionTitle, { color: C.textMuted }]}>LEGAL</Text>
             <MenuItem
               icon="file-text"
               label="Terms of Service"

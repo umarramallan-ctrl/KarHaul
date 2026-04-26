@@ -411,6 +411,10 @@ export interface CreateReviewBody {
   comment?: string;
 }
 
+export interface MyReviewsResponse {
+  reviewedBookingIds: string[];
+}
+
 export interface ReviewListResponse {
   reviews: Review[];
   averageRating?: number;

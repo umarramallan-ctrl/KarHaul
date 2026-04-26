@@ -76,7 +76,11 @@
       "Bash(printf 'No\\\\n')",
       "Bash(npx drizzle-kit:*)",
       "Bash(railway --version)",
-      "Bash(vercel --version)"
+      "Bash(vercel --version)",
+      "Bash(railway variables *)",
+      "Bash(npx vite *)",
+      "Bash(BASE_PATH=/ npx vite build)",
+      "Bash(BASE_PATH=/ npx vite build --debug rollup)"
     ]
   }
 }

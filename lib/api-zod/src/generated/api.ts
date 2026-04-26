@@ -1733,6 +1733,13 @@ export const LogoutMobileSessionResponse = zod.object({
 });
 
 /**
+ * @summary Get booking IDs the current user has already reviewed
+ */
+export const GetMyReviewsResponse = zod.object({
+  reviewedBookingIds: zod.array(zod.string()),
+});
+
+/**
  * @summary Get reviews for a specific booking
  */
 export const GetBookingReviewsParams = zod.object({

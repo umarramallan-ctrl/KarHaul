@@ -41,6 +41,7 @@ export * from "./listShipmentsTransportType";
 export * from "./logoutMobileSessionResponse";
 export * from "./message";
 export * from "./messageListResponse";
+export * from "./myReviewsResponse";
 export * from "./placeBidBody";
 export * from "./review";
 export * from "./reviewListResponse";
