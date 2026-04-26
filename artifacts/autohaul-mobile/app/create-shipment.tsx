@@ -401,7 +401,7 @@ export default function CreateShipmentScreen() {
     transportType: "open", serviceType: "door_to_door",
     pickupDateFrom: null as Date | null,
     pickupDateTo: null as Date | null,
-    budgetMin: "", budgetMax: "", notes: "",
+    budgetMax: "", notes: "",
     agreeToTerms: false,
   });
 
@@ -423,7 +423,7 @@ export default function CreateShipmentScreen() {
       //   .originAddress, .originCity, .originState, .originZip,
       //   .destinationAddress, .destinationCity, .destinationState, .destinationZip,
       //   .pickupDateFrom (YYYY-MM-DD), .pickupDateTo (YYYY-MM-DD),
-      //   .budgetMin, .budgetMax, .notes,
+      //   .budgetMax, .notes,
       //   .pickupLocationType, .deliveryLocationType
       const payload = {
         vehicleYear: parseInt(form.vehicleYear, 10),
@@ -446,7 +446,6 @@ export default function CreateShipmentScreen() {
         deliveryLocationType: form.deliveryLocationType || undefined,
         pickupDateFrom: form.pickupDateFrom ? toYMD(form.pickupDateFrom) : undefined,
         pickupDateTo: form.pickupDateTo ? toYMD(form.pickupDateTo) : undefined,
-        budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : undefined,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : undefined,
         notes: form.notes || undefined,
       };
@@ -777,15 +776,8 @@ export default function CreateShipmentScreen() {
 
             {/* Budget */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
-              <SectionHead label="Budget Range" icon="dollar-sign" color={C.text} />
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <View style={{ flex: 1 }}>
-                  <F label="Minimum ($)" value={form.budgetMin} onChange={v => set("budgetMin", v)} placeholder="500" keyboardType="numeric" autoCapitalize="none" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="900" keyboardType="numeric" autoCapitalize="none" />
-                </View>
-              </View>
+              <SectionHead label="Budget" icon="dollar-sign" color={C.text} />
+              <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="e.g. 900" keyboardType="numeric" autoCapitalize="none" />
             </View>
 
             {/* Notes */}
