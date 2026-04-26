@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable,
-  Platform, Alert, ActivityIndicator, Modal,
+  Platform, Alert, ActivityIndicator, Modal, FlatList,
   type KeyboardTypeOptions,
 } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -47,16 +47,53 @@ const US_STATES = [
 
 const STATE_ITEMS = US_STATES.map(s => ({ label: `${s.abbr} — ${s.name}`, value: s.abbr }));
 
-const CAR_MAKES = [
-  "Acura","Alfa Romeo","Aston Martin","Audi","Bentley","BMW","Buick",
-  "Cadillac","Chevrolet","Chrysler","Dodge","Ferrari","Fiat","Ford",
-  "Genesis","GMC","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia",
-  "Lamborghini","Land Rover","Lexus","Lincoln","Lucid","Maserati","Mazda",
-  "McLaren","Mercedes-Benz","MINI","Mitsubishi","Nissan","Porsche","Ram",
-  "Rivian","Rolls-Royce","Subaru","Tesla","Toyota","Volkswagen","Volvo",
-];
+const VEHICLE_DATA: Record<string, string[]> = {
+  Acura:           ["ILX", "Integra", "MDX", "NSX", "RDX", "TLX"],
+  "Alfa Romeo":    ["Giulia", "Giulietta", "Stelvio", "Tonale"],
+  "Aston Martin":  ["DB11", "DBX", "DBS Superleggera", "V8 Vantage", "Valkyrie"],
+  Audi:            ["A3", "A4", "A5", "A6", "A7", "A8", "e-tron", "Q3", "Q5", "Q7", "Q8", "R8", "RS3", "RS5", "RS6", "RS7", "S3", "S4", "S5", "TT"],
+  Bentley:         ["Bentayga", "Continental GT", "Flying Spur", "Mulsanne"],
+  BMW:             ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "i4", "i7", "iX", "M2", "M3", "M4", "M5", "M8", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "Z4"],
+  Buick:           ["Enclave", "Encore", "Encore GX", "Envision", "LaCrosse"],
+  Cadillac:        ["CT4", "CT5", "Escalade", "Lyriq", "XT4", "XT5", "XT6"],
+  Chevrolet:       ["Blazer", "Bolt EUV", "Bolt EV", "Camaro", "Colorado", "Corvette", "Equinox", "Malibu", "Silverado 1500", "Silverado 2500HD", "Silverado 3500HD", "Suburban", "Tahoe", "Trailblazer", "Traverse", "Trax"],
+  Chrysler:        ["300", "Pacifica", "Voyager"],
+  Dodge:           ["Challenger", "Charger", "Durango", "Hornet", "Viper"],
+  Ferrari:         ["296 GTB", "488 GTB", "812 Superfast", "F8 Tributo", "Portofino", "Roma", "SF90 Stradale"],
+  Fiat:            ["124 Spider", "500", "500X"],
+  Ford:            ["Bronco", "Bronco Sport", "EcoSport", "Edge", "Escape", "Expedition", "Explorer", "F-150", "F-150 Lightning", "F-250 Super Duty", "F-350 Super Duty", "Maverick", "Mustang", "Mustang Mach-E", "Ranger", "Transit"],
+  Genesis:         ["G70", "G80", "G90", "GV70", "GV80"],
+  GMC:             ["Acadia", "Canyon", "Sierra 1500", "Sierra 2500HD", "Sierra 3500HD", "Terrain", "Yukon", "Yukon XL"],
+  Honda:           ["Accord", "Civic", "CR-V", "HR-V", "Insight", "Odyssey", "Passport", "Pilot", "Prologue", "Ridgeline"],
+  Hyundai:         ["Elantra", "IONIQ 5", "IONIQ 6", "Kona", "Palisade", "Santa Cruz", "Santa Fe", "Sonata", "Tucson", "Venue"],
+  Infiniti:        ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
+  Jaguar:          ["E-Pace", "F-Pace", "F-Type", "I-Pace", "XE", "XF"],
+  Jeep:            ["Cherokee", "Compass", "Gladiator", "Grand Cherokee", "Grand Wagoneer", "Renegade", "Wagoneer", "Wrangler"],
+  Kia:             ["Carnival", "EV6", "Forte", "K5", "Niro", "Seltos", "Soul", "Sorento", "Sportage", "Stinger", "Telluride"],
+  Lamborghini:     ["Aventador", "Huracan", "Urus"],
+  "Land Rover":    ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Range Rover Velar"],
+  Lexus:           ["ES", "GS", "GX", "IS", "LC", "LS", "LX", "NX", "RC", "RX", "UX"],
+  Lincoln:         ["Aviator", "Corsair", "MKZ", "Nautilus", "Navigator"],
+  Lucid:           ["Air"],
+  Maserati:        ["Ghibli", "GranTurismo", "Grecale", "Levante", "MC20", "Quattroporte"],
+  Mazda:           ["CX-30", "CX-5", "CX-50", "CX-9", "CX-90", "Mazda3", "Mazda6", "MX-5 Miata"],
+  McLaren:         ["570S", "600LT", "720S", "765LT", "Artura", "GT", "Senna"],
+  "Mercedes-Benz": ["A-Class", "AMG GT", "C-Class", "CLA", "CLE", "E-Class", "EQB", "EQE", "EQS", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "Sprinter"],
+  MINI:            ["Clubman", "Convertible", "Cooper", "Countryman"],
+  Mitsubishi:      ["Eclipse Cross", "Galant", "Mirage", "Outlander", "Outlander Sport"],
+  Nissan:          ["370Z", "Altima", "Armada", "Frontier", "GT-R", "Kicks", "Leaf", "Maxima", "Murano", "Pathfinder", "Rogue", "Rogue Sport", "Sentra", "Titan", "Versa"],
+  Porsche:         ["718 Boxster", "718 Cayman", "911", "Cayenne", "Macan", "Panamera", "Taycan"],
+  Ram:             ["1500", "2500", "3500", "ProMaster", "ProMaster City"],
+  Rivian:          ["R1S", "R1T"],
+  "Rolls-Royce":   ["Cullinan", "Dawn", "Ghost", "Phantom", "Spectre", "Wraith"],
+  Subaru:          ["Ascent", "BRZ", "Crosstrek", "Forester", "Impreza", "Legacy", "Outback", "Solterra", "WRX"],
+  Tesla:           ["Cybertruck", "Model 3", "Model S", "Model X", "Model Y", "Roadster"],
+  Toyota:          ["4Runner", "86", "Avalon", "Camry", "C-HR", "Corolla", "Crown", "GR86", "GR Corolla", "Highlander", "Land Cruiser", "Mirai", "Prius", "RAV4", "Sequoia", "Sienna", "Supra", "Tacoma", "Tundra", "Venza"],
+  Volkswagen:      ["Arteon", "Atlas", "Atlas Cross Sport", "Golf", "GTI", "ID.4", "Jetta", "Passat", "Taos", "Tiguan"],
+  Volvo:           ["C40", "S60", "S90", "V60", "V90", "XC40", "XC60", "XC90"],
+};
 
-const MAKE_ITEMS = CAR_MAKES.map(m => ({ label: m, value: m }));
+const VEHICLE_MAKES = Object.keys(VEHICLE_DATA).sort();
 
 const VEHICLE_TYPES = [
   { value: "sedan", label: "Sedan" },
@@ -179,6 +216,134 @@ function SuggestInput({
         </View>
       )}
     </View>
+  );
+}
+
+// ─── VehiclePickerModal ──────────────────────────────────────────────────────
+
+function VehiclePickerModal({
+  label, value, onChange, items, placeholder, disabled = false,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  items: string[]; placeholder?: string; disabled?: boolean;
+}) {
+  const { colorScheme } = useTheme();
+  const C = Colors[colorScheme];
+  const [visible, setVisible] = useState(false);
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<TextInput>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? items.filter(i => i.toLowerCase().includes(q)) : items;
+  }, [query, items]);
+
+  const open = () => {
+    if (disabled) return;
+    setQuery("");
+    setVisible(true);
+  };
+
+  const select = (item: string) => {
+    onChange(item);
+    setVisible(false);
+  };
+
+  return (
+    <>
+      <View style={styles.fieldWrap}>
+        <Text style={[styles.fLabel, { color: C.textMuted }]}>{label}</Text>
+        <Pressable
+          onPress={open}
+          style={[styles.pickerTrigger, {
+            borderBottomColor: value ? C.primary : C.borderLight,
+            opacity: disabled ? 0.45 : 1,
+          }]}
+        >
+          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 15, flex: 1, color: value ? C.text : C.textMuted }}>
+            {value || placeholder || "Select…"}
+          </Text>
+          <Feather name={disabled ? "lock" : "chevron-down"} size={16} color={C.textMuted} />
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setVisible(false)}
+        onShow={() => setTimeout(() => searchRef.current?.focus(), 60)}
+      >
+        <View style={styles.pickerOverlay}>
+          <Pressable style={{ flex: 1 }} onPress={() => setVisible(false)} />
+          <View style={[styles.pickerSheet, { backgroundColor: C.surface }]}>
+            {/* Header */}
+            <View style={[styles.pickerSheetHeader, { borderBottomColor: C.borderLight }]}>
+              <Text style={[styles.pickerSheetTitle, { color: C.text }]}>{label}</Text>
+              <Pressable hitSlop={12} onPress={() => setVisible(false)}>
+                <Feather name="x" size={20} color={C.textSecondary} />
+              </Pressable>
+            </View>
+
+            {/* Search bar */}
+            <View style={[styles.pickerSearchRow, { borderBottomColor: C.borderLight, backgroundColor: C.inputBackground }]}>
+              <Feather name="search" size={15} color={C.textMuted} />
+              <TextInput
+                ref={searchRef}
+                style={[styles.pickerSearchInput, { color: C.text }]}
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search…"
+                placeholderTextColor={C.textMuted}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+              />
+              {query.length > 0 && (
+                <Pressable hitSlop={10} onPress={() => setQuery("")}>
+                  <Feather name="x-circle" size={15} color={C.textMuted} />
+                </Pressable>
+              )}
+            </View>
+
+            {/* List */}
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 36 }}
+              renderItem={({ item }) => {
+                const active = item === value;
+                return (
+                  <Pressable
+                    onPress={() => select(item)}
+                    style={({ pressed }) => [
+                      styles.pickerItem,
+                      { borderBottomColor: C.borderLight },
+                      active && { backgroundColor: C.primary + "12" },
+                      pressed && { backgroundColor: C.border },
+                    ]}
+                  >
+                    <Text style={[styles.pickerItemText, { color: active ? C.primary : C.text }]}>
+                      {item}
+                    </Text>
+                    {active && <Feather name="check" size={16} color={C.primary} />}
+                  </Pressable>
+                );
+              }}
+              ListEmptyComponent={
+                <View style={{ alignItems: "center", paddingVertical: 36, gap: 8 }}>
+                  <Feather name="search" size={28} color={C.textMuted} />
+                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.textMuted }}>
+                    No results for "{query}"
+                  </Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -573,18 +738,20 @@ export default function CreateShipmentScreen() {
                   />
                 </View>
               </View>
-              <SuggestInput
+              <VehiclePickerModal
                 label="Make *"
                 value={form.vehicleMake}
-                onChange={v => set("vehicleMake", v)}
-                placeholder="e.g. Ford, Toyota…"
-                items={MAKE_ITEMS}
+                onChange={v => { set("vehicleMake", v); set("vehicleModel", ""); }}
+                items={VEHICLE_MAKES}
+                placeholder="Select make…"
               />
-              <F
+              <VehiclePickerModal
                 label="Model *"
                 value={form.vehicleModel}
                 onChange={v => set("vehicleModel", v)}
-                placeholder="e.g. F-150, Camry…"
+                items={form.vehicleMake ? (VEHICLE_DATA[form.vehicleMake] ?? []) : []}
+                placeholder={form.vehicleMake ? "Select model…" : "Select make first"}
+                disabled={!form.vehicleMake}
               />
               <F
                 label="VIN * (17 characters)"
@@ -993,4 +1160,34 @@ const styles = StyleSheet.create({
     gap: 8, paddingVertical: 16, borderRadius: 14,
   },
   nextBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: "#fff" },
+
+  // Vehicle picker modal
+  pickerTrigger: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    borderBottomWidth: 1, paddingVertical: 8,
+  },
+  pickerOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end",
+  },
+  pickerSheet: {
+    borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    maxHeight: "78%", overflow: "hidden",
+  },
+  pickerSheetHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pickerSheetTitle: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
+  pickerSearchRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pickerSearchInput: {
+    flex: 1, fontFamily: "Inter_400Regular", fontSize: 15, paddingVertical: 4,
+  },
+  pickerItem: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pickerItemText: { fontFamily: "Inter_400Regular", fontSize: 15 },
 });
