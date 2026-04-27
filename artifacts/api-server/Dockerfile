@@ -6,8 +6,8 @@ COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
 COPY artifacts/api-server ./artifacts/api-server
-COPY artifacts/db ./artifacts/db
-COPY artifacts/api-zod ./artifacts/api-zod
+COPY lib/db ./lib/db
+COPY lib/api-zod ./lib/api-zod
 RUN pnpm install --frozen-lockfile
 WORKDIR /app/artifacts/api-server
 RUN pnpm run build
