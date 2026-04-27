@@ -6,6 +6,8 @@ import { createNotification } from "../lib/notify";
 
 const router: IRouter = Router();
 
+const BETA_MODE = process.env.BETA_MODE === "true";
+
 async function getDbUser(authId: string) {
   const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
   return users[0] || null;
@@ -94,6 +96,17 @@ router.post("/stripe/escrow/shipper/:shipmentId", async (req, res) => {
     return;
   }
 
+  if (BETA_MODE) {
+    console.log("BETA: escrow skipped");
+    await db.update(shipmentsTable).set({
+      shipperEscrowStatus: "pending",
+      shipperEscrowAmount: null,
+      updatedAt: new Date(),
+    }).where(eq(shipmentsTable.id, shipment.id));
+    res.json({ status: "pending", betaMode: true });
+    return;
+  }
+
   // Ensure shipper has a Stripe customer
   let customerId = dbUser.stripeCustomerId;
   if (!customerId) {
@@ -162,6 +175,17 @@ router.post("/stripe/escrow/driver/:bookingId", async (req, res) => {
       .set({ driverEscrowStatus: "none", updatedAt: new Date() })
       .where(eq(bookingsTable.id, booking.id));
     res.json({ status: "skipped", reason: "amount_too_low" });
+    return;
+  }
+
+  if (BETA_MODE) {
+    console.log("BETA: escrow skipped");
+    await db.update(bookingsTable).set({
+      driverEscrowStatus: "pending",
+      driverEscrowAmount: null,
+      updatedAt: new Date(),
+    }).where(eq(bookingsTable.id, booking.id));
+    res.json({ status: "pending", betaMode: true });
     return;
   }
 
