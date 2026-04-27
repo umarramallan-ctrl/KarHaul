@@ -220,7 +220,7 @@ const NEW_FEATURES = [
     icon: <Zap className="h-6 w-6 text-amber-500" />,
     title: "Pay-Per-Booking, Not Subscriptions",
     badge: "Driver Favorite",
-    desc: "Drivers pay a small flat fee only when they win a job — not a monthly subscription just to see loads. Keep more of what you earn.",
+    desc: "Drivers pay a small % fee only when they win a job — not a monthly subscription just to see loads. Keep more of what you earn.",
     link: null,
   },
   {
