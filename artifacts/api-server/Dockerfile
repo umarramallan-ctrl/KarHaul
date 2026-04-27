@@ -4,8 +4,11 @@ RUN npm install -g pnpm
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY tsconfig.base.json ./
 COPY artifacts/api-server ./artifacts/api-server
-RUN pnpm install --filter api-server --frozen-lockfile
+COPY artifacts/db ./artifacts/db
+COPY artifacts/api-zod ./artifacts/api-zod
+RUN pnpm install --frozen-lockfile
 WORKDIR /app/artifacts/api-server
 RUN pnpm run build
 EXPOSE 3000
