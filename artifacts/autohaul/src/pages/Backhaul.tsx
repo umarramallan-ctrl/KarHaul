@@ -66,6 +66,7 @@ export default function BackhaulBoard() {
   const qc = useQueryClient();
   const { data: profile } = useGetMyProfile();
   const isDriver = profile?.role === "driver" || profile?.role === "both";
+  const isShipper = profile?.role === "shipper" || profile?.role === "both";
 
   const [filterOrigin, setFilterOrigin] = useState("all");
   const [filterDest, setFilterDest] = useState("all");
@@ -217,7 +218,7 @@ export default function BackhaulBoard() {
                           </FormItem>
                         )} />
                         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-300">
-                          Standard 5%/3% platform fees apply. Matching shippers on your lane will be notified immediately.
+                          A 3% platform fee applies on the agreed bid amount upon acceptance. Matching shippers on your lane will be notified immediately.
                         </div>
                         <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold border-0" disabled={mutation.isPending}>
                           {mutation.isPending ? "Posting…" : "Post Route"}
@@ -257,6 +258,12 @@ export default function BackhaulBoard() {
                 <Button variant="ghost" className="text-slate-400" onClick={() => { setFilterOrigin("all"); setFilterDest("all"); }}>Clear filters</Button>
               )}
             </div>
+
+            {isShipper && (
+              <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 text-xs text-blue-300 mb-4">
+                A 5% platform fee applies on the final agreed bid at booking confirmation.
+              </div>
+            )}
 
             {isLoading ? (
               <div className="flex justify-center py-20">

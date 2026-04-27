@@ -8,7 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { listShipments } from "@workspace/api-client-react";
+import { listShipments, getMyProfile } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
 import ShipmentCard from "@/components/ShipmentCard";
 import Colors from "@/constants/colors";
 import { getApiBaseUrl } from "@/lib/api";
@@ -28,6 +29,16 @@ function DriverRoutesPanel() {
   const C = Colors[colorScheme];
   const [transportFilter, setTransportFilter] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+  const isDriver = profile?.role === "driver" || profile?.role === "both";
+  const isShipper = profile?.role === "shipper" || profile?.role === "both";
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["driver-routes-mobile", transportFilter],
@@ -54,6 +65,22 @@ function DriverRoutesPanel() {
           Drivers post their routes — shippers match loads to trucks already heading their way.
         </Text>
       </View>
+      {isDriver && (
+        <View style={[styles.backhaulBanner, { backgroundColor: "#FFFBEB", marginTop: 0 }]}>
+          <Feather name="info" size={14} color="#B45309" />
+          <Text style={[styles.backhaulBannerText, { color: "#B45309" }]}>
+            A 3% platform fee applies on the agreed bid amount upon acceptance.
+          </Text>
+        </View>
+      )}
+      {isShipper && (
+        <View style={[styles.backhaulBanner, { backgroundColor: "#EFF6FF", marginTop: 0 }]}>
+          <Feather name="info" size={14} color={C.primary} />
+          <Text style={[styles.backhaulBannerText, { color: C.primary }]}>
+            A 5% platform fee applies on the final agreed bid at booking confirmation.
+          </Text>
+        </View>
+      )}
 
       <FlatList
         horizontal
