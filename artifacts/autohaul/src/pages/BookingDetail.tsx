@@ -695,8 +695,10 @@ export default function BookingDetail() {
   const isBookingActive = !["delivered", "cancelled"].includes(b.status);
   const steps = ["confirmed", "picked_up", "in_transit", "delivered"];
   const currentStepIndex = steps.indexOf(b.status);
-  const platformFee = Number(b.platformFeeAmount ?? 0);
-  const totalShipperCost = Number(b.agreedPrice ?? 0) + platformFee;
+  const driverFee = Number(b.platformFeeAmount ?? 0);
+  const shipperFee = Number((b.shipment as any)?.shipperEscrowAmount ?? 0);
+  const myFee = isDriver ? driverFee : isShipper ? shipperFee : 0;
+  const totalWithMyFee = Number(b.agreedPrice ?? 0) + myFee;
 
   return (
     <BookingErrorBoundary>
@@ -775,19 +777,19 @@ export default function BookingDetail() {
                   <span className="text-xs text-muted-foreground">Transport price</span>
                   <span className="font-semibold">{formatCurrency(b.agreedPrice)}</span>
                 </div>
-                {platformFee > 0 && (
+                {myFee > 0 && (
                   <div className="flex items-center justify-between gap-8">
-                    <span className="text-xs text-muted-foreground">Platform fee ({isDriver ? "3% of agreed price" : "5% of agreed price"})</span>
-                    <span className="text-sm text-amber-600">+{formatCurrency(platformFee)}</span>
+                    <span className="text-xs text-muted-foreground">Your platform fee ({isDriver ? "3%" : "5%"})</span>
+                    <span className="text-sm text-amber-600">+{formatCurrency(myFee)}</span>
                   </div>
                 )}
-                {platformFee > 0 && (
+                {myFee > 0 && (
                   <div className="flex items-center justify-between gap-8 pt-1 border-t">
                     <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total</span>
-                    <span className="text-2xl font-display font-bold">{formatCurrency(totalShipperCost)}</span>
+                    <span className="text-2xl font-display font-bold">{formatCurrency(totalWithMyFee)}</span>
                   </div>
                 )}
-                {platformFee === 0 && (
+                {myFee === 0 && (
                   <p className="text-2xl font-display font-bold">{formatCurrency(b.agreedPrice)}</p>
                 )}
                 </div>
@@ -1004,17 +1006,17 @@ export default function BookingDetail() {
                 </Card>
 
                 {/* Platform Fee Info */}
-                {platformFee > 0 && (
+                {myFee > 0 && (
                   <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <DollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee Breakdown</p>
+                          <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Platform Fee</p>
                           <div className="text-xs text-amber-700 dark:text-amber-400 mt-1 space-y-1">
-                            {(isShipper || (!isShipper && !isDriver)) && <p><strong>Shipper fee:</strong> 5% of the agreed price held in escrow when the bid was accepted — released to KarHaul on delivery.</p>}
+                            {isShipper && <p><strong>Your fee:</strong> 5% of the agreed price held in escrow when the bid was accepted — released to KarHaul on delivery.</p>}
                             {isDriver && <p><strong>Your fee:</strong> 3% of your accepted bid held in escrow when you accepted — released to KarHaul on delivery.</p>}
-                            <p className="pt-1 border-t border-amber-300/30"><strong>Transport payment:</strong> KarHaul does not process payments between shipper and driver. You pay each other directly.</p>
+                            <p className="pt-1 border-t border-amber-300/30"><strong>Transport payment:</strong> KarHaul does not process transport payments. You pay each other directly.</p>
                           </div>
                         </div>
                       </div>

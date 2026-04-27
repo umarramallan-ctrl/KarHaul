@@ -616,10 +616,10 @@ export default function CreateShipment() {
                       <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
                         <p className="text-xs font-bold text-blue-300 uppercase tracking-widest">How KarHaul Fees Work</p>
                         <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
-                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Your fee:</span><span>5% of your budget is held in escrow when you post. Released to KarHaul after delivery.</span></div>
+                          <div className="flex items-start gap-2"><span className="text-blue-400 font-bold shrink-0">Your fee:</span><span>A 5% platform fee on the final agreed bid is held in escrow at booking confirmation.</span></div>
                           <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">Cancellation:</span><span>You have a 2-hour window to cancel penalty-free. After that, your escrow fee is forfeited.</span></div>
                           <div className="flex items-start gap-2"><span className="text-amber-400 font-bold shrink-0">No-show:</span><span>If your vehicle is not accessible at the agreed pickup location and time, your escrow fee is forfeited.</span></div>
-                          <div className="flex items-start gap-2 pt-1 border-t border-blue-500/20"><span className="text-slate-400 font-bold shrink-0">Payments:</span><span>KarHaul does NOT process transport payments. You pay the driver directly — cash, Zelle, Venmo, etc. The escrow above is the platform fee only.</span></div>
+                          <div className="flex items-start gap-2 pt-1 border-t border-blue-500/20"><span className="text-slate-400 font-bold shrink-0">Payments:</span><span>KarHaul does not process transport payments. Pay your driver directly — cash, Zelle, Venmo, etc.</span></div>
                         </div>
                       </div>
 
@@ -658,10 +658,8 @@ export default function CreateShipment() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Post Load to Board"
-        description={`Your load will be visible to all verified drivers. A 5% platform fee (based on your budget) is held in escrow now and released to KarHaul when delivery is confirmed. You pay the driver directly — KarHaul does not process transport payments.`}
-        fees={pendingBudgetMax > 0 ? [
-          { label: "Your platform fee (5% of max budget)", amount: shipperFee },
-        ] : []}
+        description="Your load will be visible to all verified drivers. A 5% platform fee on the final agreed bid is held in escrow at booking confirmation — not at posting. Pay your driver directly — KarHaul does not process transport payments."
+        fees={[]}
         commitmentText="Once a driver's bid is accepted, you have 2 hours to cancel penalty-free. After that, cancelling forfeits your escrow fee. If the driver no-shows, your escrow is returned."
         confirmLabel="Post Load"
         onConfirm={confirmPost}

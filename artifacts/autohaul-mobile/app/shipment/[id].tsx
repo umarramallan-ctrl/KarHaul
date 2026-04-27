@@ -421,7 +421,7 @@ export default function ShipmentDetailScreen() {
               </View>
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold" }}>Your fee: </Text>
-                A 3% platform fee on your accepted bid is held in escrow and released to KarHaul on delivery.
+                A 3% platform fee on the agreed bid amount is charged upon mutual acceptance.
               </Text>
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>Cancellation: </Text>

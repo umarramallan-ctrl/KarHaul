@@ -66,8 +66,7 @@ router.get("/stripe/connect/status", async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// Escrow: create shipper payment intent when posting a load
-// Called client-side after post-load confirmation modal
+// Escrow: create shipper payment intent at booking confirmation (bid acceptance)
 // ──────────────────────────────────────────────────────────────
 
 router.post("/stripe/escrow/shipper/:shipmentId", async (req, res) => {
@@ -84,7 +83,8 @@ router.post("/stripe/escrow/shipper/:shipmentId", async (req, res) => {
     return;
   }
 
-  const { shipperFeeCents, shipperFeeUsd } = computeEscrowAmounts(shipment.budgetMax);
+  const { agreedPrice } = req.body;
+  const { shipperFeeCents, shipperFeeUsd } = computeEscrowAmounts(agreedPrice ?? shipment.budgetMax);
   if (shipperFeeCents < 50) {
     // Below Stripe minimum — skip escrow
     await db.update(shipmentsTable)
@@ -156,7 +156,7 @@ router.post("/stripe/escrow/driver/:bookingId", async (req, res) => {
 
   const [shipment] = await db.select().from(shipmentsTable)
     .where(eq(shipmentsTable.id, booking.shipmentId)).limit(1);
-  const { driverFeeCents, driverFeeUsd } = computeEscrowAmounts(shipment?.budgetMax);
+  const { driverFeeCents, driverFeeUsd } = computeEscrowAmounts((booking as any).agreedPrice ?? shipment?.budgetMax);
   if (driverFeeCents < 50) {
     await db.update(bookingsTable)
       .set({ driverEscrowStatus: "none", updatedAt: new Date() })

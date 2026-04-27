@@ -982,7 +982,7 @@ export default function CreateShipmentScreen() {
               </View>
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold" }}>Your fee: </Text>
-                5% of your budget is held in escrow when you post. Released to KarHaul after delivery.
+                A 5% platform fee on the final agreed bid is held in escrow at booking confirmation.
               </Text>
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>Cancellation: </Text>
@@ -994,7 +994,7 @@ export default function CreateShipmentScreen() {
               </Text>
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18, paddingTop: 4, borderTopWidth: 1, borderTopColor: "#BFDBFE" }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#64748B" }}>Payments: </Text>
-                KarHaul does NOT process transport payments. You pay the driver directly.
+                KarHaul does not process transport payments. Pay your driver directly — cash, Zelle, Venmo, etc.
               </Text>
             </View>
 

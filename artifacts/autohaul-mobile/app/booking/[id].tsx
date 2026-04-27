@@ -159,7 +159,9 @@ export default function BookingDetailScreen() {
   const photos = (photosData?.photos || []) as Array<{ id: string; phase: string; photoUrl: string; caption?: string }>;
   const pickupPhotos = photos.filter(p => p.phase === "pickup");
   const deliveryPhotos = photos.filter(p => p.phase === "delivery");
-  const platformFee = (booking as any).platformFeeAmount ?? 0;
+  const driverFee = Number((booking as any).platformFeeAmount ?? 0);
+  const shipperFee = Number((booking as any).shipment?.shipperEscrowAmount ?? 0);
+  const myFee = isDriver ? driverFee : isShipper ? shipperFee : 0;
   const agreedPrice = (booking as any).agreedPrice ?? 0;
 
   const isBookingActive = !["delivered", "cancelled"].includes((booking as any).status);
@@ -219,11 +221,11 @@ export default function BookingDetailScreen() {
         <View style={[styles.priceCard, { backgroundColor: C.primary }]}>
           <Text style={styles.priceLabel}>Transport Price</Text>
           <Text style={styles.priceAmount}>${agreedPrice.toLocaleString()}</Text>
-          {platformFee > 0 && (
+          {myFee > 0 && (
             <>
               <View style={styles.feeDivider} />
-              <Text style={styles.feeText}>+ ${platformFee.toFixed(2)} platform fee ({isDriver ? "3% of your accepted bid" : "5% of budget"})</Text>
-              {isShipper && <Text style={styles.feeTotal}>Total: ${(agreedPrice + platformFee).toFixed(2)}</Text>}
+              <Text style={styles.feeText}>+ ${myFee.toFixed(2)} platform fee ({isDriver ? "3% of your accepted bid" : "5% of agreed bid"})</Text>
+              {isShipper && <Text style={styles.feeTotal}>Total: ${(agreedPrice + myFee).toFixed(2)}</Text>}
             </>
           )}
           <Text style={styles.priceNote}>Payment arranged directly between shipper and driver</Text>
