@@ -549,6 +549,7 @@ export default function CreateShipmentScreen() {
   const qc = useQueryClient();
   const { getToken } = useAuth();
   const [step, setStep] = useState(0);
+  const [step2Errors, setStep2Errors] = useState({ pickupDateFrom: "", pickupDateTo: "", budgetMax: "" });
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -681,6 +682,13 @@ export default function CreateShipmentScreen() {
       if (form.destinationState.trim().length !== 2) { Alert.alert("Invalid State", "Please use the 2-letter state abbreviation (e.g. CA)."); return false; }
     }
     if (step === 2) {
+      const errs = { pickupDateFrom: "", pickupDateTo: "", budgetMax: "" };
+      if (!form.pickupDateFrom) errs.pickupDateFrom = "Earliest pickup date is required";
+      if (!form.pickupDateTo) errs.pickupDateTo = "Latest pickup date is required";
+      if (!form.budgetMax.trim() || parseFloat(form.budgetMax) <= 0) errs.budgetMax = "Maximum budget is required";
+      const hasFieldErrors = Object.values(errs).some(Boolean);
+      setStep2Errors(errs);
+      if (hasFieldErrors) return false;
       if (!form.agreeToTerms) {
         Alert.alert("Agreement Required", "Please acknowledge the liability disclaimer to post your load."); return false;
       }
@@ -938,23 +946,49 @@ export default function CreateShipmentScreen() {
             <View style={[styles.card, { backgroundColor: C.surface }]}>
               <SectionHead label="Pickup Window" icon="calendar" color={C.text} />
               <DateField
-                label="Earliest Pickup Date"
+                label="Earliest Pickup Date *"
                 value={form.pickupDateFrom}
-                onChange={d => { set("pickupDateFrom", d); if (form.pickupDateTo && d && d > form.pickupDateTo) set("pickupDateTo", null); }}
+                onChange={d => {
+                  set("pickupDateFrom", d);
+                  if (d) setStep2Errors(e => ({ ...e, pickupDateFrom: "" }));
+                  if (form.pickupDateTo && d && d > form.pickupDateTo) set("pickupDateTo", null);
+                }}
                 minimumDate={today}
               />
+              {!!step2Errors.pickupDateFrom && (
+                <Text style={styles.fieldError}>{step2Errors.pickupDateFrom}</Text>
+              )}
               <DateField
-                label="Latest Pickup Date"
+                label="Latest Pickup Date *"
                 value={form.pickupDateTo}
-                onChange={d => set("pickupDateTo", d)}
+                onChange={d => {
+                  set("pickupDateTo", d);
+                  if (d) setStep2Errors(e => ({ ...e, pickupDateTo: "" }));
+                }}
                 minimumDate={form.pickupDateFrom ?? today}
               />
+              {!!step2Errors.pickupDateTo && (
+                <Text style={styles.fieldError}>{step2Errors.pickupDateTo}</Text>
+              )}
             </View>
 
             {/* Budget */}
             <View style={[styles.card, { backgroundColor: C.surface }]}>
               <SectionHead label="Budget" icon="dollar-sign" color={C.text} />
-              <F label="Maximum ($)" value={form.budgetMax} onChange={v => set("budgetMax", v)} placeholder="e.g. 900" keyboardType="numeric" autoCapitalize="none" />
+              <F
+                label="Maximum ($) *"
+                value={form.budgetMax}
+                onChange={v => {
+                  set("budgetMax", v);
+                  if (v.trim() && parseFloat(v) > 0) setStep2Errors(e => ({ ...e, budgetMax: "" }));
+                }}
+                placeholder="e.g. 900"
+                keyboardType="numeric"
+                autoCapitalize="none"
+              />
+              {!!step2Errors.budgetMax && (
+                <Text style={styles.fieldError}>{step2Errors.budgetMax}</Text>
+              )}
             </View>
 
             {/* Notes */}
@@ -1147,6 +1181,8 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 6, borderWidth: 2,
     alignItems: "center", justifyContent: "center", marginTop: 1,
   },
+
+  fieldError: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#EF4444", marginTop: -8, marginBottom: 6 },
 
   // Notes textarea
   textarea: {

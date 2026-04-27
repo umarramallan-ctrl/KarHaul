@@ -63,10 +63,10 @@ const formSchema = z.object({
   destinationState: z.string().length(2, "Use 2-letter state code"),
   destinationZip: z.string().min(5, "ZIP required"),
   deliveryLocationType: z.string().optional(),
-  pickupDateFrom: z.string().optional(),
-  pickupDateTo: z.string().optional(),
+  pickupDateFrom: z.string({ required_error: "Earliest pickup date is required" }).min(1, "Earliest pickup date is required"),
+  pickupDateTo: z.string({ required_error: "Latest pickup date is required" }).min(1, "Latest pickup date is required"),
   budgetMin: z.coerce.number().optional(),
-  budgetMax: z.coerce.number().optional(),
+  budgetMax: z.coerce.number({ invalid_type_error: "Maximum budget is required" }).min(1, "Maximum budget is required"),
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, { message: "You must agree to the liability waiver" }),
 });
