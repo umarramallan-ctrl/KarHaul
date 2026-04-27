@@ -412,6 +412,26 @@ export default function ShipmentDetailScreen() {
                 textAlignVertical="top"
               />
             </View>
+            <View style={[styles.disclaimerBox, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE", flexDirection: "column", gap: 6 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Feather name="info" size={13} color="#2563EB" />
+                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 11, color: "#2563EB", letterSpacing: 0.6, textTransform: "uppercase" }}>
+                  How KarHaul Fees Work
+                </Text>
+              </View>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>Your fee: </Text>
+                A 3% platform fee on your accepted bid is held in escrow and released to KarHaul on delivery.
+              </Text>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>Cancellation: </Text>
+                You have a 2-hour window to cancel penalty-free. After that, your escrow fee is forfeited.
+              </Text>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>No-show: </Text>
+                If you no-show at the pickup location, your escrow fee is forfeited.
+              </Text>
+            </View>
             <View style={[styles.disclaimerBox, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A" }]}>
               <Feather name="alert-circle" size={14} color="#A16207" />
               <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#A16207", flex: 1, lineHeight: 18 }}>

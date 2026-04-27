@@ -804,7 +804,8 @@ export default function ShipmentDetail() {
                             <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
                               <p><strong>Your fee:</strong> If accepted, a <strong>3% platform fee</strong> on your accepted bid is held in escrow and released to KarHaul on delivery.</p>
                               <p><strong>Payment:</strong> You are paid directly by the shipper — KarHaul does not process transport payments.</p>
-                              <p><strong>Cancellation:</strong> You have 2 hours after acceptance to cancel penalty-free. After that, cancelling forfeits your escrow.</p>
+                              <p><strong>Cancellation:</strong> You have a 2-hour window to cancel penalty-free. After that, your escrow fee is forfeited.</p>
+                              <p><strong>No-show:</strong> If you no-show at the pickup location, your escrow fee is forfeited.</p>
                             </div>
                           </div>
 

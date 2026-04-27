@@ -973,10 +973,28 @@ export default function CreateShipmentScreen() {
             </View>
 
             {/* Fee info */}
-            <View style={[styles.infoBox, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-              <Feather name="info" size={14} color={C.primary} />
-              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: C.primary, flex: 1, lineHeight: 18 }}>
-                KarHaul is a marketplace only. Arrange payment directly with your driver. A 5% platform fee is held in escrow when your load is posted.
+            <View style={[styles.card, { backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", gap: 8 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Feather name="info" size={13} color={C.primary} />
+                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 11, color: C.primary, letterSpacing: 0.6, textTransform: "uppercase" }}>
+                  How KarHaul Fees Work
+                </Text>
+              </View>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold" }}>Your fee: </Text>
+                5% of your budget is held in escrow when you post. Released to KarHaul after delivery.
+              </Text>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>Cancellation: </Text>
+                You have a 2-hour window to cancel penalty-free. After that, your escrow fee is forfeited.
+              </Text>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18 }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#D97706" }}>No-show: </Text>
+                If your vehicle is not accessible at the agreed pickup location and time, your escrow fee is forfeited.
+              </Text>
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "#1E40AF", lineHeight: 18, paddingTop: 4, borderTopWidth: 1, borderTopColor: "#BFDBFE" }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#64748B" }}>Payments: </Text>
+                KarHaul does NOT process transport payments. You pay the driver directly.
               </Text>
             </View>
 
