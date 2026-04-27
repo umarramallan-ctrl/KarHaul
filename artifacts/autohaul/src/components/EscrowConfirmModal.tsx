@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, DollarSign, Shield, Clock } from "lucide-react";
+import { DollarSign, Shield, Clock } from "lucide-react";
 
 interface FeeLineItem {
   label: string;
@@ -74,13 +74,6 @@ export function EscrowConfirmModal({
             <div className="text-xs text-blue-300 leading-relaxed">
               <strong>Cancellation policy:</strong> You have 2 hours after mutual acceptance to cancel penalty-free. After that, the cancelling party forfeits their escrow.
             </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-300 leading-relaxed">{commitmentText}</p>
           </div>
         </div>
 
