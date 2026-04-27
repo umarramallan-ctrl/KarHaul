@@ -139,6 +139,8 @@ router.post("/shipments", async (req, res) => {
       notes: body.notes || null,
       pickupLocationType: body.pickupLocationType || null,
       deliveryLocationType: body.deliveryLocationType || null,
+      shipperEscrowAmount: null,
+      shipperEscrowStatus: "pending",
       status: "open",
     });
     const [shipment] = await db.select().from(shipmentsTable).where(eq(shipmentsTable.id, id)).limit(1);
