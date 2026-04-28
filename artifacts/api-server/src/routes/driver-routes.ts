@@ -4,6 +4,11 @@ import { eq, and, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+async function getDbUser(authId: string) {
+  const users = await db.select().from(usersTable).where(eq(usersTable.authId, authId)).limit(1);
+  return users[0] || null;
+}
+
 router.get("/driver-routes", async (req: Request, res: Response) => {
   try {
     const { originState, destinationState, transportType, activeOnly } = req.query;
@@ -55,8 +60,11 @@ router.get("/driver-routes", async (req: Request, res: Response) => {
 
 router.post("/driver-routes", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const authId = req.user!.id;
   try {
+    const dbUser = await getDbUser(authId);
+    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
+    const userId = dbUser.id;
     const { originCity, originState, destinationCity, destinationState, departureDateFrom, departureDateTo, truckCapacity, availableSpots, transportType, pricePerVehicle, notes } = req.body;
     if (!originCity || !originState || !destinationCity || !destinationState || !departureDateFrom || !departureDateTo) {
       res.status(400).json({ error: "Missing required fields" }); return;
@@ -65,9 +73,10 @@ router.post("/driver-routes", async (req: Request, res: Response) => {
     const [route] = await db.insert(driverRoutesTable).values({
       id, driverId: userId, originCity, originState, destinationCity, destinationState,
       departureDateFrom, departureDateTo,
-      truckCapacity: truckCapacity || 1, availableSpots: availableSpots || 1,
+      truckCapacity: Number(truckCapacity) || 1, availableSpots: Number(availableSpots) || 1,
       transportType: transportType || "open",
-      pricePerVehicle: pricePerVehicle || null, notes: notes || null, isActive: true,
+      pricePerVehicle: pricePerVehicle != null && pricePerVehicle !== "" ? Number(pricePerVehicle) : null,
+      notes: notes || null, isActive: true,
     }).returning();
     res.status(201).json(route);
   } catch (err) {
@@ -78,11 +87,13 @@ router.post("/driver-routes", async (req: Request, res: Response) => {
 
 router.patch("/driver-routes/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const authId = req.user!.id;
   const id = req.params.id as string;
   try {
+    const dbUser = await getDbUser(authId);
+    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
     const [existing] = await db.select().from(driverRoutesTable).where(eq(driverRoutesTable.id, id));
-    if (!existing || existing.driverId !== userId) { res.status(403).json({ error: "Not authorized" }); return; }
+    if (!existing || existing.driverId !== dbUser.id) { res.status(403).json({ error: "Not authorized" }); return; }
     const { availableSpots, isActive, notes, pricePerVehicle } = req.body;
     const [updated] = await db.update(driverRoutesTable)
       .set({ availableSpots, isActive, notes, pricePerVehicle, updatedAt: new Date() })
@@ -96,11 +107,13 @@ router.patch("/driver-routes/:id", async (req: Request, res: Response) => {
 
 router.delete("/driver-routes/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Authentication required" }); return; }
-  const userId = req.user!.id;
+  const authId = req.user!.id;
   const id = req.params.id as string;
   try {
+    const dbUser = await getDbUser(authId);
+    if (!dbUser) { res.status(400).json({ error: "Profile not found" }); return; }
     const [existing] = await db.select().from(driverRoutesTable).where(eq(driverRoutesTable.id, id));
-    if (!existing || existing.driverId !== userId) { res.status(403).json({ error: "Not authorized" }); return; }
+    if (!existing || existing.driverId !== dbUser.id) { res.status(403).json({ error: "Not authorized" }); return; }
     await db.delete(driverRoutesTable).where(eq(driverRoutesTable.id, id));
     res.json({ success: true });
   } catch (err) {
