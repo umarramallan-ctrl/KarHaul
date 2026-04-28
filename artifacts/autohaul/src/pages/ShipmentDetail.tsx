@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
+import { EscrowConfirmModal } from "@/components/EscrowConfihrmModal";
 import { formatCurrency, formatDateTime, getStatusColor, formatVehicleName, formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -724,7 +724,7 @@ export default function ShipmentDetail() {
                 </div>
               </CardContent>
               <CardFooter className="pt-0">
-                {canBid ? (
+                {canBid && !hasMyBid ? (
                   <Dialog open={isBidDialogOpen} onOpenChange={setIsBidDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="w-full h-12 text-lg hover-elevate shadow-lg shadow-primary/25">Place a Bid</Button>
