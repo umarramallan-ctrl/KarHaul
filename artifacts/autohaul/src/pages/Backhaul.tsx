@@ -1,7 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Component } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -292,7 +292,7 @@ function ShipperActionPanel({
     defaultValues: {
       originStreet: "", originCity: "", originState: "", originZip: "",
       destinationStreet: "", destinationCity: "", destinationState: "", destinationZip: "",
-      vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vin: "",
+      vehicleYear: new Date().getFullYear(), vehicleMake: "", vehicleModel: "", vin: "",
     },
   });
 
@@ -333,6 +333,24 @@ function ShipperActionPanel({
     onCounter(Number(counterPrice), form.getValues());
     setShowCounter(false);
     setCounterPrice("");
+  }
+
+  if (!route) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-3 bg-slate-800 rounded w-1/3 mb-5" />
+        <div className="h-10 bg-slate-800 rounded" />
+        <div className="grid grid-cols-4 gap-2">
+          {[0, 1, 2, 3].map(i => <div key={i} className="h-10 bg-slate-800 rounded" />)}
+        </div>
+        <div className="h-10 bg-slate-800 rounded" />
+        <div className="h-3 bg-slate-800 rounded w-1/3 mt-4 mb-5" />
+        <div className="h-10 bg-slate-800 rounded" />
+        <div className="h-10 bg-slate-800 rounded" />
+        <div className="h-11 bg-slate-800 rounded mt-4" />
+        <div className="h-11 bg-slate-800 rounded" />
+      </div>
+    );
   }
 
   return (
@@ -739,6 +757,31 @@ function ConfirmActionModal({
   );
 }
 
+// ─── Panel error boundary ──────────────────────────────────────────────────────
+
+class PanelErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300 leading-relaxed">
+          Something went wrong loading the booking form. Please close this dialog and try again.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── Route detail dialog ───────────────────────────────────────────────────────
 
 function RouteDetailDialog({
@@ -763,7 +806,11 @@ function RouteDetailDialog({
   // Determine which panel to render
   function renderPanel() {
     if (!booking) {
-      if (isShipper) return <ShipperActionPanel route={route} onAccept={onShipperAccept} onCounter={onShipperCounter} />;
+      if (isShipper) return (
+        <PanelErrorBoundary>
+          <ShipperActionPanel route={route} onAccept={onShipperAccept} onCounter={onShipperCounter} />
+        </PanelErrorBoundary>
+      );
       if (isDriver)  return (
         <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-4 text-xs text-slate-400 text-center">
           No shipper requests yet. You'll be notified when a shipper responds to this route.
