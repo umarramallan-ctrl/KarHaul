@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { EscrowConfirmModal } from "@/components/EscrowConfihrmModal";
+import { EscrowConfirmModal } from "@/components/EscrowConfirmModal";
 import { formatCurrency, formatDateTime, getStatusColor, formatVehicleName, formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
