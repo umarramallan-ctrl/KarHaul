@@ -301,22 +301,36 @@ function ShipperActionPanel({
   const { data: nhtsaMakes = [] } = useQuery<string[]>({
     queryKey: ["nhtsa-makes"],
     queryFn: async () => {
-      const res = await fetch("https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json");
-      const json = await res.json();
-      return (json.Results as Array<{ MakeName: string }>).map(m => m.MakeName).sort();
+      try {
+        const res = await fetch("https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json");
+        const json = await res.json();
+        return (json.Results as Array<{ MakeName: string }>).map(m => m.MakeName).sort();
+      } catch {
+        return [];
+      }
     },
-    staleTime: Infinity, gcTime: Infinity,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+    throwOnError: false,
   });
 
   const { data: nhtsaModels = [] } = useQuery<string[]>({
     queryKey: ["nhtsa-models", watchedMake],
     queryFn: async () => {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(watchedMake)}?format=json`);
-      const json = await res.json();
-      return [...new Set((json.Results as Array<{ Model_Name: string }>).map(m => m.Model_Name))].sort() as string[];
+      try {
+        const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(watchedMake)}?format=json`);
+        const json = await res.json();
+        return [...new Set((json.Results as Array<{ Model_Name: string }>).map(m => m.Model_Name))].sort() as string[];
+      } catch {
+        return [];
+      }
     },
     enabled: watchedMake.trim().length >= 2,
-    staleTime: Infinity, gcTime: Infinity,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+    throwOnError: false,
   });
 
   const ic = "bg-slate-800/60 border-slate-700 text-white h-10 focus:border-blue-500 placeholder:text-slate-600 text-sm";
@@ -761,17 +775,17 @@ function ConfirmActionModal({
 
 class PanelErrorBoundary extends Component<
   { children: React.ReactNode },
-  { hasError: boolean }
+  { renderError: boolean }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { renderError: false };
   }
   static getDerivedStateFromError() {
-    return { hasError: true };
+    return { renderError: true };
   }
   render() {
-    if (this.state.hasError) {
+    if (this.state.renderError) {
       return (
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300 leading-relaxed">
           Something went wrong loading the booking form. Please close this dialog and try again.
