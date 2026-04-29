@@ -1,7 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,12 +16,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import {
   Truck, MapPin, ArrowRight, ArrowLeft, Plus, DollarSign, Calendar, Package,
-  Clock, X, Shield, CheckCircle, AlertTriangle,
+  Clock, X, Shield, CheckCircle, AlertTriangle, Car,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { apiBase } from "@/lib/api";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
+
+const BACKHAUL_LOCATION_TYPES = [
+  { value: "residential", label: "Residential" },
+  { value: "dealer",      label: "Auto Dealer / Lot" },
+  { value: "auction",     label: "Auction House" },
+  { value: "port",        label: "Port / Marine Terminal" },
+] as const;
+
+// ----- Driver post form schema -----
 
 const backhaulSchema = z.object({
   originCity: z.string().min(2, "City required"),
@@ -35,6 +44,29 @@ const backhaulSchema = z.object({
   pricePerVehicle: z.coerce.number().optional(),
   notes: z.string().optional(),
 });
+
+// ----- Shipper booking form schema -----
+
+const shipperBookingSchema = z.object({
+  originStreet:           z.string().min(3, "Street address required"),
+  originCity:             z.string().min(2, "City required"),
+  originState:            z.string().length(2, "2-letter state"),
+  originZip:              z.string().regex(/^\d{5}$/, "5-digit ZIP required"),
+  originLocationType:     z.enum(["residential", "dealer", "auction", "port"], { required_error: "Select a location type" }),
+  destinationStreet:      z.string().min(3, "Street address required"),
+  destinationCity:        z.string().min(2, "City required"),
+  destinationState:       z.string().length(2, "2-letter state"),
+  destinationZip:         z.string().regex(/^\d{5}$/, "5-digit ZIP required"),
+  destinationLocationType:z.enum(["residential", "dealer", "auction", "port"], { required_error: "Select a location type" }),
+  vehicleYear:            z.coerce.number({ invalid_type_error: "Year required" }).min(1900).max(new Date().getFullYear() + 1),
+  vehicleMake:            z.string().min(1, "Make required"),
+  vehicleModel:           z.string().min(1, "Model required"),
+  vin:                    z.string().length(17, "VIN must be exactly 17 characters"),
+});
+
+type ShipperBookingData = z.infer<typeof shipperBookingSchema>;
+
+// ----- API helpers -----
 
 async function clerkHeaders(): Promise<HeadersInit> {
   const token = await (window as any).Clerk?.session?.getToken();
@@ -64,11 +96,16 @@ async function postBackhaul(data: Record<string, any>) {
   return res.json();
 }
 
+// ----- Shared types -----
+
 interface BookingState {
   price: number;
   confirmedAt: Date;
   cancelled: boolean;
+  shipperData: ShipperBookingData;
 }
+
+// ----- Helpers -----
 
 function useCancellationCountdown(confirmedAt: Date | null): number {
   const [remaining, setRemaining] = useState(0);
@@ -94,6 +131,67 @@ function formatCountdown(ms: number): string {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+// ----- Autocomplete input (NHTSA makes/models) -----
+
+function AutocompleteInput({
+  value,
+  onChange,
+  suggestions,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: string[];
+  placeholder: string;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const safeValue = value ?? "";
+  const filtered = safeValue.trim().length > 0
+    ? suggestions.filter(s => s.toLowerCase().includes(safeValue.toLowerCase())).slice(0, 8)
+    : [];
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Input
+        value={safeValue}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => filtered.length > 0 && setOpen(true)}
+        placeholder={placeholder}
+        className={className}
+        autoComplete="off"
+      />
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 shadow-xl divide-y divide-slate-800/50">
+          {filtered.map(s => (
+            <li key={s}>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm text-white hover:bg-slate-800 transition-colors"
+                onMouseDown={e => { e.preventDefault(); onChange(s); setOpen(false); }}
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ----- Policy notice -----
+
 function PolicyNotice({ isShipper }: { isShipper: boolean }) {
   return (
     <div className="rounded-xl border border-slate-700/40 bg-slate-800/30 p-4 space-y-3">
@@ -117,6 +215,20 @@ function PolicyNotice({ isShipper }: { isShipper: boolean }) {
     </div>
   );
 }
+
+// ----- Section header divider -----
+
+function SectionLabel({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <Icon className="h-3.5 w-3.5 text-slate-500" />
+      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em]">{children}</span>
+      <div className="h-px flex-1 bg-slate-700/60" />
+    </div>
+  );
+}
+
+// ----- Booking confirmed panel -----
 
 function BookingConfirmedPanel({
   booking,
@@ -180,70 +292,305 @@ function BookingConfirmedPanel({
   );
 }
 
+// ----- Shipper action panel (with address/vehicle form) -----
+
 function ShipperActionPanel({
   route,
   onAccept,
   onCounter,
 }: {
   route: any;
-  onAccept: () => void;
-  onCounter: (price: number) => void;
+  onAccept: (data: ShipperBookingData) => void;
+  onCounter: (price: number, data: ShipperBookingData) => void;
 }) {
   const [showCounter, setShowCounter] = useState(false);
   const [counterPrice, setCounterPrice] = useState("");
 
-  return (
-    <div className="space-y-3">
-      <Button
-        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold border-0 h-11"
-        onClick={onAccept}
-      >
-        Accept — {route.pricePerVehicle ? `$${route.pricePerVehicle}/vehicle` : "Listed Price"}
-      </Button>
+  const form = useForm<ShipperBookingData>({
+    resolver: zodResolver(shipperBookingSchema),
+    defaultValues: {
+      originStreet: "", originCity: "", originState: "", originZip: "",
+      destinationStreet: "", destinationCity: "", destinationState: "", destinationZip: "",
+      vehicleYear: undefined as any, vehicleMake: "", vehicleModel: "", vin: "",
+    },
+  });
 
-      {!showCounter ? (
-        <Button
-          variant="outline"
-          className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 h-11"
-          onClick={() => setShowCounter(true)}
-        >
-          Counter Offer
-        </Button>
-      ) : (
-        <div className="space-y-2">
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              type="number"
-              placeholder="Your offer per vehicle…"
-              value={counterPrice}
-              onChange={e => setCounterPrice(e.target.value)}
-              className="bg-slate-800/60 border-slate-700 text-white h-11 pl-9 focus:border-blue-500 placeholder:text-slate-600"
-            />
+  const watchedMake = form.watch("vehicleMake") ?? "";
+
+  const { data: nhtsaMakes = [] } = useQuery<string[]>({
+    queryKey: ["nhtsa-makes"],
+    queryFn: async () => {
+      const res = await fetch("https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json");
+      const json = await res.json();
+      return (json.Results as Array<{ MakeName: string }>).map(m => m.MakeName).sort();
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  const { data: nhtsaModels = [] } = useQuery<string[]>({
+    queryKey: ["nhtsa-models", watchedMake],
+    queryFn: async () => {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(watchedMake)}?format=json`);
+      const json = await res.json();
+      return [...new Set((json.Results as Array<{ Model_Name: string }>).map(m => m.Model_Name))].sort() as string[];
+    },
+    enabled: watchedMake.trim().length >= 2,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  const ic = "bg-slate-800/60 border-slate-700 text-white h-10 focus:border-blue-500 placeholder:text-slate-600 text-sm";
+
+  async function tryAccept() {
+    const valid = await form.trigger();
+    if (!valid) return;
+    onAccept(form.getValues());
+  }
+
+  async function tryCounter() {
+    const valid = await form.trigger();
+    if (!valid) return;
+    if (!counterPrice || Number(counterPrice) <= 0) return;
+    onCounter(Number(counterPrice), form.getValues());
+    setShowCounter(false);
+    setCounterPrice("");
+  }
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Pickup Location ── */}
+      <div>
+        <SectionLabel icon={MapPin}>Pickup Location</SectionLabel>
+        <div className="space-y-2.5">
+          <FormField control={form.control} name="originStreet" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">Street Address</FormLabel>
+              <FormControl><Input placeholder="123 Main St" {...field} className={ic} /></FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )} />
+          <div className="grid grid-cols-4 gap-2">
+            <div className="col-span-2">
+              <FormField control={form.control} name="originCity" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-slate-400">City</FormLabel>
+                  <FormControl><Input placeholder="Chicago" {...field} className={ic} /></FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="originState" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-slate-400">State</FormLabel>
+                <FormControl><Input placeholder="IL" maxLength={2} {...field} className={`${ic} uppercase`} /></FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="originZip" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-slate-400">ZIP</FormLabel>
+                <FormControl><Input placeholder="60601" maxLength={5} {...field} className={ic} /></FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              className="flex-1 text-slate-400 hover:text-white"
-              onClick={() => { setShowCounter(false); setCounterPrice(""); }}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold border-0"
-              disabled={!counterPrice || Number(counterPrice) <= 0}
-              onClick={() => { onCounter(Number(counterPrice)); setShowCounter(false); setCounterPrice(""); }}
-            >
-              Submit Counter
-            </Button>
-          </div>
+          <FormField control={form.control} name="originLocationType" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">Location Type</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className={ic}><SelectValue placeholder="Select type…" /></SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {BACKHAUL_LOCATION_TYPES.map(lt => (
+                    <SelectItem key={lt.value} value={lt.value}>{lt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )} />
         </div>
-      )}
+      </div>
+
+      {/* ── Delivery Location ── */}
+      <div>
+        <SectionLabel icon={MapPin}>Delivery Location</SectionLabel>
+        <div className="space-y-2.5">
+          <FormField control={form.control} name="destinationStreet" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">Street Address</FormLabel>
+              <FormControl><Input placeholder="456 Oak Ave" {...field} className={ic} /></FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )} />
+          <div className="grid grid-cols-4 gap-2">
+            <div className="col-span-2">
+              <FormField control={form.control} name="destinationCity" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-slate-400">City</FormLabel>
+                  <FormControl><Input placeholder="Atlanta" {...field} className={ic} /></FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="destinationState" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-slate-400">State</FormLabel>
+                <FormControl><Input placeholder="GA" maxLength={2} {...field} className={`${ic} uppercase`} /></FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="destinationZip" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-slate-400">ZIP</FormLabel>
+                <FormControl><Input placeholder="30301" maxLength={5} {...field} className={ic} /></FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
+          </div>
+          <FormField control={form.control} name="destinationLocationType" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">Location Type</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className={ic}><SelectValue placeholder="Select type…" /></SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {BACKHAUL_LOCATION_TYPES.map(lt => (
+                    <SelectItem key={lt.value} value={lt.value}>{lt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )} />
+        </div>
+      </div>
+
+      {/* ── Vehicle ── */}
+      <div>
+        <SectionLabel icon={Car}>Vehicle</SectionLabel>
+        <div className="space-y-2.5">
+          <div className="grid grid-cols-3 gap-2">
+            <FormField control={form.control} name="vehicleYear" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-slate-400">Year</FormLabel>
+                <FormControl><Input type="number" placeholder="2019" {...field} className={ic} /></FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
+            <div className="col-span-2">
+              <FormField control={form.control} name="vehicleMake" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-slate-400">Make</FormLabel>
+                  <FormControl>
+                    <AutocompleteInput
+                      value={field.value}
+                      onChange={v => { field.onChange(v); form.setValue("vehicleModel", ""); }}
+                      suggestions={nhtsaMakes}
+                      placeholder="Toyota"
+                      className={ic}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )} />
+            </div>
+          </div>
+          <FormField control={form.control} name="vehicleModel" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">Model</FormLabel>
+              <FormControl>
+                <AutocompleteInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  suggestions={nhtsaModels}
+                  placeholder={watchedMake ? "Camry" : "Enter make first"}
+                  className={ic}
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="vin" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-slate-400">VIN (17 characters)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="1HGBH41JXMN109186"
+                  maxLength={17}
+                  {...field}
+                  className={`${ic} font-mono tracking-wider uppercase`}
+                  onChange={e => field.onChange(e.target.value.toUpperCase())}
+                />
+              </FormControl>
+              <div className="flex justify-between">
+                <FormMessage className="text-xs" />
+                <span className="text-[10px] text-slate-600">{(field.value ?? "").length}/17</span>
+              </div>
+            </FormItem>
+          )} />
+        </div>
+      </div>
+
+      {/* ── Action buttons ── */}
+      <div className="space-y-2 pt-1">
+        <Button
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold border-0 h-11"
+          onClick={tryAccept}
+        >
+          Accept — {route.pricePerVehicle ? `$${route.pricePerVehicle}/vehicle` : "Listed Price"}
+        </Button>
+
+        {!showCounter ? (
+          <Button
+            variant="outline"
+            className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 h-11"
+            onClick={() => setShowCounter(true)}
+          >
+            Counter Offer
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="number"
+                placeholder="Your offer per vehicle…"
+                value={counterPrice}
+                onChange={e => setCounterPrice(e.target.value)}
+                className="bg-slate-800/60 border-slate-700 text-white h-11 pl-9 focus:border-blue-500 placeholder:text-slate-600"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                className="flex-1 text-slate-400 hover:text-white"
+                onClick={() => { setShowCounter(false); setCounterPrice(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold border-0"
+                disabled={!counterPrice || Number(counterPrice) <= 0}
+                onClick={tryCounter}
+              >
+                Submit Counter
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <PolicyNotice isShipper />
     </div>
   );
 }
+
+// ----- Route detail dialog -----
 
 function RouteDetailDialog({
   route,
@@ -262,95 +609,89 @@ function RouteDetailDialog({
   booking: BookingState | undefined;
   isShipper: boolean;
   isDriver: boolean;
-  onAccept: () => void;
-  onCounter: (price: number) => void;
+  onAccept: (data: ShipperBookingData) => void;
+  onCounter: (price: number, data: ShipperBookingData) => void;
   onCancel: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl">
+      <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <MapPin className="h-4 w-4 text-amber-400" />
+          <DialogTitle className="flex items-center gap-2 text-white text-base">
+            <MapPin className="h-4 w-4 text-amber-400 shrink-0" />
             {route.originCity}, {route.originState}
-            <ArrowRight className="h-4 w-4 text-slate-500" />
+            <ArrowRight className="h-4 w-4 text-slate-500 shrink-0" />
             {route.destinationCity}, {route.destinationState}
           </DialogTitle>
           <DialogDescription className="sr-only">Backhaul route details and booking actions</DialogDescription>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6 pt-2">
-          {/* Route details */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-slate-800/50 p-3">
-                <Package className="h-3.5 w-3.5 text-slate-400 mb-1.5" />
-                <div className="text-sm font-bold text-white">{route.availableSpots}</div>
-                <div className="text-[11px] text-slate-500">available spots</div>
-              </div>
-              <div className="rounded-lg bg-slate-800/50 p-3">
-                <DollarSign className="h-3.5 w-3.5 text-slate-400 mb-1.5" />
-                <div className="text-sm font-bold text-white">
-                  {route.pricePerVehicle ? `$${route.pricePerVehicle}` : "TBD"}
-                </div>
-                <div className="text-[11px] text-slate-500">per vehicle</div>
-              </div>
-              <div className="rounded-lg bg-slate-800/50 p-3">
-                <Calendar className="h-3.5 w-3.5 text-slate-400 mb-1.5" />
-                <div className="text-sm font-bold text-white">{route.departureDateFrom}</div>
-                <div className="text-[11px] text-slate-500">earliest departure</div>
-              </div>
-              <div className="rounded-lg bg-slate-800/50 p-3">
-                <Truck className="h-3.5 w-3.5 text-slate-400 mb-1.5" />
-                <div className="text-sm font-bold text-white capitalize">{route.transportType}</div>
-                <div className="text-[11px] text-slate-500">transport type</div>
-              </div>
+        {/* Compact route summary */}
+        <div className="grid grid-cols-4 gap-2 py-1">
+          <div className="rounded-lg bg-slate-800/50 p-2 text-center">
+            <Package className="h-3 w-3 text-slate-400 mx-auto mb-1" />
+            <div className="text-xs font-bold text-white">{route.availableSpots}</div>
+            <div className="text-[10px] text-slate-500">spots</div>
+          </div>
+          <div className="rounded-lg bg-slate-800/50 p-2 text-center">
+            <DollarSign className="h-3 w-3 text-slate-400 mx-auto mb-1" />
+            <div className="text-xs font-bold text-white">{route.pricePerVehicle ? `$${route.pricePerVehicle}` : "TBD"}</div>
+            <div className="text-[10px] text-slate-500">/ vehicle</div>
+          </div>
+          <div className="rounded-lg bg-slate-800/50 p-2 text-center">
+            <Calendar className="h-3 w-3 text-slate-400 mx-auto mb-1" />
+            <div className="text-xs font-bold text-white">{route.departureDateFrom}</div>
+            <div className="text-[10px] text-slate-500">earliest</div>
+          </div>
+          <div className="rounded-lg bg-slate-800/50 p-2 text-center">
+            <Truck className="h-3 w-3 text-slate-400 mx-auto mb-1" />
+            <div className="text-xs font-bold text-white capitalize">{route.transportType}</div>
+            <div className="text-[10px] text-slate-500">type</div>
+          </div>
+        </div>
+
+        {route.notes && (
+          <p className="text-xs text-slate-400 bg-slate-800/30 rounded-lg px-3 py-2 leading-relaxed">{route.notes}</p>
+        )}
+        {route.driver && (
+          <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/30 rounded-lg px-3 py-2">
+            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
+              <Truck className="h-3 w-3" />
             </div>
-
-            {route.notes && (
-              <p className="text-xs text-slate-400 bg-slate-800/30 rounded-lg p-3 leading-relaxed">{route.notes}</p>
-            )}
-
-            {route.driver && (
-              <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/30 rounded-lg p-3">
-                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-                  <Truck className="h-3 w-3" />
-                </div>
-                <span>{route.driver.firstName} {route.driver.lastName}</span>
-                {route.driver.isVerified && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px]">Verified</Badge>
-                )}
-              </div>
+            <span>{route.driver.firstName} {route.driver.lastName}</span>
+            {route.driver.isVerified && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px]">Verified</Badge>
             )}
           </div>
+        )}
 
-          {/* Action panel */}
-          <div>
-            {booking && !booking.cancelled ? (
-              <BookingConfirmedPanel booking={booking} onCancel={onCancel} isShipper={isShipper} />
-            ) : booking?.cancelled ? (
-              <div className="space-y-3">
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
-                  This booking has been cancelled.
-                </div>
-                <PolicyNotice isShipper={isShipper} />
+        <div className="border-t border-slate-700/60 pt-4">
+          {booking && !booking.cancelled ? (
+            <BookingConfirmedPanel booking={booking} onCancel={onCancel} isShipper={isShipper} />
+          ) : booking?.cancelled ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                This booking has been cancelled.
               </div>
-            ) : isShipper ? (
-              <ShipperActionPanel route={route} onAccept={onAccept} onCounter={onCounter} />
-            ) : isDriver ? (
-              <div className="space-y-3">
-                <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs text-slate-400 text-center">
-                  Waiting for a shipper to accept or counter.
-                </div>
-                <PolicyNotice isShipper={false} />
+              <PolicyNotice isShipper={isShipper} />
+            </div>
+          ) : isShipper ? (
+            <ShipperActionPanel route={route} onAccept={onAccept} onCounter={onCounter} />
+          ) : isDriver ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs text-slate-400 text-center">
+                Waiting for a shipper to accept or counter.
               </div>
-            ) : null}
-          </div>
+              <PolicyNotice isShipper={false} />
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+// ----- Confirmation modal -----
 
 function ConfirmActionModal({
   open,
@@ -428,6 +769,8 @@ function ConfirmActionModal({
   );
 }
 
+// ----- Route card -----
+
 function RouteCard({
   route,
   booking,
@@ -451,17 +794,11 @@ function RouteCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-amber-400" />
-            <span className="font-bold text-white text-sm">
-              {route.originCity}, {route.originState}
-            </span>
+            <span className="font-bold text-white text-sm">{route.originCity}, {route.originState}</span>
             <ArrowRight className="h-3.5 w-3.5 text-slate-500" />
-            <span className="font-bold text-white text-sm">
-              {route.destinationCity}, {route.destinationState}
-            </span>
+            <span className="font-bold text-white text-sm">{route.destinationCity}, {route.destinationState}</span>
           </div>
-          <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs">
-            {route.transportType}
-          </Badge>
+          <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs">{route.transportType}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -473,9 +810,7 @@ function RouteCard({
           </div>
           <div className="rounded-lg bg-slate-800/50 p-2">
             <DollarSign className="h-3.5 w-3.5 text-slate-400 mx-auto mb-1" />
-            <div className="text-xs text-white font-bold">
-              {route.pricePerVehicle ? `$${route.pricePerVehicle}` : "TBD"}
-            </div>
+            <div className="text-xs text-white font-bold">{route.pricePerVehicle ? `$${route.pricePerVehicle}` : "TBD"}</div>
             <div className="text-[10px] text-slate-500">per vehicle</div>
           </div>
           <div className="rounded-lg bg-slate-800/50 p-2">
@@ -488,7 +823,6 @@ function RouteCard({
         {route.notes && (
           <p className="text-xs text-slate-400 bg-slate-800/30 rounded-lg p-2">{route.notes}</p>
         )}
-
         {route.driver && (
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center">
@@ -501,7 +835,6 @@ function RouteCard({
           </div>
         )}
 
-        {/* Booking state on card */}
         {booking && !booking.cancelled && (
           <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -516,7 +849,6 @@ function RouteCard({
             )}
           </div>
         )}
-
         {booking?.cancelled && (
           <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-2 text-xs text-red-400 text-center">
             Cancelled
@@ -526,6 +858,8 @@ function RouteCard({
     </Card>
   );
 }
+
+// ----- Page -----
 
 export default function BackhaulBoard() {
   const { toast } = useToast();
@@ -538,7 +872,7 @@ export default function BackhaulBoard() {
   const [filterDest, setFilterDest] = useState("all");
   const [postOpen, setPostOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<any | null>(null);
-  const [confirmModal, setConfirmModal] = useState<{ price: number; type: "accept" | "counter" } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ price: number; type: "accept" | "counter"; shipperData: ShipperBookingData } | null>(null);
   const [bookings, setBookings] = useState<Record<string, BookingState>>({});
 
   const { data, isLoading } = useQuery({
@@ -567,20 +901,25 @@ export default function BackhaulBoard() {
 
   const inputCls = "bg-slate-800/60 border-slate-700 text-white h-10 focus:border-blue-500 placeholder:text-slate-600";
 
-  function handleAccept() {
+  function handleAccept(data: ShipperBookingData) {
     if (!selectedRoute?.pricePerVehicle) return;
-    setConfirmModal({ price: selectedRoute.pricePerVehicle, type: "accept" });
+    setConfirmModal({ price: selectedRoute.pricePerVehicle, type: "accept", shipperData: data });
   }
 
-  function handleCounter(price: number) {
-    setConfirmModal({ price, type: "counter" });
+  function handleCounter(price: number, data: ShipperBookingData) {
+    setConfirmModal({ price, type: "counter", shipperData: data });
   }
 
   function handleConfirm() {
     if (!confirmModal || !selectedRoute) return;
     setBookings(prev => ({
       ...prev,
-      [selectedRoute.id]: { price: confirmModal.price, confirmedAt: new Date(), cancelled: false },
+      [selectedRoute.id]: {
+        price: confirmModal.price,
+        confirmedAt: new Date(),
+        cancelled: false,
+        shipperData: confirmModal.shipperData,
+      },
     }));
     setConfirmModal(null);
     toast({
@@ -737,7 +1076,6 @@ export default function BackhaulBoard() {
 
         <div className="bg-slate-950 min-h-screen">
           <div className="container mx-auto px-4 md:px-8 py-8">
-            {/* Filters */}
             <div className="flex flex-wrap gap-3 mb-6">
               <Select value={filterOrigin} onValueChange={setFilterOrigin}>
                 <SelectTrigger className="w-48 bg-slate-800/60 border-slate-700 text-white">
